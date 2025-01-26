@@ -2,15 +2,27 @@
 
 import React, { useState } from 'react';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
+import { auth } from '@/app/firebase/firebaseConfig'; 
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { useRouter } from 'next/navigation'; 
 
 export const SignIn = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const router = useRouter(); 
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         // Add sign-in logic here
+
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            alert('Signed in successfully!');
+            router.push('/'); 
+        } catch (error) {
+            alert((error as any).message);
+        }
     };
 
     return (
@@ -52,7 +64,7 @@ export const SignIn = () => {
                             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent 
                             transition duration-300 placeholder-gray-400"
                         />
-                        <button 
+                        <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
                             className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-blue-600"
@@ -62,9 +74,9 @@ export const SignIn = () => {
                     </div>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center">
-                            <input 
-                                type="checkbox" 
-                                id="remember" 
+                            <input
+                                type="checkbox"
+                                id="remember"
                                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                             />
                             <label htmlFor="remember" className="ml-2 block text-sm text-gray-900">
@@ -89,7 +101,7 @@ export const SignIn = () => {
                 </form>
                 <div className="text-center">
                     <p className="text-sm text-gray-600">
-                        Don't have an account? 
+                        Don't have an account?
                         <a href="/signup" className="text-blue-600 hover:text-blue-500 ml-1">
                             Sign Up
                         </a>

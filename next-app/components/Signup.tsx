@@ -2,6 +2,9 @@
 
 import React, { useState } from 'react';
 import { User, Mail, Lock, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
+import { auth } from '@/app/firebase/firebaseConfig';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
 
 export const SignUp = () => {
     const [showPassword, setShowPassword] = useState(false);
@@ -11,6 +14,8 @@ export const SignUp = () => {
         email: '',
         password: ''
     });
+    
+    const router = useRouter();
 
     const checkPasswordStrength = (password: string) => {
         let strength = 0;
@@ -22,15 +27,22 @@ export const SignUp = () => {
         return strength;
     };
 
-    const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handlePasswordChange = (e: { target: { value: any; }; }) => {
         const password = e.target.value;
         setFormData({...formData, password});
         setPasswordStrength(checkPasswordStrength(password));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: { preventDefault: () => void; }) => {
         e.preventDefault();
         // Add sign-up logic
+        try {
+            await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+            alert('Account created successfully!');
+            router.push('/signin'); 
+        } catch (error) {
+            alert((error as any).message);
+        }
     };
 
     return (
