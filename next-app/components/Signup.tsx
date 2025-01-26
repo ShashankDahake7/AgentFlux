@@ -38,7 +38,7 @@ export const SignUp = () => {
             <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 space-y-6 transform transition-all hover:scale-105 duration-300">
                 <div className="text-center">
                     <h2 className="text-3xl font-bold text-gray-800 mb-2">Create Account</h2>
-                    <p className="text-gray-500">Join RegulaTech today</p>
+                    <p className="text-gray-500">Join AgentFlux today</p>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="relative">
