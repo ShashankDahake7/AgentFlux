@@ -30,7 +30,7 @@ export const SignIn = () => {
             <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 space-y-6 transform transition-all hover:scale-105 duration-300">
                 <div className="text-center">
                     <h2 className="text-3xl font-bold text-gray-800 mb-2">Welcome Back</h2>
-                    <p className="text-gray-500">Sign in to continue to RegulaTech</p>
+                    <p className="text-gray-500">Sign in to continue to AgentFlux</p>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="relative">
