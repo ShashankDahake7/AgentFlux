@@ -14,10 +14,16 @@ const config: Config = {
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
       },
       fontFamily: {
-        Montserrat: ["Montserrat", "sans-serif"],
+        montserrat: ["Montserrat", "sans-serif"],
+        cinzel: ["Cinzel", "serif"],
+        dancing: ["Dancing Script", "cursive"],
+        merriweather: ["Merriweather", "serif"],
+        quintessential: ["Quintessential", "cursive"],
+        cookie: ["Cookie", "cursive"],
       },
     },
   },
   plugins: [],
 };
+
 export default config;

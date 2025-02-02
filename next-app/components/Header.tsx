@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Shield, Menu, X } from 'lucide-react';
+import { BrainCircuit, Menu, X } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/app/firebase/firebaseConfig';
 
@@ -16,10 +16,16 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error('Error signing out:', error);
+    const confirmed = window.confirm('Are you sure you want to sign out?');
+
+    if (confirmed) {
+      try {
+        await signOut(auth);
+      } catch (error) {
+        console.error('Error signing out:', error);
+      }
+    } else {
+      console.log('Sign out canceled');
     }
   };
 
@@ -27,7 +33,7 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
     <header className="fixed top-0 left-0 w-full bg-black/90 backdrop-blur-md shadow-sm z-50">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <div className="flex items-center space-x-2">
-          <Shield className="text-blue-600" />
+          <BrainCircuit className="text-violet-300 w-6 h-6" />
           <h1 className="text-2xl font-bold text-white-800">AgentFlux</h1>
         </div>
 
