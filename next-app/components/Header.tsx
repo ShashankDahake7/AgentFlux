@@ -52,13 +52,13 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
             <>
               <Link
                 href="/playground"
-                className="px-4 py-2 bg-green-600 text-white-600 border rounded-lg hover:bg-blue-600 transition"
+                className="px-3 py-1.5 text-sm bg-black-600 text-white-600 border border-violet-400 rounded-lg hover:bg-gray-600 transition"
               >
                 Access Playgrounds
               </Link>
               <button
                 onClick={handleSignOut}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                className="px-3 py-1.5 text-sm bg-black-600 text-white border border-violet-400 rounded-lg hover:bg-gray-700 transition"
               >
                 Sign Out
               </button>
@@ -67,13 +67,13 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
             <>
               <Link
                 href="/signin"
-                className="px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition"
+                className="px-3 py-1.5 text-sm text-black-600 border border-violet-400 rounded-lg hover:bg-gray-700 transition"
               >
                 Sign In
               </Link>
               <Link
                 href="/signup"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                className="px-3 py-1.5 text-sm bg-black-600 text-white border border-violet-400 rounded-lg hover:bg-gray-700 transition"
               >
                 Sign Up
               </Link>
@@ -118,7 +118,7 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
                     </Link>
                     <button
                       onClick={handleSignOut}
-                      className="w-full text-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                      className="w-full text-center px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
                     >
                       Sign Out
                     </button>
@@ -134,7 +134,7 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
                     </Link>
                     <Link
                       href="/signup"
-                      className="w-full text-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                      className="w-full text-center px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                       onClick={toggleMenu}
                     >
                       Sign Up

@@ -15,7 +15,7 @@ interface FeatureCardProps {
 const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, videoSrc, gradient }) => (
     <motion.div
         whileHover={{ scale: 1.05 }}
-        className={`relative p-6 rounded-2xl text-white shadow-lg hover:shadow-2xl transition-all overflow-hidden ${gradient || 'bg-gradient-to-br from-gray-900 to-gray-800'}`}
+        className={`relative p-10 text-white shadow-lg hover:shadow-2xl transition-all overflow-hidden ${gradient || 'bg-gradient-to-br from-gray-900 to-gray-800'}`}
     >
         {/* Background Video */}
         {videoSrc && (
@@ -25,7 +25,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, videoSrc,
         )}
 
         {/* Content */}
-        <div className="relative z-10">
+        <div className="h-[350px] relative z-10">
             <h3 className="text-2xl font-semibold mb-2">{title}</h3>
             <p className="text-gray-300 mb-4">{description}</p>
             <Link
