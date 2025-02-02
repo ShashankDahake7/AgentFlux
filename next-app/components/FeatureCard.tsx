@@ -32,19 +32,19 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, videoSrc,
 
         <div className="relative group h-[300px] w-full max-w-md overflow-hidden rounded-xl aspect-video bg-black/40 shadow-lg ring-1 ring-black/5">
             {/* Content */}
-            <div className="relative z-10 h-full p-8 flex flex-col justify-end transform transition-transform duration-500 group-hover:translate-y-[-100px]">
-                <h3 className="text-2xl font-semibold mb-4">
+            <div className="relative z-10 h-full p-5 flex flex-col justify-end transform transition-transform duration-500 group-hover:translate-y-[-70px]">
+                <h3 className="text-2xl font-merriweather mb-4">
                     {title}
                 </h3>
-                <p className="text-gray-300 mb-6">
+                <p className="text-gray-200 font-cookie text-2xl mb-6">
                     {description}
                 </p>
             </div>
 
             {/* Extra Content (revealed on hover) */}
-            <div className="absolute left-0 right-0 bottom-0 p-8 bg-gradient-to-t from-blue-600/90 to-blue-600/0 transform translate-y-full transition-transform duration-500 group-hover:translate-y-0">
-                <h4 className="text-xl font-semibold text-white">
-                    <Link href="#" className="flex items-center text-blue-500 hover:text-blue-300 transition-colors group/link">
+            <div className="absolute left-0 right-0 bottom-0 p-8 bg-gradient-to-t from-violet-600/90 to-violet-600/0 transform translate-y-full transition-transform duration-500 group-hover:translate-y-0">
+                <h4 className="text-[1rem] font-merriweather text-white">
+                    <Link href="#" className="flex items-center text-white hover:text-pink-300 transition-colors group/link">
                         <span className="mr-2">Learn More</span>
                         <ChevronRight className="w-5 h-5 transform transition-transform duration-300 group-hover/link:translate-x-1" />
                     </Link>
