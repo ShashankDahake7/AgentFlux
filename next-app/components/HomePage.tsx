@@ -16,12 +16,12 @@ const slides = [
 ];
 
 const featureCards = [
-  { title: "Intelligent Automation", description: "Harness AI-driven workflows for efficiency.", gradient: "bg-gradient-to-br from-yellow-800 to-red-700" },
-  { title: "Seamless Integration", description: "Effortlessly connect with your existing tools.", gradient: "bg-gradient-to-br from-pink-900 to-red-600" },
-  { title: "Scalable Performance", description: "Grow without limits with our robust platform.", gradient: "bg-gradient-to-br from-purple-900 to-blue-700" },
-  { title: "Trusted Security", description: "Enterprise-grade protection for your data.", gradient: "bg-gradient-to-br from-blue-900 to-teal-700" },
-  { title: "Advanced Analytics", description: "Unlock insights with AI-powered analytics.", gradient: "bg-gradient-to-br from-green-800 to-teal-600" },
-  { title: "Custom Workflows", description: "Create tailored workflows for unique use cases.", gradient: "bg-gradient-to-br from-orange-900 to-red-500" },
+  { title: "Intelligent Automation", description: "Harness AI-driven workflows for efficiency.", gradient: "bg-gradient-to-br from-yellow-800 to-red-700", image: "/cardPhotos/image1.webp" },
+  { title: "Seamless Integration", description: "Effortlessly connect with your existing tools.", gradient: "bg-gradient-to-br from-pink-900 to-red-600", image: "/cardPhotos/image2.webp" },
+  { title: "Scalable Performance", description: "Grow without limits with our robust platform.", gradient: "bg-gradient-to-br from-purple-900 to-blue-700", image: "/cardPhotos/image3.webp" },
+  { title: "Trusted Security", description: "Enterprise-grade protection for your data.", gradient: "bg-gradient-to-br from-blue-900 to-teal-700", image: "/cardPhotos/image4.webp" },
+  { title: "Advanced Analytics", description: "Unlock insights with AI-powered analytics.", gradient: "bg-gradient-to-br from-green-800 to-teal-600", image: "/cardPhotos/image5.webp" },
+  { title: "Custom Workflows", description: "Create tailored workflows for unique use cases.", gradient: "bg-gradient-to-br from-orange-900 to-red-500", image: "/cardPhotos/image6.webp" },
 ];
 
 export const HomePage: React.FC = () => {
@@ -35,6 +35,14 @@ export const HomePage: React.FC = () => {
     });
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      nextSlide();
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [currentSlide]);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % slides.length);
@@ -87,8 +95,8 @@ export const HomePage: React.FC = () => {
               }}
             >
               {featureCards.map((card, index) => (
-                <div key={index} className="min-w-[calc(28%-2rem)]"> {/* Reduced card width */}
-                  <FeatureCard title={card.title} description={card.description} gradient={card.gradient} />
+                <div key={index} className="min-w-[calc((100%/4)-1rem)]">{/* Reduced card width */}
+                  <FeatureCard title={card.title} description={card.description} gradient={card.gradient} image={card.image} />
                 </div>
               ))}
             </div>

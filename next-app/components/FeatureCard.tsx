@@ -10,30 +10,46 @@ interface FeatureCardProps {
     description: string;
     videoSrc?: string;
     gradient?: string;
+    image?: string;
 }
 
-const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, videoSrc, gradient }) => (
+const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, videoSrc, gradient, image }) => (
     <motion.div
         whileHover={{ scale: 1.05 }}
-        className={`relative p-10 text-white shadow-lg hover:shadow-2xl transition-all overflow-hidden ${gradient || 'bg-gradient-to-br from-gray-900 to-gray-800'}`}
+        className={`relative p-10 text-white shadow-lg hover:shadow-2xl transition-all overflow-hidden`}
+        style={{
+            backgroundImage: image ? `url(${image})` : undefined,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+        }}
     >
-        {/* Background Video */}
+        {/* Background Video (optional, can be kept)
         {videoSrc && (
-            <video autoPlay loop muted className="absolute inset-0 w-full h-full object-cover">
+            <video autoPlay loop muted className="absolute inset-0 w-full h-full object-cover z-0">
                 <source src={videoSrc} type="video/mp4" />
             </video>
-        )}
+        )} */}
 
-        {/* Content */}
-        <div className="h-[350px] relative z-10">
-            <h3 className="text-2xl font-semibold mb-2">{title}</h3>
-            <p className="text-gray-300 mb-4">{description}</p>
-            <Link
-                href="#"
-                className="mt-4 flex items-center text-blue-400 hover:text-blue-500 transition"
-            >
-                Learn More <ChevronRight className="ml-2 w-5 h-5" />
-            </Link>
+        <div className="relative group h-[300px] w-full max-w-md overflow-hidden rounded-xl aspect-video bg-black/40 shadow-lg ring-1 ring-black/5">
+            {/* Content */}
+            <div className="relative z-10 h-full p-8 flex flex-col justify-end transform transition-transform duration-500 group-hover:translate-y-[-100px]">
+                <h3 className="text-2xl font-semibold mb-4">
+                    {title}
+                </h3>
+                <p className="text-gray-300 mb-6">
+                    {description}
+                </p>
+            </div>
+
+            {/* Extra Content (revealed on hover) */}
+            <div className="absolute left-0 right-0 bottom-0 p-8 bg-gradient-to-t from-blue-600/90 to-blue-600/0 transform translate-y-full transition-transform duration-500 group-hover:translate-y-0">
+                <h4 className="text-xl font-semibold text-white">
+                    <Link href="#" className="flex items-center text-blue-500 hover:text-blue-300 transition-colors group/link">
+                        <span className="mr-2">Learn More</span>
+                        <ChevronRight className="w-5 h-5 transform transition-transform duration-300 group-hover/link:translate-x-1" />
+                    </Link>
+                </h4>
+            </div>
         </div>
     </motion.div>
 );
