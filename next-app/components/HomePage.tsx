@@ -98,7 +98,7 @@ export const HomePage: React.FC = () => {
       <Header user={user} />
 
       {/* Slides Section */}
-      <div className="relative w-full overflow-hidden h-[700px] flex items-center justify-center">
+      <div className="relative w-full overflow-hidden lg:h-[700px] md:h-[600px] h-[500px] flex items-center justify-center">
         <motion.div
           key={currentSlide}
           initial={{ opacity: 0, x: 50 }}
@@ -107,9 +107,9 @@ export const HomePage: React.FC = () => {
           transition={{ duration: 0.5 }}
           className={`absolute inset-0 flex items-center justify-center p-10 rounded-3xl shadow-xl ${slides[currentSlide].gradient}`}
         >
-          <div className="text-center max-w-3xl">
-            <h1 className="text-7xl md:text-7xl font-cinzel mb-6">{slides[currentSlide].title}</h1>
-            <p className="text-lg md:text-[1.5rem] font-quintessential text-white">{slides[currentSlide].description}</p>
+          <div className="text-center max-w-3xl gap-5">
+            <h1 className="lg:text-7xl md:text-5xl text-4xl font-cinzel mb-6">{slides[currentSlide].title}</h1>
+            <p className="lg:text-[1.5rem] text-lg  font-quintessential text-white">{slides[currentSlide].description}</p>
           </div>
         </motion.div>
         <button onClick={prevSlide} className="absolute left-8 p-2 bg-gray-800 rounded-full hover:bg-gray-700 transition">
@@ -131,7 +131,7 @@ export const HomePage: React.FC = () => {
               transition={{ duration: 0.5 }}
             >
               {visibleCards.map((card, index) => (
-                <div key={`${card.title}-${index}`} className="min-w-[calc((100%/4)-1rem)]">
+                <div key={`${card.title}-${index}`} className="xl:min-w-[calc((100%/4)-1rem)] lg:min-w-[calc((100%/3)-1rem)] md:min-w-[calc((100%/2)-1rem)] min-w-[calc((100%)-1rem)] ">
                   <FeatureCard
                     title={card.title}
                     description={card.description}
@@ -145,16 +145,18 @@ export const HomePage: React.FC = () => {
 
           <button
             onClick={prevFeature}
-            className="absolute top-1/2 left-[-40px] transform -translate-y-1/2 bg-gray-800 text-white p-2 rounded-full z-10"
+            className="absolute top-1/2 left-[-10px] transform -translate-y-1/2 bg-gray-800 text-white p-3 rounded-full shadow-md z-10 
+                        hover:bg-gray-700 hover:scale-110 transition-all"
           >
-            <ChevronLeft size={32} />
+            <ChevronLeft size={28} />
           </button>
 
           <button
             onClick={nextFeature}
-            className="absolute top-1/2 right-[-30px] transform -translate-y-1/2 bg-gray-800 text-white p-2 rounded-full z-10"
+            className="absolute top-1/2 right-[-10px] transform -translate-y-1/2 bg-gray-800 text-white p-3 rounded-full shadow-md z-10
+               hover:bg-gray-700 hover:scale-110 transition-all"
           >
-            <ChevronRight size={32} />
+            <ChevronRight size={28} />
           </button>
         </div>
       </section>
