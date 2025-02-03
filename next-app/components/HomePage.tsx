@@ -27,7 +27,6 @@ const slides = [
   },
 ];
 
-
 const featureCards = [
   { title: "Intelligent Automation", description: "Harness AI-driven workflows for efficiency.", gradient: "bg-gradient-to-br from-yellow-800 to-red-700", image: "/cardPhotos/image6.webp" },
   { title: "Seamless Integration", description: "Effortlessly connect with your existing tools.", gradient: "bg-gradient-to-br from-pink-900 to-red-600", image: "/cardPhotos/image2.webp" },
@@ -37,16 +36,24 @@ const featureCards = [
   { title: "Custom Workflows", description: "Create tailored workflows for unique use cases.", gradient: "bg-gradient-to-br from-orange-900 to-red-500", image: "/cardPhotos/image5.webp" },
 ];
 
+const CARDS_TO_SHOW = 4; // Number of cards visible at once
+
 export const HomePage: React.FC = () => {
   const [user, setUser] = useState<any>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [currentFeatureIndex, setCurrentFeatureIndex] = useState(0); // State for feature scrolling
+  const [visibleCards, setVisibleCards] = useState<typeof featureCards>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
     });
     return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    // Initialize visible cards
+    updateVisibleCards(0);
   }, []);
 
   useEffect(() => {
@@ -57,6 +64,15 @@ export const HomePage: React.FC = () => {
     return () => clearInterval(interval);
   }, [currentSlide]);
 
+  const updateVisibleCards = (startIndex: number) => {
+    let cards = [];
+    for (let i = 0; i < CARDS_TO_SHOW; i++) {
+      const index = (startIndex + i) % featureCards.length;
+      cards.push(featureCards[index]);
+    }
+    setVisibleCards(cards);
+  };
+
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % slides.length);
   };
@@ -66,11 +82,15 @@ export const HomePage: React.FC = () => {
   };
 
   const nextFeature = () => {
-    setCurrentFeatureIndex((prev) => Math.min(prev + 1, featureCards.length - 3)); // Dynamically calculate max scroll
+    const nextIndex = (currentIndex + 1) % featureCards.length;
+    setCurrentIndex(nextIndex);
+    updateVisibleCards(nextIndex);
   };
 
   const prevFeature = () => {
-    setCurrentFeatureIndex((prev) => Math.max(prev - 1, 0)); // Ensure we don't scroll past the first card
+    const prevIndex = (currentIndex - 1 + featureCards.length) % featureCards.length;
+    setCurrentIndex(prevIndex);
+    updateVisibleCards(prevIndex);
   };
 
   return (
@@ -92,8 +112,12 @@ export const HomePage: React.FC = () => {
             <p className="text-lg md:text-[1.5rem] font-quintessential text-white">{slides[currentSlide].description}</p>
           </div>
         </motion.div>
-        <button onClick={prevSlide} className="absolute left-8 p-2 bg-gray-800 rounded-full hover:bg-gray-700 transition"><ChevronLeft size={32} /></button>
-        <button onClick={nextSlide} className="absolute right-8 p-2 bg-gray-800 rounded-full hover:bg-gray-700 transition"><ChevronRight size={32} /></button>
+        <button onClick={prevSlide} className="absolute left-8 p-2 bg-gray-800 rounded-full hover:bg-gray-700 transition">
+          <ChevronLeft size={32} />
+        </button>
+        <button onClick={nextSlide} className="absolute right-8 p-2 bg-gray-800 rounded-full hover:bg-gray-700 transition">
+          <ChevronRight size={32} />
+        </button>
       </div>
 
       {/* Key Features Section */}
@@ -101,21 +125,24 @@ export const HomePage: React.FC = () => {
         <h2 className="text-4xl font-cinzel text-left mb-12">Key Features</h2>
         <div className="relative">
           <div className="overflow-hidden">
-            <div
-              className="flex transition-transform duration-300 gap-6"
-              style={{
-                transform: `translateX(-${currentFeatureIndex * (24 + 2)}%)`, // Adjust for smaller width
-              }}
+            <motion.div
+              className="flex gap-6"
+              animate={{ x: 0 }}
+              transition={{ duration: 0.5 }}
             >
-              {featureCards.map((card, index) => (
-                <div key={index} className="min-w-[calc((100%/4)-1rem)]">{/* Reduced card width */}
-                  <FeatureCard title={card.title} description={card.description} gradient={card.gradient} image={card.image} />
+              {visibleCards.map((card, index) => (
+                <div key={`${card.title}-${index}`} className="min-w-[calc((100%/4)-1rem)]">
+                  <FeatureCard
+                    title={card.title}
+                    description={card.description}
+                    gradient={card.gradient}
+                    image={card.image}
+                  />
                 </div>
               ))}
-            </div>
+            </motion.div>
           </div>
 
-          {/* Left arrow button */}
           <button
             onClick={prevFeature}
             className="absolute top-1/2 left-[-40px] transform -translate-y-1/2 bg-gray-800 text-white p-2 rounded-full z-10"
@@ -123,7 +150,6 @@ export const HomePage: React.FC = () => {
             <ChevronLeft size={32} />
           </button>
 
-          {/* Right arrow button */}
           <button
             onClick={nextFeature}
             className="absolute top-1/2 right-[-30px] transform -translate-y-1/2 bg-gray-800 text-white p-2 rounded-full z-10"
