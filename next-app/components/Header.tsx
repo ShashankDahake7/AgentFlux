@@ -89,7 +89,7 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
 
         {/* Mobile Menu Overlay */}
         {isMenuOpen && (
-          <div className="lg:hidden fixed inset-0 bg-white top-16 pt-8">
+          <div className="lg:hidden fixed inset-0 bg-black bg-opacity-80 top-16 py-8 h-max ">
             <nav className="flex flex-col items-center space-y-6">
               <Link
                 href="/"
@@ -114,38 +114,38 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
               </Link>
               <div className="flex flex-col space-y-4 w-full px-8">
                 {user ? (
-                  <>
+                  <div className='flex justify-center flex-col items-center gap-3'>
                     <Link
                       href="/playground"
-                      className="w-full text-center px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition"
+                      className="w-4/6 text-center px-4 py-2 bg-white text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition"
                       onClick={toggleMenu}
                     >
                       Access Playgrounds
                     </Link>
                     <button
                       onClick={handleSignOut}
-                      className="w-full text-center px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                      className="w-3/6 text-center px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
                     >
                       Sign Out
                     </button>
-                  </>
+                  </div>
                 ) : (
-                  <>
+                  <div className='flex justify-center flex-col items-center gap-3'>
                     <Link
                       href="/signin"
-                      className="w-full text-center px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition"
+                      className="w-3/6 text-center px-4 py-2 bg-white text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition"
                       onClick={toggleMenu}
                     >
                       Sign In
                     </Link>
                     <Link
                       href="/signup"
-                      className="w-full text-center px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                      className="w-3/6 text-center px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                       onClick={toggleMenu}
                     >
                       Sign Up
                     </Link>
-                  </>
+                  </div>
                 )}
               </div>
             </nav>
