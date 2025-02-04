@@ -4,9 +4,10 @@ import React, { useState } from 'react';
 import { BrainCircuit, Menu, X } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/app/firebase/firebaseConfig';
+import Link from 'next/link';
 
 interface HeaderProps {
-  user: any; 
+  user: any;
   scrollToSection: (section: string) => void;
 }
 
@@ -31,7 +32,7 @@ export const Header: React.FC<HeaderProps> = ({ user, scrollToSection }) => {
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <div className="flex items-center space-x-2">
           <BrainCircuit className="text-violet-300 w-6 h-6" />
-          <h1 className="text-2xl font-bold text-white-800">AgentFlux</h1>
+          <Link href="/" className="text-2xl font-bold text-white-800">AgentFlux</Link>
         </div>
 
         {/* Mobile Menu Toggle */}
@@ -50,21 +51,21 @@ export const Header: React.FC<HeaderProps> = ({ user, scrollToSection }) => {
         <div className="hidden lg:flex space-x-4">
           {user ? (
             <>
-              <button onClick={() => scrollToSection("playground")} className="px-3 py-1.5 text-sm bg-black-600 text-white-600 border border-violet-400 rounded-lg hover:bg-gray-600 transition">
+              <Link href="/playground" className="px-3 py-1.5 text-sm bg-black-600 text-white-600 border border-violet-400 rounded-lg hover:bg-gray-600 transition">
                 Access Playgrounds
-              </button>
+              </Link>
               <button onClick={handleSignOut} className="px-3 py-1.5 text-sm bg-black-600 text-white border border-violet-400 rounded-lg hover:bg-gray-700 transition">
                 Sign Out
               </button>
             </>
           ) : (
             <>
-              <button onClick={() => scrollToSection("signin")} className="px-3 py-1.5 text-sm text-black-600 border border-violet-400 rounded-lg hover:bg-gray-700 transition">
+              <Link href="/signin" className="px-3 py-1.5 text-sm text-black-600 border border-violet-400 rounded-lg hover:bg-gray-700 transition">
                 Sign In
-              </button>
-              <button onClick={() => scrollToSection("signup")} className="px-3 py-1.5 text-sm bg-black-600 text-white border border-violet-400 rounded-lg hover:bg-gray-700 transition">
+              </Link>
+              <Link href="/signup" className="px-3 py-1.5 text-sm bg-black-600 text-white border border-violet-400 rounded-lg hover:bg-gray-700 transition">
                 Sign Up
-              </button>
+              </Link>
             </>
           )}
         </div>
@@ -86,21 +87,21 @@ export const Header: React.FC<HeaderProps> = ({ user, scrollToSection }) => {
               <div className="flex flex-col space-y-4 w-full px-8">
                 {user ? (
                   <div className="flex justify-center flex-col items-center gap-3">
-                    <button onClick={() => { scrollToSection("playground"); toggleMenu(); }} className="w-4/6 text-center px-4 py-2 bg-white text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition">
+                    <Link href="/playground" className="w-4/6 text-center px-4 py-2 bg-white text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition">
                       Access Playgrounds
-                    </button>
+                    </Link>
                     <button onClick={handleSignOut} className="w-3/6 text-center px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
                       Sign Out
                     </button>
                   </div>
                 ) : (
                   <div className="flex justify-center flex-col items-center gap-3">
-                    <button onClick={() => { scrollToSection("signin"); toggleMenu(); }} className="w-3/6 text-center px-4 py-2 bg-white text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition">
+                    <Link href="/signin" className="w-3/6 text-center px-4 py-2 bg-white text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition">
                       Sign In
-                    </button>
-                    <button onClick={() => { scrollToSection("signup"); toggleMenu(); }} className="w-3/6 text-center px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                    </Link>
+                    <Link href="/signup" className="w-3/6 text-center px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
                       Sign Up
-                    </button>
+                    </Link>
                   </div>
                 )}
               </div>
