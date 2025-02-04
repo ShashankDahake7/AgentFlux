@@ -36,13 +36,15 @@ const featureCards = [
   { title: "Custom Workflows", description: "Create tailored workflows for unique use cases.", gradient: "bg-gradient-to-br from-orange-900 to-red-500", image: "/cardPhotos/image5.webp" },
 ];
 
-const CARDS_TO_SHOW = 4; // Number of cards visible at once
+const CARDS_TO_SHOW = { xl: 4, lg: 3, md: 2, sm: 1 };
 
 export const HomePage: React.FC = () => {
   const [user, setUser] = useState<any>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [visibleCards, setVisibleCards] = useState<typeof featureCards>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [cardsToShow, setCardsToShow] = useState(CARDS_TO_SHOW.xl);
+  const totalCards = featureCards.length;
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -66,7 +68,7 @@ export const HomePage: React.FC = () => {
 
   const updateVisibleCards = (startIndex: number) => {
     let cards = [];
-    for (let i = 0; i < CARDS_TO_SHOW; i++) {
+    for (let i = 0; i < cardsToShow; i++) {
       const index = (startIndex + i) % featureCards.length;
       cards.push(featureCards[index]);
     }
@@ -81,16 +83,34 @@ export const HomePage: React.FC = () => {
     setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
   };
 
+  useEffect(() => {
+    const updateCardsToShow = () => {
+      if (window.innerWidth >= 1280) setCardsToShow(CARDS_TO_SHOW.xl);
+      else if (window.innerWidth >= 1024) setCardsToShow(CARDS_TO_SHOW.lg);
+      else if (window.innerWidth >= 768) setCardsToShow(CARDS_TO_SHOW.md);
+      else setCardsToShow(CARDS_TO_SHOW.sm);
+    };
+    updateCardsToShow();
+    window.addEventListener("resize", updateCardsToShow);
+    return () => window.removeEventListener("resize", updateCardsToShow);
+  }, []);
+
+  const slideWidth = (100 / cardsToShow) + 0.4;
   const nextFeature = () => {
-    const nextIndex = (currentIndex + 1) % featureCards.length;
-    setCurrentIndex(nextIndex);
-    updateVisibleCards(nextIndex);
+    setCurrentIndex((prev) => (prev + 1) % totalCards);
+    if ((currentIndex == 2) && (cardsToShow == 4)) {
+      setCurrentIndex(0);
+    }
+    else if ((currentIndex == 3) && (cardsToShow == 3)) {
+      setCurrentIndex(0);
+    }
+    else if ((currentIndex == 4) && (cardsToShow == 2)) {
+      setCurrentIndex(0);
+    }
   };
 
   const prevFeature = () => {
-    const prevIndex = (currentIndex - 1 + featureCards.length) % featureCards.length;
-    setCurrentIndex(prevIndex);
-    updateVisibleCards(prevIndex);
+    setCurrentIndex((prev) => (prev - 1 + totalCards) % totalCards);
   };
 
   const homeRef = useRef<HTMLDivElement | null>(null);
@@ -135,26 +155,25 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* Key Features Section */}
-      <section ref={featureRef} className="container mx-auto px-4 py-20">
-        <h2 className="text-4xl font-cinzel text-left mb-12">Key Features</h2>
-        <div className="relative">
-          <div className="overflow-hidden">
-            <motion.div
-              className="flex gap-6"
-              animate={{ x: 0 }}
-              transition={{ duration: 0.5 }}
+      <section className="container mx-auto px-4 py-24">
+        <h2 className="text-4xl font-bold text-center mb-12">Key Features</h2>
+        <div className="relative w-full">
+          <div className="overflow-hidden w-full">
+            <div
+              className="flex flex-nowrap transition-transform duration-500 ease-in-out gap-6"
+              style={{ transform: `translateX(-${currentIndex * slideWidth}%)` }}
             >
-              {visibleCards.map((card, index) => (
-                <div key={`${card.title}-${index}`} className="xl:min-w-[calc((100%/4)-1rem)] lg:min-w-[calc((100%/3)-1rem)] md:min-w-[calc((100%/2)-1rem)] min-w-[calc((100%)-1rem)] ">
-                  <FeatureCard
-                    title={card.title}
-                    description={card.description}
-                    gradient={card.gradient}
-                    image={card.image}
-                  />
+
+              {[...featureCards, ...featureCards.slice(0, cardsToShow)].map((card, index) => (
+                <div
+                  key={index}
+                  className="xl:min-w-[calc((100%/4)-1rem)] lg:min-w-[calc((100%/3)-1rem)] md:min-w-[calc((100%/2)-1rem)] min-w-[calc((100%)-1rem)] "
+                  style={{ width: `${slideWidth}%` }}
+                >
+                  <FeatureCard title={card.title} description={card.description} gradient={card.gradient} image={card.image} />
                 </div>
               ))}
-            </motion.div>
+            </div>
           </div>
 
           <button
