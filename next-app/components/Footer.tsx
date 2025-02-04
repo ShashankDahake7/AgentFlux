@@ -25,8 +25,8 @@ export const Footer = () => {
         </div>
         <div>
           <h4 className="font-cinzel font-bold mb-3">Contact</h4>
-          <p className="font-quintessential text-gray-300">mail@agentflux.com</p>
-          <p className="font-quintessential text-gray-300">XXX</p>
+          <p className="font-quintessential text-gray-300">agentflux@gmail.com</p>
+          <p className="font-quintessential text-gray-300">9874651327</p>
         </div>
       </div>
     </footer>

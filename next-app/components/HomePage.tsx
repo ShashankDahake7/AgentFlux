@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import FeatureCard from './FeatureCard';
@@ -93,12 +93,26 @@ export const HomePage: React.FC = () => {
     updateVisibleCards(prevIndex);
   };
 
+  const homeRef = useRef<HTMLDivElement | null>(null);
+  const featureRef = useRef<HTMLDivElement | null>(null);
+  const aboutRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollToSection = (section: string) => {
+    if (section === "home" && homeRef.current) {
+      homeRef.current.scrollIntoView({ behavior: "smooth" });
+    } else if (section === "features" && featureRef.current) {
+      featureRef.current.scrollIntoView({ behavior: "smooth" });
+    } else if (section === "about" && aboutRef.current) {
+      aboutRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black text-white relative">
-      <Header user={user} />
+      <Header user={user} scrollToSection={scrollToSection} />
 
       {/* Slides Section */}
-      <div className="relative w-full overflow-hidden lg:h-[700px] md:h-[600px] h-[500px] flex items-center justify-center">
+      <section ref={homeRef} className="relative w-full overflow-hidden lg:h-[700px] md:h-[600px] h-[500px] flex items-center justify-center">
         <motion.div
           key={currentSlide}
           initial={{ opacity: 0, x: 50 }}
@@ -118,10 +132,10 @@ export const HomePage: React.FC = () => {
         <button onClick={nextSlide} className="absolute right-8 p-2 bg-gray-800 rounded-full hover:bg-gray-700 transition">
           <ChevronRight size={32} />
         </button>
-      </div>
+      </section>
 
       {/* Key Features Section */}
-      <section className="container mx-auto px-4 py-20">
+      <section ref={featureRef} className="container mx-auto px-4 py-20">
         <h2 className="text-4xl font-cinzel text-left mb-12">Key Features</h2>
         <div className="relative">
           <div className="overflow-hidden">
@@ -145,23 +159,22 @@ export const HomePage: React.FC = () => {
 
           <button
             onClick={prevFeature}
-            className="absolute top-1/2 left-[-10px] transform -translate-y-1/2 bg-gray-800 text-white p-3 rounded-full shadow-md z-10 
-                        hover:bg-gray-700 hover:scale-110 transition-all"
+            className="absolute top-1/2 left-[-10px] transform -translate-y-1/2 bg-gray-800 text-white p-3 rounded-full shadow-md z-10 hover:bg-gray-700 hover:scale-110 transition-all"
           >
             <ChevronLeft size={28} />
           </button>
 
           <button
             onClick={nextFeature}
-            className="absolute top-1/2 right-[-10px] transform -translate-y-1/2 bg-gray-800 text-white p-3 rounded-full shadow-md z-10
-               hover:bg-gray-700 hover:scale-110 transition-all"
+            className="absolute top-1/2 right-[-10px] transform -translate-y-1/2 bg-gray-800 text-white p-3 rounded-full shadow-md z-10 hover:bg-gray-700 hover:scale-110 transition-all"
           >
             <ChevronRight size={28} />
           </button>
         </div>
       </section>
-
-      <Footer />
+      <div ref={aboutRef}>
+        <Footer />
+      </div>
     </div>
   );
 };
