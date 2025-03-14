@@ -11,7 +11,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const slides = [
   {
-    title: 'AgentFlux',
+    title: 'AgentFlux Redesign Agents',
     description: 'AI-powered agent engineering for smarter, more reliable AI workflows with seamless optimization and guardrails',
     gradient: 'bg-gradient-to-br from-violet-700 to-red-300'
   },
@@ -132,7 +132,7 @@ export const HomePage: React.FC = () => {
       <Header user={user} scrollToSection={scrollToSection} />
 
       {/* Slides Section */}
-      <section ref={homeRef} className="relative w-full overflow-hidden lg:h-[700px] md:h-[600px] h-[500px] flex items-center justify-center">
+      <section ref={homeRef} className="relative w-full overflow-hidden lg:h-[750px] md:h-[600px] h-[500px] flex items-center justify-center">
         <motion.div
           key={currentSlide}
           initial={{ opacity: 0, x: 50 }}
@@ -155,8 +155,8 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* Key Features Section */}
-      <section className="container mx-auto px-4 py-24">
-        <h2 className="text-4xl font-bold text-center mb-12">Key Features</h2>
+      <section ref={featureRef} className="container mx-auto px-4 py-24">
+        <h2 className="text-4xl font-cinzel text-center mb-12">Key Features</h2>
         <div className="relative w-full">
           <div className="overflow-hidden w-full">
             <div
@@ -178,14 +178,14 @@ export const HomePage: React.FC = () => {
 
           <button
             onClick={prevFeature}
-            className="absolute top-1/2 left-[-10px] transform -translate-y-1/2 bg-gray-800 text-white p-3 rounded-full shadow-md z-10 hover:bg-gray-700 hover:scale-110 transition-all"
+            className="absolute top-1/2 left-[-28px] transform -translate-y-1/2 bg-gray-800 text-white p-3 rounded-full shadow-md z-10 hover:bg-gray-700 hover:scale-110 transition-all"
           >
             <ChevronLeft size={28} />
           </button>
 
           <button
             onClick={nextFeature}
-            className="absolute top-1/2 right-[-10px] transform -translate-y-1/2 bg-gray-800 text-white p-3 rounded-full shadow-md z-10 hover:bg-gray-700 hover:scale-110 transition-all"
+            className="absolute top-1/2 right-[-28px] transform -translate-y-1/2 bg-gray-800 text-white p-3 rounded-full shadow-md z-10 hover:bg-gray-700 hover:scale-110 transition-all"
           >
             <ChevronRight size={28} />
           </button>
