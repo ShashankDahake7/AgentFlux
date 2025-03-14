@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useState } from 'react';
 import { BrainCircuit, Menu, X } from 'lucide-react';
 import { signOut } from 'firebase/auth';
@@ -42,28 +40,28 @@ export const Header: React.FC<HeaderProps> = ({ user, scrollToSection }) => {
 
         {/* Desktop Navigation */}
         <nav className="hidden lg:flex space-x-6">
-          <button onClick={() => scrollToSection("home")} className="text-white-600 hover:text-blue-600 transition">Home</button>
-          <button onClick={() => scrollToSection("features")} className="text-white-600 hover:text-blue-600 transition">Features</button>
-          <button onClick={() => scrollToSection("about")} className="text-white-600 hover:text-blue-600 transition">About</button>
+          <button onClick={() => scrollToSection("home")} className="text-white-600 font-cinzel hover:text-violet-300 transition">Home</button>
+          <button onClick={() => scrollToSection("features")} className="text-white-600 font-cinzel hover:text-violet-300 transition">Features</button>
+          <button onClick={() => scrollToSection("about")} className="text-white-600 font-cinzel hover:text-violet-300 transition">About</button>
         </nav>
 
         {/* Desktop Auth Buttons */}
         <div className="hidden lg:flex space-x-4">
           {user ? (
             <>
-              <Link href="/playground" className="px-3 py-1.5 text-sm bg-black-600 text-white-600 border border-violet-400 rounded-lg hover:bg-gray-600 transition">
+              <Link href="/playground" className="px-3 py-1.5 text-sm font-merriweather bg-black-600 text-white-600 border border-violet-400 rounded-lg hover:bg-gray-600 transition">
                 Access Playgrounds
               </Link>
-              <button onClick={handleSignOut} className="px-3 py-1.5 text-sm bg-black-600 text-white border border-violet-400 rounded-lg hover:bg-gray-700 transition">
+              <button onClick={handleSignOut} className="px-3 py-1.5 text-sm font-merriweather bg-black-600 text-white border border-violet-400 rounded-lg hover:bg-gray-700 transition">
                 Sign Out
               </button>
             </>
           ) : (
             <>
-              <Link href="/signin" className="px-3 py-1.5 text-sm text-black-600 border border-violet-400 rounded-lg hover:bg-gray-700 transition">
+              <Link href="/signin" className="px-3 py-1.5 text-sm font-merriweather text-black-600 border border-violet-400 rounded-lg hover:bg-gray-700 transition">
                 Sign In
               </Link>
-              <Link href="/signup" className="px-3 py-1.5 text-sm bg-black-600 text-white border border-violet-400 rounded-lg hover:bg-gray-700 transition">
+              <Link href="/signup" className="px-3 py-1.5 text-sm font-merriweather bg-black-600 text-white border border-violet-400 rounded-lg hover:bg-gray-700 transition">
                 Sign Up
               </Link>
             </>
