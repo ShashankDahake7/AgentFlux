@@ -5,7 +5,7 @@ import Playground from "@/models/Playground";
 import Sheet from "@/models/Sheet";
 import admin from "firebase-admin";
 
-// Initialize Firebase Admin if not already
+// Initialize Firebase Admin if not already initialized.
 if (!admin.apps.length) {
     const serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_CRED || "{}");
     admin.initializeApp({
@@ -24,7 +24,8 @@ export async function POST(request: Request) {
         const uid = decodedToken.uid;
 
         await dbConnect();
-        // Create sample playground only if not initialized yet.
+
+        // Only initialize if the user has no playgrounds yet.
         const existing = await Playground.findOne({ userId: uid });
         if (existing) {
             return NextResponse.json({ message: "User already initialized." });
@@ -38,26 +39,29 @@ export async function POST(request: Request) {
             updatedAt: new Date()
         });
 
-        const dummyCode = `// Sample AI Agent Graph Code
-function agentGraph() {
-  return {
-    nodes: [
-      { id: "start", label: "Start Node", x: 50, y: 50 },
-      { id: "end", label: "End Node", x: 200, y: 200 }
-    ],
-    edges: [
-      { from: "start", to: "end", label: "Flow" }
-    ]
-  };
-}
-agentGraph();`;
+        const dummyFile = {
+            filename: "main.py",
+            language: "python",
+            code: `# Sample AI Agent Graph Code
+def agentGraph():
+    return {
+        "nodes": [
+            {"id": "start", "label": "Start Node", "x": 50, "y": 50},
+            {"id": "end", "label": "End Node", "x": 200, "y": 200}
+        ],
+        "edges": [
+            {"from": "start", "to": "end", "label": "Flow"}
+        ]
+    }
+
+print(agentGraph())`
+        };
 
         await Sheet.create({
             playgroundId: samplePlayground._id,
             title: "Sample Agent Graph",
-            code: dummyCode,
-            canvasData: { nodes: [], edges: [] },
-            language: "js",
+            files: [dummyFile],
+            canvasData: {},
             createdAt: new Date(),
             updatedAt: new Date()
         });
