@@ -1,5 +1,4 @@
 "use client";
-
 // Shim browser globals for xterm.
 if (typeof window !== "undefined" && typeof self === "undefined") {
   (window as any).self = window;
@@ -50,9 +49,11 @@ const MIN_VISIBLE_TERMINAL_HEIGHT = 100;
 const TERMINAL_HEADER_HEIGHT = 40;
 
 /* ========= MODALS ========= */
+// (Modal components remain the same as before)
 const Modal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose, children }) => (
   <div
-    className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 transition-opacity duration-300 ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+    className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 transition-opacity duration-300 ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+      }`}
   >
     <div className="bg-black border border-gray-700 p-6 rounded-lg shadow-xl max-w-md w-full transform transition-transform duration-300">
       <button onClick={onClose} className="absolute top-2 right-2 text-gray-400 hover:text-gray-200 text-2xl">
@@ -63,7 +64,11 @@ const Modal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onC
   </div>
 );
 
-const AddPlaygroundModal: React.FC<{ isOpen: boolean; onClose: () => void; onSubmit: (name: string, description: string) => void; }> = ({ isOpen, onClose, onSubmit }) => {
+const AddPlaygroundModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (name: string, description: string) => void;
+}> = ({ isOpen, onClose, onSubmit }) => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const handleSubmit = () => {
@@ -76,14 +81,31 @@ const AddPlaygroundModal: React.FC<{ isOpen: boolean; onClose: () => void; onSub
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <h2 className="text-xl font-bold text-gray-200 mb-4">Add Playground</h2>
-      <input type="text" placeholder="Playground Name" value={name} onChange={(e) => setName(e.target.value)} className="w-full p-2 rounded bg-gray-800 text-gray-200 border border-gray-700 focus:outline-none mb-2" />
-      <textarea placeholder="Description (optional)" value={description} onChange={(e) => setDescription(e.target.value)} className="w-full p-2 rounded bg-gray-800 text-gray-200 border border-gray-700 focus:outline-none mb-4 resize-none"></textarea>
-      <button onClick={handleSubmit} className="w-full py-2 bg-gray-700 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300">Submit</button>
+      <input
+        type="text"
+        placeholder="Playground Name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        className="w-full p-2 rounded bg-gray-800 text-gray-200 border border-gray-700 focus:outline-none mb-2"
+      />
+      <textarea
+        placeholder="Description (optional)"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        className="w-full p-2 rounded bg-gray-800 text-gray-200 border border-gray-700 focus:outline-none mb-4 resize-none"
+      ></textarea>
+      <button onClick={handleSubmit} className="w-full py-2 bg-gray-700 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300">
+        Submit
+      </button>
     </Modal>
   );
 };
 
-const AddSheetModal: React.FC<{ isOpen: boolean; onClose: () => void; onSubmit: (title: string) => void; }> = ({ isOpen, onClose, onSubmit }) => {
+const AddSheetModal: React.FC<{ isOpen: boolean; onClose: () => void; onSubmit: (title: string) => void }> = ({
+  isOpen,
+  onClose,
+  onSubmit,
+}) => {
   const [title, setTitle] = useState("");
   const handleSubmit = () => {
     if (!title.trim()) return alert("Sheet title is required");
@@ -94,13 +116,25 @@ const AddSheetModal: React.FC<{ isOpen: boolean; onClose: () => void; onSubmit: 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <h2 className="text-xl font-bold text-gray-200 mb-4">Add Sheet</h2>
-      <input type="text" placeholder="Sheet Title" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full p-2 rounded bg-gray-800 text-gray-200 border border-gray-700 focus:outline-none mb-4" />
-      <button onClick={handleSubmit} className="w-full py-2 bg-gray-700 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300">Submit</button>
+      <input
+        type="text"
+        placeholder="Sheet Title"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        className="w-full p-2 rounded bg-gray-800 text-gray-200 border border-gray-700 focus:outline-none mb-4"
+      />
+      <button onClick={handleSubmit} className="w-full py-2 bg-gray-700 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300">
+        Submit
+      </button>
     </Modal>
   );
 };
 
-const UploadFileModal: React.FC<{ isOpen: boolean; onClose: () => void; onSubmit: (file: File) => void; }> = ({ isOpen, onClose, onSubmit }) => {
+const UploadFileModal: React.FC<{ isOpen: boolean; onClose: () => void; onSubmit: (file: File) => void }> = ({
+  isOpen,
+  onClose,
+  onSubmit,
+}) => {
   const [fileInput, setFileInput] = useState<File | null>(null);
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) setFileInput(e.target.files[0]);
@@ -115,18 +149,30 @@ const UploadFileModal: React.FC<{ isOpen: boolean; onClose: () => void; onSubmit
     <Modal isOpen={isOpen} onClose={onClose}>
       <h2 className="text-xl font-bold text-gray-200 mb-4">Upload File</h2>
       <input type="file" accept=".py,.js,.env" onChange={handleFileChange} className="mb-4" />
-      <button onClick={handleSubmit} className="w-full py-2 bg-gray-700 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300">Upload</button>
+      <button onClick={handleSubmit} className="w-full py-2 bg-gray-700 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300">
+        Upload
+      </button>
     </Modal>
   );
 };
 
-const AdvancedSettingsModal: React.FC<{ isOpen: boolean; onClose: () => void; playground: Playground | null; onDeletePlayground: () => void; onDeleteSheets: () => void; }> = ({ isOpen, onClose, playground, onDeletePlayground, onDeleteSheets }) => {
+const AdvancedSettingsModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  playground: Playground | null;
+  onDeletePlayground: () => void;
+  onDeleteSheets: () => void;
+}> = ({ isOpen, onClose, playground, onDeletePlayground, onDeleteSheets }) => {
   if (!playground) return null;
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <h2 className="text-xl font-bold text-gray-200 mb-4">Advanced Settings: {playground.name}</h2>
-      <button onClick={onDeletePlayground} className="w-full py-2 bg-red-700 hover:bg-red-600 rounded text-gray-200 transition-colors duration-300 mb-2">Delete Playground</button>
-      <button onClick={onDeleteSheets} className="w-full py-2 bg-yellow-700 hover:bg-yellow-600 rounded text-gray-200 transition-colors duration-300">Delete All Sheets</button>
+      <button onClick={onDeletePlayground} className="w-full py-2 bg-red-700 hover:bg-red-600 rounded text-gray-200 transition-colors duration-300 mb-2">
+        Delete Playground
+      </button>
+      <button onClick={onDeleteSheets} className="w-full py-2 bg-yellow-700 hover:bg-yellow-600 rounded text-gray-200 transition-colors duration-300">
+        Delete All Sheets
+      </button>
     </Modal>
   );
 };
@@ -158,7 +204,12 @@ const Sidebar: React.FC<SidebarProps> = ({ playgrounds, selectedId, onSelect, on
         {playgrounds.map((pg) => (
           <li key={pg._id} className={`p-2 rounded cursor-pointer mb-2 ${selectedId === pg._id ? "bg-gray-700" : "hover:bg-gray-800"}`}>
             <div className="flex items-center justify-between">
-              <div className="flex items-center" onClick={() => { if (selectedId !== pg._id) onSelect(pg); }}>
+              <div
+                className="flex items-center"
+                onClick={() => {
+                  if (selectedId !== pg._id) onSelect(pg);
+                }}
+              >
                 <Image src={getLogoForPlayground(pg._id)} alt="Logo" width={20} height={20} className="mr-2" />
                 <span>{pg.name}</span>
               </div>
@@ -169,122 +220,126 @@ const Sidebar: React.FC<SidebarProps> = ({ playgrounds, selectedId, onSelect, on
           </li>
         ))}
       </ul>
-      <button onClick={onAdd} className="mt-2 py-2 bg-gray-700 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300">Add Playground</button>
+      <button onClick={onAdd} className="mt-2 py-2 bg-gray-700 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300">
+        Add Playground
+      </button>
     </div>
   );
 };
 
 /* ========= TERMINAL PANEL ========= */
-// In this component, the WebSocket connection is created only when the "Run Code" button 
-// is clicked (which increments runTrigger). Other initialization is done on mount.
 interface TerminalPanelProps {
-  files: FileType[];
+  sheetId: string;
+  playgroundId: string;
   terminalHeight: number;
   onResizeStart: (e: MouseEvent<HTMLDivElement>) => void;
   onClose: () => void;
   runTrigger?: number;
 }
 
-const TerminalPanel: React.FC<TerminalPanelProps> = ({ files, terminalHeight, onResizeStart, onClose, runTrigger }) => {
+// TerminalPanel buffers keystrokes locally and sends the full command (with newline) upon Enter.
+// It uses Socket.IO to connect to your dedicated Node server.
+const TerminalPanel: React.FC<TerminalPanelProps> = ({
+  sheetId,
+  playgroundId,
+  terminalHeight,
+  onResizeStart,
+  onClose,
+  runTrigger,
+}) => {
   const terminalRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<any>(null);
   const fitAddonRef = useRef<any>(null);
-  const wsRef = useRef<WebSocket | null>(null);
-  const initializedRef = useRef<boolean>(false);
+  const socketRef = useRef<any>(null);
+  const commandBufferRef = useRef<string>("");
 
-  // Initialize terminal (xterm and fit addon) only once on mount.
   useEffect(() => {
-    if (initializedRef.current) return;
-    initializedRef.current = true;
-    if (typeof window !== "undefined") {
-      if (typeof self === "undefined") {
-        (window as any).self = window;
-      }
-      import("xterm").then(({ Terminal }) => {
-        import("xterm-addon-fit").then(({ FitAddon }) => {
-          const term = new Terminal({
-            convertEol: true,
-            cursorBlink: true,
-            theme: { background: "#000", foreground: "#fff" },
-          });
-          const fitAddon = new FitAddon();
-          term.loadAddon(fitAddon);
-          termRef.current = term;
-          fitAddonRef.current = fitAddon;
-          if (terminalRef.current) {
-            term.open(terminalRef.current);
-            term.focus();
-            // Use double requestAnimationFrame to ensure dimensions are set.
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                try {
-                  fitAddon.fit();
-                } catch (e) {
-                  console.error("Terminal fit error on mount:", e);
-                }
-              });
-            });
+    if (termRef.current) return; // already initialized
+    import("xterm").then(({ Terminal }) => {
+      const term = new Terminal({
+        convertEol: true,
+        cursorBlink: true,
+        theme: { background: "#000", foreground: "#fff" },
+      });
+      termRef.current = term;
+      import("xterm-addon-fit").then(({ FitAddon }) => {
+        const fitAddon = new FitAddon();
+        fitAddonRef.current = fitAddon;
+        term.loadAddon(fitAddon);
+        if (terminalRef.current) {
+          term.open(terminalRef.current);
+          term.focus();
+          setTimeout(() => {
+            try {
+              fitAddon.fit();
+            } catch (e) {
+              console.error("Terminal fit error on mount:", e);
+            }
+          }, 100);
+        }
+        term.onKey(({ key, domEvent }) => {
+          if (domEvent.key === "Enter") {
+            term.write("\r\n");
+            const command = commandBufferRef.current + "\n";
+            if (socketRef.current && socketRef.current.connected) {
+              socketRef.current.emit("input", { input: command });
+            }
+            commandBufferRef.current = "";
+          } else if (domEvent.key === "Backspace") {
+            if (commandBufferRef.current.length > 0) {
+              commandBufferRef.current = commandBufferRef.current.slice(0, -1);
+              term.write("\b \b");
+            }
+          } else if (domEvent.key.length === 1 && !domEvent.ctrlKey && !domEvent.altKey) {
+            commandBufferRef.current += domEvent.key;
+            term.write(key);
           }
         });
       });
-    }
+    });
     return () => {
-      wsRef.current?.close();
+      socketRef.current && socketRef.current.disconnect();
       termRef.current?.dispose();
     };
   }, []);
 
-  // Create a new WebSocket connection only when runTrigger is incremented.
   useEffect(() => {
-    if (runTrigger === undefined || runTrigger === 0) return;
-    if (wsRef.current) {
-      wsRef.current.close();
+    if (!runTrigger || runTrigger === 0) return;
+    if (socketRef.current) {
+      socketRef.current.disconnect();
     }
-    if (typeof window !== "undefined") {
-      const loc = window.location;
-      const wsProtocol = loc.protocol === "https:" ? "wss" : "ws";
-      const endpoint = `${wsProtocol}://${loc.host}/api/terminal`;
-      const ws = new WebSocket(endpoint);
-      wsRef.current = ws;
-      ws.onopen = () => {
-        console.log("WebSocket connected");
-        ws.send(JSON.stringify({ action: "start", files }));
-      };
-      ws.onmessage = (event) => {
-        termRef.current?.write(event.data);
-      };
-      // Forward xterm input to server.
-      termRef.current?.onData((data: string) => {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({ action: "input", input: data }));
-        }
+    (async () => {
+      // Connect to the separate Node server. Set NEXT_PUBLIC_WS_URL in your env variables.
+      const backendUrl = process.env.NEXT_PUBLIC_WS_URL || "http://localhost:3001";
+      const { io } = await import("socket.io-client");
+      const socket = io(backendUrl);
+      socketRef.current = socket;
+      socket.on("connect", () => {
+        termRef.current?.write("Connected to backend.\r\n");
+        socket.emit("start", { sheetId, playgroundId });
       });
-      ws.onerror = (err) => {
-        console.error("WebSocket error:", err);
-        termRef.current?.writeln("\r\n[Error] WebSocket encountered an error.");
-      };
-      ws.onclose = () => {
+      socket.on("message", (msg: string) => {
+        termRef.current?.write(msg);
+      });
+      socket.on("disconnect", () => {
         termRef.current?.writeln("\r\nConnection closed.");
-      };
-      return () => {
-        ws.close();
-      };
-    }
-  }, [runTrigger, files]);
+      });
+      socket.on("connect_error", (err: any) => {
+        termRef.current?.writeln("\r\n[Error] " + err);
+      });
+    })();
+  }, [runTrigger, sheetId, playgroundId]);
 
-  // On terminalHeight changes (when visible), re-fit and focus.
   useEffect(() => {
     if (terminalRef.current && terminalHeight >= MIN_VISIBLE_TERMINAL_HEIGHT) {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          try {
-            fitAddonRef.current?.fit();
-          } catch (e) {
-            console.error("Terminal fit error on height change:", e);
-          }
-          termRef.current?.focus();
-        });
-      });
+      setTimeout(() => {
+        try {
+          fitAddonRef.current?.fit();
+        } catch (e) {
+          console.error("Terminal fit error on height change:", e);
+        }
+        termRef.current?.focus();
+      }, 100);
     }
   }, [terminalHeight]);
 
@@ -303,7 +358,6 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ files, terminalHeight, on
         height: terminalHeight,
       }}
     >
-      {/* Terminal Header */}
       <div
         style={{
           height: `${TERMINAL_HEADER_HEIGHT}px`,
@@ -321,18 +375,11 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({ files, terminalHeight, on
         </span>
         <button
           onClick={onClose}
-          style={{
-            color: "#fff",
-            fontSize: "24px",
-            background: "transparent",
-            border: "none",
-            cursor: "pointer",
-          }}
+          style={{ color: "#fff", fontSize: "24px", background: "transparent", border: "none", cursor: "pointer" }}
         >
           &times;
         </button>
       </div>
-      {/* Terminal Content */}
       <div
         ref={terminalRef}
         style={{
@@ -361,7 +408,6 @@ export default function PlaygroundsPage() {
   const [sidebarWidth, setSidebarWidth] = useState<number>(250);
   const [editorHeight, setEditorHeight] = useState<number>(300);
   const [fileSidebarWidth, setFileSidebarWidth] = useState<number>(200);
-  // Terminal panel: if height is less than MIN_VISIBLE_TERMINAL_HEIGHT, only the header is shown.
   const [terminalHeight, setTerminalHeight] = useState<number>(TERMINAL_HEADER_HEIGHT);
   const [graphDropdownOpen, setGraphDropdownOpen] = useState(false);
   const [runTrigger, setRunTrigger] = useState(0);
@@ -375,7 +421,6 @@ export default function PlaygroundsPage() {
   const [advancedModalOpen, setAdvancedModalOpen] = useState(false);
   const [advancedPlayground, setAdvancedPlayground] = useState<Playground | null>(null);
 
-  // Resizing functions.
   const handleSidebarMouseDown = () => {
     const minWidth = 150, maxWidth = 350;
     const onMouseMove = (e: MouseEvent) => {
@@ -421,7 +466,7 @@ export default function PlaygroundsPage() {
     e.stopPropagation();
     const startY = e.clientY;
     const startHeight = terminalHeight;
-    const minHeight = TERMINAL_HEADER_HEIGHT; // Always show header
+    const minHeight = TERMINAL_HEADER_HEIGHT;
     const maxHeight = window.innerHeight - 100;
     const onMouseMove = (event: MouseEvent) => {
       let newHeight = startHeight + (startY - event.clientY);
@@ -443,7 +488,6 @@ export default function PlaygroundsPage() {
     }
   }, [editorHeight, sidebarWidth, fileSidebarWidth]);
 
-  // Authentication.
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
@@ -482,7 +526,9 @@ export default function PlaygroundsPage() {
 
   const fetchSheets = async (playgroundId: string) => {
     try {
-      const res = await fetch(`/api/playgrounds/${playgroundId}/sheets`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(`/api/playgrounds/${playgroundId}/sheets`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await res.json();
       if (data.sheets) {
         setSheets(data.sheets);
@@ -502,18 +548,24 @@ export default function PlaygroundsPage() {
     }
   }, [selectedSheet]);
 
-  // File Upload Handling.
   const handleUploadFile = (file: File) => {
     const reader = new FileReader();
     reader.onload = async () => {
       const content = reader.result as string;
-      const language = file.name.endsWith(".js") ? "javascript" : file.name.endsWith(".py") ? "python" : "";
+      const language = file.name.endsWith(".js")
+        ? "javascript"
+        : file.name.endsWith(".py")
+          ? "python"
+          : "";
       try {
-        const res = await fetch(`/api/playgrounds/${selectedPlayground?._id}/sheets/${selectedSheet?._id}/file`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ filename: file.name, code: content, language })
-        });
+        const res = await fetch(
+          `/api/playgrounds/${selectedPlayground?._id}/sheets/${selectedSheet?._id}/file`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ filename: file.name, code: content, language }),
+          }
+        );
         const data = await res.json();
         if (data.sheet) await fetchSheets(selectedPlayground._id);
       } catch (error) {
@@ -523,13 +575,12 @@ export default function PlaygroundsPage() {
     reader.readAsText(file);
   };
 
-  // Add Playground.
   const handleAddPlayground = async (name: string, description: string) => {
     try {
       const res = await fetch("/api/playgrounds", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name, description })
+        body: JSON.stringify({ name, description }),
       });
       const data = await res.json();
       if (data.playground) {
@@ -541,14 +592,13 @@ export default function PlaygroundsPage() {
     }
   };
 
-  // Add Sheet.
   const handleAddSheet = async (title: string) => {
     if (!selectedPlayground) return;
     try {
       const res = await fetch(`/api/playgrounds/${selectedPlayground._id}/sheets`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ title })
+        body: JSON.stringify({ title }),
       });
       const data = await res.json();
       if (data.sheet) {
@@ -560,19 +610,18 @@ export default function PlaygroundsPage() {
     }
   };
 
-  // Save Files.
   const handleSaveFiles = async () => {
     if (!selectedSheet || !selectedPlayground) return;
     try {
       const res = await fetch(`/api/playgrounds/${selectedPlayground._id}/sheets/${selectedSheet._id}/file`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ files: selectedSheet.files })
+        body: JSON.stringify({ files: selectedSheet.files }),
       });
       const data = await res.json();
       if (data.sheet) {
         alert("Files saved successfully!");
-        setSheets((prev) => prev.map((sheet) => sheet._id === data.sheet._id ? data.sheet : sheet));
+        setSheets((prev) => prev.map((sheet) => (sheet._id === data.sheet._id ? data.sheet : sheet)));
       }
     } catch (error) {
       console.error("Error saving files", error);
@@ -580,7 +629,6 @@ export default function PlaygroundsPage() {
     }
   };
 
-  // Delete File.
   const handleDeleteFile = async (filename: string) => {
     if (!selectedSheet || !selectedPlayground) return;
     if (!confirm(`Are you sure you want to delete ${filename}?`)) return;
@@ -588,12 +636,12 @@ export default function PlaygroundsPage() {
       const res = await fetch(`/api/playgrounds/${selectedPlayground._id}/sheets/${selectedSheet._id}/file`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ filename })
+        body: JSON.stringify({ filename }),
       });
       const data = await res.json();
       if (data.sheet) {
         alert("File deleted successfully!");
-        setSheets((prev) => prev.map((sheet) => sheet._id === data.sheet._id ? data.sheet : sheet));
+        setSheets((prev) => prev.map((sheet) => (sheet._id === data.sheet._id ? data.sheet : sheet)));
       }
     } catch (error) {
       console.error("Error deleting file", error);
@@ -601,7 +649,6 @@ export default function PlaygroundsPage() {
     }
   };
 
-  // Advanced Settings.
   const openAdvancedSettings = (pg: Playground) => {
     setAdvancedPlayground(pg);
     setAdvancedModalOpen(true);
@@ -613,7 +660,7 @@ export default function PlaygroundsPage() {
       const res = await fetch("/api/playgrounds", {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ playgroundId: advancedPlayground._id })
+        body: JSON.stringify({ playgroundId: advancedPlayground._id }),
       });
       const data = await res.json();
       if (data.message) {
@@ -629,7 +676,10 @@ export default function PlaygroundsPage() {
   const handleDeleteSheets = async () => {
     if (!advancedPlayground) return;
     try {
-      const res = await fetch(`/api/playgrounds/${advancedPlayground._id}/sheets`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(`/api/playgrounds/${advancedPlayground._id}/sheets`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await res.json();
       if (data.message) {
         alert("Sheets deleted!");
@@ -644,7 +694,6 @@ export default function PlaygroundsPage() {
     }
   };
 
-  // Graph Pane Options.
   const handleRestructureGraph = () => {
     alert("Graph restructured!");
     setGraphDropdownOpen(false);
@@ -655,7 +704,6 @@ export default function PlaygroundsPage() {
     setGraphDropdownOpen(false);
   };
 
-  // Keyboard Shortcut for Save (Ctrl+S).
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
@@ -667,7 +715,6 @@ export default function PlaygroundsPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [selectedSheet, selectedPlayground, token, sheets]);
 
-  // "Run Code" handler: if terminal is minimized, expand it and then trigger a new run.
   const handleRunCode = () => {
     if (terminalHeight < MIN_VISIBLE_TERMINAL_HEIGHT) {
       setTerminalHeight(200);
@@ -679,9 +726,7 @@ export default function PlaygroundsPage() {
     <div className="flex flex-col h-screen bg-black text-white relative overflow-hidden">
       {/* Header */}
       <header className="h-12 bg-black border-b border-gray-700 flex items-center px-4">
-        <div className="px-3 py-1 border border-gray-700 rounded text-sm">
-          {user?.email || "Not Signed In"}
-        </div>
+        <div className="px-3 py-1 border border-gray-700 rounded text-sm">{user?.email || "Not Signed In"}</div>
       </header>
       {/* Main Layout */}
       <div className="flex flex-1 overflow-hidden">
@@ -721,21 +766,23 @@ export default function PlaygroundsPage() {
                     language={selectedFile?.language || "python"}
                     theme="vs-dark"
                     value={selectedFile?.code || ""}
-                    onMount={(editor) => { monacoEditorRef.current = editor; }}
+                    onMount={(editor) => {
+                      monacoEditorRef.current = editor;
+                    }}
                     onChange={(newValue) => {
                       if (selectedFile && selectedSheet) {
                         const updatedFile = { ...selectedFile, code: newValue || "" };
                         setSelectedFile(updatedFile);
                         setSelectedSheet({
                           ...selectedSheet,
-                          files: selectedSheet.files.map((file) => file.filename === updatedFile.filename ? updatedFile : file)
+                          files: selectedSheet.files.map((file) => (file.filename === updatedFile.filename ? updatedFile : file)),
                         });
                       }
                     }}
                     options={{
                       automaticLayout: true,
                       wordWrap: "on",
-                      minimap: { enabled: true, side: "right" }
+                      minimap: { enabled: true, side: "right" },
                     }}
                   />
                   <button
@@ -751,7 +798,7 @@ export default function PlaygroundsPage() {
                       border: "none",
                       borderRadius: "4px",
                       padding: "8px 12px",
-                      cursor: "pointer"
+                      cursor: "pointer",
                     }}
                   >
                     Run Code
@@ -767,13 +814,19 @@ export default function PlaygroundsPage() {
                         </span>
                         <button onClick={() => handleDeleteFile(file.filename)} title="Delete File" className="text-gray-400 hover:text-red-500 focus:outline-none ml-2">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M6 4a1 1 0 011-1h6a1 1 0 011 1v1h3a1 1 0 110 2h-1v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7H2a1 1 0 110-2h3V4zm2 3a1 1 0 00-1 1v7a1 1 0 102 0V8a1 1 0 00-1-1zm4 0a1 1 0 00-1 1v7a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                            <path
+                              fillRule="evenodd"
+                              d="M6 4a1 1 0 011-1h6a1 1 0 011 1v1h3a1 1 0 110 2h-1v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7H2a1 1 0 110-2h3V4zm2 3a1 1 0 00-1 1v7a1 1 0 102 0V8a1 1 0 00-1-1zm4 0a1 1 0 00-1 1v7a1 1 0 102 0V8a1 1 0 00-1-1z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         </button>
                       </li>
                     ))}
                   </ul>
-                  <button onClick={handleSaveFiles} className="w-full mb-[30px] py-2 bg-gray-700 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300">Save</button>
+                  <button onClick={handleSaveFiles} className="w-full mb-[30px] py-2 bg-gray-700 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300">
+                    Save
+                  </button>
                   <Draggable axis="x" position={{ x: 0, y: 0 }} onDrag={handleDrag}>
                     <div className="absolute top-0 left-[-5px] h-full w-3 bg-gray-600 hover:bg-gray-500 cursor-ew-resize transition-colors duration-200" />
                   </Draggable>
@@ -792,11 +845,19 @@ export default function PlaygroundsPage() {
             </div>
             <div className="absolute bottom-0 left-0 right-0 bg-black border-t border-gray-700 p-2 flex items-center justify-between z-20">
               <div className="flex space-x-2">
-                {sheets.length > 0 && sheets.map((sheet) => (
-                  <button key={sheet._id} onClick={() => { if (selectedSheet && selectedSheet._id !== sheet._id) setSelectedSheet(sheet); }} className={`px-3 py-1 rounded text-xs border border-gray-600 hover:bg-gray-700 transition-colors duration-300 ${selectedSheet && selectedSheet._id === sheet._id ? "bg-gray-700" : ""}`}>
-                    {sheet.title}
-                  </button>
-                ))}
+                {sheets.length > 0 &&
+                  sheets.map((sheet) => (
+                    <button
+                      key={sheet._id}
+                      onClick={() => {
+                        if (selectedSheet && selectedSheet._id !== sheet._id) setSelectedSheet(sheet);
+                      }}
+                      className={`px-3 py-1 rounded text-xs border border-gray-600 hover:bg-gray-700 transition-colors duration-300 ${selectedSheet && selectedSheet._id === sheet._id ? "bg-gray-700" : ""
+                        }`}
+                    >
+                      {sheet.title}
+                    </button>
+                  ))}
               </div>
               <button onClick={() => setShowAddSheetModal(true)} className="px-3 py-1 rounded text-xs border border-gray-600 hover:bg-gray-700 transition-colors duration-300">
                 + Add Sheet
@@ -805,19 +866,26 @@ export default function PlaygroundsPage() {
           </div>
         </div>
       </div>
-      {/* Terminal Panel */}
-      <TerminalPanel
-        files={selectedSheet ? selectedSheet.files : []}
-        terminalHeight={terminalHeight}
-        onResizeStart={handleTerminalResizeMouseDown}
-        onClose={() => setTerminalHeight(TERMINAL_HEADER_HEIGHT)}
-        runTrigger={runTrigger}
-      />
-      {/* Modals */}
+      {selectedSheet && selectedPlayground && (
+        <TerminalPanel
+          sheetId={selectedSheet._id}
+          playgroundId={selectedPlayground._id}
+          terminalHeight={terminalHeight}
+          onResizeStart={handleTerminalResizeMouseDown}
+          onClose={() => setTerminalHeight(TERMINAL_HEADER_HEIGHT)}
+          runTrigger={runTrigger}
+        />
+      )}
       <AddPlaygroundModal isOpen={showAddPlaygroundModal} onClose={() => setShowAddPlaygroundModal(false)} onSubmit={handleAddPlayground} />
       <AddSheetModal isOpen={showAddSheetModal} onClose={() => setShowAddSheetModal(false)} onSubmit={handleAddSheet} />
       <UploadFileModal isOpen={showUploadFileModal} onClose={() => setShowUploadFileModal(false)} onSubmit={handleUploadFile} />
-      <AdvancedSettingsModal isOpen={advancedModalOpen} onClose={() => setAdvancedModalOpen(false)} playground={advancedPlayground} onDeletePlayground={handleDeletePlayground} onDeleteSheets={handleDeleteSheets} />
+      <AdvancedSettingsModal
+        isOpen={advancedModalOpen}
+        onClose={() => setAdvancedModalOpen(false)}
+        playground={advancedPlayground}
+        onDeletePlayground={handleDeletePlayground}
+        onDeleteSheets={handleDeleteSheets}
+      />
     </div>
   );
 }
