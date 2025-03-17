@@ -1,4 +1,3 @@
-// app/api/playgrounds/route.ts
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Playground from "@/models/Playground";
@@ -7,7 +6,7 @@ import admin from "firebase-admin";
 if (!admin.apps.length) {
     const serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_CRED || "{}");
     admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
+        credential: admin.credential.cert(serviceAccount),
     });
 }
 
@@ -48,9 +47,33 @@ export async function POST(request: Request) {
             name,
             description: description || "",
             createdAt: new Date(),
-            updatedAt: new Date()
+            updatedAt: new Date(),
         });
         return NextResponse.json({ playground: newPlayground });
+    } catch (error: any) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
+export async function DELETE(request: Request) {
+    try {
+        const authHeader = request.headers.get("authorization");
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+        const token = authHeader.split("Bearer ")[1];
+        await admin.auth().verifyIdToken(token);
+        await dbConnect();
+        // Expect a JSON body with playgroundId
+        const body = await request.json();
+        const { playgroundId } = body;
+        if (!playgroundId) {
+            return NextResponse.json({ error: "PlaygroundId is required" }, { status: 400 });
+        }
+        // Delete the playground and optionally (if desired) its sheets.
+        await Playground.findByIdAndDelete(playgroundId);
+        // You might want to also delete sheets – this example leaves that to another API.
+        return NextResponse.json({ message: "Playground deleted successfully." });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

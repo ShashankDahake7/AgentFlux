@@ -17,10 +17,13 @@
     "http-proxy-middleware": "^3.0.3",
     "lucide-react": "^0.474.0",
     "mongoose": "^8.12.1",
-    "next": "14.1.4",
-    "react": "^18",
-    "react-dom": "^18",
-    "react-draggable": "^4.4.6"
+    "next": "^14.1.4",
+    "node-pty": "^1.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-draggable": "^4.4.6",
+    "xterm": "^5.3.0",
+    "xterm-addon-fit": "^0.8.0"
   },
   "devDependencies": {
     "@types/node": "^20",
