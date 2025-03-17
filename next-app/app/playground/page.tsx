@@ -43,7 +43,7 @@ interface Sheet {
 }
 
 /* ========= MODALS ========= */
-const Modal: React.FC<{ isOpen: boolean; onClose: () => void; children: React.ReactNode }> = ({
+const Modal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
   isOpen,
   onClose,
   children,
@@ -382,9 +382,7 @@ export default function PlaygroundsPage() {
         );
         const data = await res.json();
         if (data.sheet) {
-          if (selectedPlayground) {
-            await fetchSheets(selectedPlayground._id);
-          }
+          await fetchSheets(selectedPlayground._id);
         }
       } catch (error) {
         console.error("Error uploading file", error);
