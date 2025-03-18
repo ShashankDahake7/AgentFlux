@@ -50,7 +50,7 @@ const TERMINAL_HEADER_HEIGHT = 40;
 
 /* ========= MODALS ========= */
 // (Modal components remain the same as before)
-const Modal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose, children }) => (
+const Modal: React.FC<{ isOpen: boolean; onClose: () => void; children: React.ReactNode }> = ({ isOpen, onClose, children }) => (
   <div
     className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 transition-opacity duration-300 ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
       }`}
@@ -262,6 +262,7 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
         theme: { background: "#000", foreground: "#fff" },
       });
       termRef.current = term;
+
       import("xterm-addon-fit").then(({ FitAddon }) => {
         const fitAddon = new FitAddon();
         fitAddonRef.current = fitAddon;
@@ -277,9 +278,13 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
             }
           }, 100);
         }
+
+        // Print the initial prompt
+        term.write("$ ");
+
         term.onKey(({ key, domEvent }) => {
           if (domEvent.key === "Enter") {
-            term.write("\r\n");
+            term.write("\r\n$ "); // Add new prompt on Enter
             const command = commandBufferRef.current + "\n";
             if (socketRef.current && socketRef.current.connected) {
               socketRef.current.emit("input", { input: command });
@@ -297,11 +302,13 @@ const TerminalPanel: React.FC<TerminalPanelProps> = ({
         });
       });
     });
+
     return () => {
       socketRef.current && socketRef.current.disconnect();
       termRef.current?.dispose();
     };
   }, []);
+
 
   useEffect(() => {
     if (!runTrigger || runTrigger === 0) return;
@@ -423,15 +430,15 @@ export default function PlaygroundsPage() {
 
   const handleSidebarMouseDown = () => {
     const minWidth = 150, maxWidth = 350;
-    const onMouseMove = (e: MouseEvent) => {
+    const onMouseMove = (e: globalThis.MouseEvent) => {
       let newWidth = e.clientX;
       if (newWidth < minWidth) newWidth = minWidth;
       if (newWidth > maxWidth) newWidth = maxWidth;
       setSidebarWidth(newWidth);
     };
     const onMouseUp = () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener("mousemove", onMouseMove as EventListener);
+      window.removeEventListener("mouseup", onMouseUp as EventListener);
     };
     window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("mouseup", onMouseUp);
@@ -439,7 +446,7 @@ export default function PlaygroundsPage() {
 
   const handleEditorResizeMouseDown = () => {
     const minHeight = 100, maxHeight = window.innerHeight - 100;
-    const onMouseMove = (e: MouseEvent) => {
+    const onMouseMove = (e: globalThis.MouseEvent) => {
       let newHeight = e.clientY - 12;
       if (newHeight < minHeight) newHeight = minHeight;
       if (newHeight > maxHeight) newHeight = maxHeight;
@@ -468,7 +475,7 @@ export default function PlaygroundsPage() {
     const startHeight = terminalHeight;
     const minHeight = TERMINAL_HEADER_HEIGHT;
     const maxHeight = window.innerHeight - 100;
-    const onMouseMove = (event: MouseEvent) => {
+    const onMouseMove = (event: globalThis.MouseEvent) => {
       let newHeight = startHeight + (startY - event.clientY);
       if (newHeight < minHeight) newHeight = minHeight;
       if (newHeight > maxHeight) newHeight = maxHeight;
@@ -567,7 +574,8 @@ export default function PlaygroundsPage() {
           }
         );
         const data = await res.json();
-        if (data.sheet) await fetchSheets(selectedPlayground._id);
+        if (data.sheet && selectedPlayground)
+          await fetchSheets(selectedPlayground._id);
       } catch (error) {
         console.error("Error uploading file", error);
       }
@@ -862,6 +870,7 @@ export default function PlaygroundsPage() {
               <button onClick={() => setShowAddSheetModal(true)} className="px-3 py-1 rounded text-xs border border-gray-600 hover:bg-gray-700 transition-colors duration-300">
                 + Add Sheet
               </button>
+
             </div>
           </div>
         </div>
