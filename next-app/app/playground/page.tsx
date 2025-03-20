@@ -4,7 +4,15 @@ if (typeof window !== "undefined" && typeof self === "undefined") {
   (window as any).self = window;
 }
 
-import React, { useState, useEffect, useRef, ChangeEvent, MouseEvent } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useImperativeHandle,
+  forwardRef,
+  ChangeEvent,
+  MouseEvent
+} from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/app/firebase/firebaseConfig";
 import { useRouter } from "next/navigation";
@@ -15,6 +23,19 @@ import "xterm/css/xterm.css";
 
 // Dynamically import MonacoEditor (SSR disabled)
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
+
+// Dynamically import GraphVisualization component
+const GraphVisualization = dynamic(
+  () => import("@/components/GraphVisualization"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-full flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-500"></div>
+      </div>
+    )
+  }
+);
 
 /* ========= TYPES ========= */
 interface Playground {
@@ -40,6 +61,7 @@ interface Sheet {
   title: string;
   files: FileType[];
   canvasData: any;
+  graphData?: any;
   createdAt: string;
   updatedAt: string;
 }
@@ -49,13 +71,16 @@ const MIN_VISIBLE_TERMINAL_HEIGHT = 100;
 const TERMINAL_HEADER_HEIGHT = 40;
 
 /* ========= MODALS ========= */
-// (Modal components remain the same as before)
-const Modal: React.FC<{ isOpen: boolean; onClose: () => void; children: React.ReactNode }> = ({ isOpen, onClose, children }) => (
+const Modal: React.FC<{ isOpen: boolean; onClose: () => void; children: React.ReactNode }> = ({
+  isOpen,
+  onClose,
+  children
+}) => (
   <div
     className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 transition-opacity duration-300 ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
       }`}
   >
-    <div className="bg-black border border-gray-700 p-6 rounded-lg shadow-xl max-w-md w-full transform transition-transform duration-300">
+    <div className="bg-black border border-gray-700 p-6 rounded-lg shadow-xl max-w-md w-full relative transform transition-transform duration-300">
       <button onClick={onClose} className="absolute top-2 right-2 text-gray-400 hover:text-gray-200 text-2xl">
         &times;
       </button>
@@ -94,7 +119,10 @@ const AddPlaygroundModal: React.FC<{
         onChange={(e) => setDescription(e.target.value)}
         className="w-full p-2 rounded bg-gray-800 text-gray-200 border border-gray-700 focus:outline-none mb-4 resize-none"
       ></textarea>
-      <button onClick={handleSubmit} className="w-full py-2 bg-gray-700 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300">
+      <button
+        onClick={handleSubmit}
+        className="w-full py-2 bg-gray-700 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300"
+      >
         Submit
       </button>
     </Modal>
@@ -104,7 +132,7 @@ const AddPlaygroundModal: React.FC<{
 const AddSheetModal: React.FC<{ isOpen: boolean; onClose: () => void; onSubmit: (title: string) => void }> = ({
   isOpen,
   onClose,
-  onSubmit,
+  onSubmit
 }) => {
   const [title, setTitle] = useState("");
   const handleSubmit = () => {
@@ -123,18 +151,21 @@ const AddSheetModal: React.FC<{ isOpen: boolean; onClose: () => void; onSubmit: 
         onChange={(e) => setTitle(e.target.value)}
         className="w-full p-2 rounded bg-gray-800 text-gray-200 border border-gray-700 focus:outline-none mb-4"
       />
-      <button onClick={handleSubmit} className="w-full py-2 bg-gray-700 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300">
+      <button
+        onClick={handleSubmit}
+        className="w-full py-2 bg-gray-700 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300"
+      >
         Submit
       </button>
     </Modal>
   );
 };
 
-const UploadFileModal: React.FC<{ isOpen: boolean; onClose: () => void; onSubmit: (file: File) => void }> = ({
-  isOpen,
-  onClose,
-  onSubmit,
-}) => {
+const UploadFileModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (file: File) => void;
+}> = ({ isOpen, onClose, onSubmit }) => {
   const [fileInput, setFileInput] = useState<File | null>(null);
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) setFileInput(e.target.files[0]);
@@ -148,29 +179,126 @@ const UploadFileModal: React.FC<{ isOpen: boolean; onClose: () => void; onSubmit
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <h2 className="text-xl font-bold text-gray-200 mb-4">Upload File</h2>
-      <input type="file" accept=".py,.js,.env" onChange={handleFileChange} className="mb-4" />
-      <button onClick={handleSubmit} className="w-full py-2 bg-gray-700 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300">
+      <input type="file" accept=".py,.js,.env,.env.local" onChange={handleFileChange} className="mb-4" />
+      <button
+        onClick={handleSubmit}
+        className="w-full py-2 bg-gray-700 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300"
+      >
         Upload
       </button>
     </Modal>
   );
 };
 
-const AdvancedSettingsModal: React.FC<{
+interface AdvancedSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   playground: Playground | null;
+  token: string;
+  sheets: Sheet[];
   onDeletePlayground: () => void;
-  onDeleteSheets: () => void;
-}> = ({ isOpen, onClose, playground, onDeletePlayground, onDeleteSheets }) => {
-  if (!playground) return null;
+  onSheetsDeleted: (deletedSheetIds?: string[]) => void;
+}
+
+const AdvancedSettingsModal: React.FC<AdvancedSettingsModalProps> = ({
+  isOpen,
+  onClose,
+  playground,
+  token,
+  sheets,
+  onDeletePlayground,
+  onSheetsDeleted
+}) => {
+  const [selectedSheetIds, setSelectedSheetIds] = useState<string[]>([]);
+  const toggleSheetSelection = (sheetId: string) => {
+    if (selectedSheetIds.includes(sheetId)) {
+      setSelectedSheetIds(selectedSheetIds.filter((id) => id !== sheetId));
+    } else {
+      setSelectedSheetIds([...selectedSheetIds, sheetId]);
+    }
+  };
+  const handleDeleteSelectedSheets = async () => {
+    if (!playground) return;
+    const idsToDelete = selectedSheetIds.filter((id) => id);
+    if (idsToDelete.length === 0) {
+      alert("Please select one or more sheets to delete.");
+      return;
+    }
+    try {
+      const res = await fetch(`/api/playgrounds/${playground._id}/sheets`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ sheetIds: idsToDelete })
+      });
+      const data = await res.json();
+      if (data.message) {
+        alert(data.message);
+        onSheetsDeleted(idsToDelete);
+        setSelectedSheetIds([]);
+        onClose();
+      }
+    } catch (error) {
+      console.error("Error deleting selected sheets", error);
+    }
+  };
+  const handleDeleteAllSheets = async () => {
+    if (!playground) return;
+    try {
+      const res = await fetch(`/api/playgrounds/${playground._id}/sheets`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.message) {
+        alert(data.message);
+        onSheetsDeleted();
+        onClose();
+      }
+    } catch (error) {
+      console.error("Error deleting all sheets", error);
+    }
+  };
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <h2 className="text-xl font-bold text-gray-200 mb-4">Advanced Settings: {playground.name}</h2>
-      <button onClick={onDeletePlayground} className="w-full py-2 bg-red-700 hover:bg-red-600 rounded text-gray-200 transition-colors duration-300 mb-2">
+      <h2 className="text-xl font-bold text-gray-200 mb-4">
+        Advanced Settings: {playground?.name}
+      </h2>
+      <button
+        onClick={onDeletePlayground}
+        className="w-full py-2 bg-red-700 hover:bg-red-600 rounded text-gray-200 transition-colors duration-300 mb-4"
+      >
         Delete Playground
       </button>
-      <button onClick={onDeleteSheets} className="w-full py-2 bg-yellow-700 hover:bg-yellow-600 rounded text-gray-200 transition-colors duration-300">
+      <div className="bg-gray-800 p-4 rounded mb-4">
+        <h3 className="text-lg font-semibold text-gray-200 mb-2">Select Sheets to Delete</h3>
+        {sheets && sheets.length > 0 ? (
+          <ul className="max-h-60 overflow-y-auto">
+            {sheets.map((sheet) => (
+              <li key={sheet._id} className="flex items-center mb-2">
+                <input
+                  type="checkbox"
+                  className="mr-2"
+                  checked={selectedSheetIds.includes(sheet._id)}
+                  onChange={() => toggleSheetSelection(sheet._id)}
+                />
+                <span className="text-gray-200">{sheet.title}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-gray-400">No sheets available.</p>
+        )}
+      </div>
+      <button
+        onClick={handleDeleteSelectedSheets}
+        className="w-full py-2 bg-yellow-700 hover:bg-yellow-600 rounded text-gray-200 transition-colors duration-300 mb-2"
+      >
+        Delete Selected Sheets
+      </button>
+      <button
+        onClick={handleDeleteAllSheets}
+        className="w-full py-2 bg-yellow-700 hover:bg-yellow-600 rounded text-gray-200 transition-colors duration-300"
+      >
         Delete All Sheets
       </button>
     </Modal>
@@ -202,7 +330,11 @@ const Sidebar: React.FC<SidebarProps> = ({ playgrounds, selectedId, onSelect, on
       </div>
       <ul className="flex-1 overflow-y-auto font-cinzel text-sm text-gray-200">
         {playgrounds.map((pg) => (
-          <li key={pg._id} className={`p-2 rounded cursor-pointer mb-2 ${selectedId === pg._id ? "bg-gray-700" : "hover:bg-gray-800"}`}>
+          <li
+            key={pg._id}
+            className={`p-2 rounded cursor-pointer mb-2 ${selectedId === pg._id ? "bg-gray-700" : "hover:bg-gray-800"
+              }`}
+          >
             <div className="flex items-center justify-between">
               <div
                 className="flex items-center"
@@ -210,7 +342,13 @@ const Sidebar: React.FC<SidebarProps> = ({ playgrounds, selectedId, onSelect, on
                   if (selectedId !== pg._id) onSelect(pg);
                 }}
               >
-                <Image src={getLogoForPlayground(pg._id)} alt="Logo" width={20} height={20} className="mr-2" />
+                <Image
+                  src={getLogoForPlayground(pg._id)}
+                  alt="Logo"
+                  width={20}
+                  height={20}
+                  className="mr-2"
+                />
                 <span>{pg.name}</span>
               </div>
               <button onClick={() => onOpenAdvanced(pg)} title="Advanced settings" className="text-gray-400 hover:text-gray-200 focus:outline-none">
@@ -228,179 +366,197 @@ const Sidebar: React.FC<SidebarProps> = ({ playgrounds, selectedId, onSelect, on
 };
 
 /* ========= TERMINAL PANEL ========= */
+// TerminalPanel is a forwardRef component that initializes xterm on mount
+// but does not connect its socket until triggerRunCode() is called.
 interface TerminalPanelProps {
   sheetId: string;
   playgroundId: string;
   terminalHeight: number;
   onResizeStart: (e: MouseEvent<HTMLDivElement>) => void;
   onClose: () => void;
-  runTrigger?: number;
+  onGraphReady?: () => void;
 }
 
-// TerminalPanel buffers keystrokes locally and sends the full command (with newline) upon Enter.
-// It uses Socket.IO to connect to your dedicated Node server.
-const TerminalPanel: React.FC<TerminalPanelProps> = ({
-  sheetId,
-  playgroundId,
-  terminalHeight,
-  onResizeStart,
-  onClose,
-  runTrigger,
-}) => {
-  const terminalRef = useRef<HTMLDivElement>(null);
-  const termRef = useRef<any>(null);
-  const fitAddonRef = useRef<any>(null);
-  const socketRef = useRef<any>(null);
-  const commandBufferRef = useRef<string>("");
+const TerminalPanel = forwardRef(
+  (props: TerminalPanelProps, ref: React.Ref<{ triggerRunCode: () => void }>) => {
+    const { sheetId, playgroundId, terminalHeight, onResizeStart, onClose, onGraphReady } = props;
+    const terminalRef = useRef<HTMLDivElement>(null);
+    const termRef = useRef<any>(null);
+    const fitAddonRef = useRef<any>(null);
+    const socketRef = useRef<any>(null);
+    const commandBufferRef = useRef<string>("");
+    // Keep track of the current IDs.
+    const currentSheetIdRef = useRef(sheetId);
+    const currentPlaygroundIdRef = useRef(playgroundId);
+    useEffect(() => {
+      currentSheetIdRef.current = sheetId;
+    }, [sheetId]);
+    useEffect(() => {
+      currentPlaygroundIdRef.current = playgroundId;
+    }, [playgroundId]);
 
-  useEffect(() => {
-    if (termRef.current) return; // already initialized
-    import("xterm").then(({ Terminal }) => {
-      const term = new Terminal({
-        convertEol: true,
-        cursorBlink: true,
-        theme: { background: "#000", foreground: "#fff" },
-      });
-      termRef.current = term;
-
-      import("xterm-addon-fit").then(({ FitAddon }) => {
-        const fitAddon = new FitAddon();
-        fitAddonRef.current = fitAddon;
-        term.loadAddon(fitAddon);
-        if (terminalRef.current) {
-          term.open(terminalRef.current);
-          term.focus();
-          setTimeout(() => {
-            try {
-              fitAddon.fit();
-            } catch (e) {
-              console.error("Terminal fit error on mount:", e);
-            }
-          }, 100);
-        }
-
-        // Print the initial prompt
-        term.write("$ ");
-
-        term.onKey(({ key, domEvent }) => {
-          if (domEvent.key === "Enter") {
-            term.write("\r\n$ "); // Add new prompt on Enter
-            const command = commandBufferRef.current + "\n";
-            if (socketRef.current && socketRef.current.connected) {
-              socketRef.current.emit("input", { input: command });
-            }
-            commandBufferRef.current = "";
-          } else if (domEvent.key === "Backspace") {
-            if (commandBufferRef.current.length > 0) {
-              commandBufferRef.current = commandBufferRef.current.slice(0, -1);
-              term.write("\b \b");
-            }
-          } else if (domEvent.key.length === 1 && !domEvent.ctrlKey && !domEvent.altKey) {
-            commandBufferRef.current += domEvent.key;
-            term.write(key);
+    // Initialize xterm only once.
+    useEffect(() => {
+      import("xterm").then(({ Terminal }) => {
+        const term = new Terminal({
+          convertEol: true,
+          cursorBlink: true,
+          theme: { background: "#000", foreground: "#fff" }
+        });
+        termRef.current = term;
+        import("xterm-addon-fit").then(({ FitAddon }) => {
+          const fitAddon = new FitAddon();
+          fitAddonRef.current = fitAddon;
+          term.loadAddon(fitAddon);
+          if (terminalRef.current) {
+            term.open(terminalRef.current);
+            setTimeout(() => {
+              try {
+                fitAddon.fit();
+              } catch (e) {
+                console.error("Terminal fit error on mount:", e);
+              }
+            }, 100);
           }
+          term.write("$ ");
+          term.onKey(({ key, domEvent }) => {
+            if (domEvent.key === "Enter") {
+              term.write("\r\n$ ");
+              const command = commandBufferRef.current + "\n";
+              if (socketRef.current && socketRef.current.connected) {
+                socketRef.current.emit("input", { input: command });
+              }
+              commandBufferRef.current = "";
+            } else if (domEvent.key === "Backspace") {
+              if (commandBufferRef.current.length > 0) {
+                commandBufferRef.current = commandBufferRef.current.slice(0, -1);
+                term.write("\b \b");
+              }
+            } else if (domEvent.key.length === 1 && !domEvent.ctrlKey && !domEvent.altKey) {
+              commandBufferRef.current += domEvent.key;
+              term.write(key);
+            }
+          });
         });
       });
-    });
+      return () => {
+        if (socketRef.current) socketRef.current.disconnect();
+        termRef.current?.dispose();
+      };
+    }, []);
 
-    return () => {
-      socketRef.current && socketRef.current.disconnect();
-      termRef.current?.dispose();
-    };
-  }, []);
-
-
-  useEffect(() => {
-    if (!runTrigger || runTrigger === 0) return;
-    if (socketRef.current) {
-      socketRef.current.disconnect();
-    }
-    (async () => {
-      // Connect to the separate Node server. Set NEXT_PUBLIC_WS_URL in your env variables.
-      const backendUrl = process.env.NEXT_PUBLIC_WS_URL || "http://localhost:3001";
-      const { io } = await import("socket.io-client");
-      const socket = io(backendUrl);
-      socketRef.current = socket;
-      socket.on("connect", () => {
-        termRef.current?.write("Connected to backend.\r\n");
-        socket.emit("start", { sheetId, playgroundId });
-      });
-      socket.on("message", (msg: string) => {
-        termRef.current?.write(msg);
-      });
-      socket.on("disconnect", () => {
-        termRef.current?.writeln("\r\nConnection closed.");
-      });
-      socket.on("connect_error", (err: any) => {
-        termRef.current?.writeln("\r\n[Error] " + err);
-      });
-    })();
-  }, [runTrigger, sheetId, playgroundId]);
-
-  useEffect(() => {
-    if (terminalRef.current && terminalHeight >= MIN_VISIBLE_TERMINAL_HEIGHT) {
-      setTimeout(() => {
-        try {
-          fitAddonRef.current?.fit();
-        } catch (e) {
-          console.error("Terminal fit error on height change:", e);
+    // Expose triggerRunCode() so that the parent can connect the socket on demand.
+    useImperativeHandle(ref, () => ({
+      triggerRunCode() {
+        if (socketRef.current && socketRef.current.connected) {
+          termRef.current?.write("\r\nStarting code execution...\r\n");
+          socketRef.current.emit("start", {
+            sheetId: currentSheetIdRef.current,
+            playgroundId: currentPlaygroundIdRef.current
+          });
+        } else {
+          const backendUrl = process.env.NEXT_PUBLIC_WS_URL || "http://localhost:3001";
+          import("socket.io-client").then(({ io }) => {
+            const socket = io(backendUrl);
+            socketRef.current = socket;
+            socket.on("connect", () => {
+              termRef.current?.write("Connected to backend.\r\n");
+              socket.emit("start", {
+                sheetId: currentSheetIdRef.current,
+                playgroundId: currentPlaygroundIdRef.current
+              });
+            });
+            socket.on("message", (msg: string) => {
+              termRef.current?.write(msg);
+            });
+            socket.on("disconnect", () => {
+              termRef.current?.writeln("\r\nConnection closed.");
+            });
+            socket.on("connect_error", (err: any) => {
+              termRef.current?.writeln("\r\n[Error] " + err);
+            });
+            socket.on("graph_ready", (data: any) => {
+              termRef.current?.writeln("\r\nGraph data is ready.");
+              if (onGraphReady) onGraphReady();
+            });
+          });
         }
-        termRef.current?.focus();
-      }, 100);
-    }
-  }, [terminalHeight]);
+      }
+    }));
 
-  return (
-    <div
-      style={{
-        position: "absolute",
-        bottom: "42px",
-        left: "255px",
-        right: "5px",
-        background: "#000",
-        borderTop: "1px solid #444",
-        borderLeft: "1px solid #444",
-        borderRight: "1px solid #444",
-        zIndex: 50,
-        height: terminalHeight,
-      }}
-    >
+    useEffect(() => {
+      if (terminalRef.current && terminalHeight >= MIN_VISIBLE_TERMINAL_HEIGHT) {
+        setTimeout(() => {
+          try {
+            fitAddonRef.current?.fit();
+          } catch (e) {
+            console.error("Terminal fit error on height change:", e);
+          }
+          termRef.current?.focus();
+        }, 100);
+      }
+    }, [terminalHeight]);
+
+    return (
       <div
         style={{
-          height: `${TERMINAL_HEADER_HEIGHT}px`,
-          cursor: "ns-resize",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "0 8px",
-          background: "#111",
+          position: "absolute",
+          bottom: "42px",
+          left: "255px",
+          right: "5px",
+          background: "#000",
+          borderTop: "1px solid #444",
+          borderLeft: "1px solid #444",
+          borderRight: "1px solid #444",
+          zIndex: 50,
+          height: terminalHeight
         }}
-        onMouseDown={onResizeStart}
       >
-        <span style={{ color: "#fff", userSelect: "none" }}>
-          Interactive Terminal {terminalHeight < MIN_VISIBLE_TERMINAL_HEIGHT ? "(Minimized)" : ""}
-        </span>
-        <button
-          onClick={onClose}
-          style={{ color: "#fff", fontSize: "24px", background: "transparent", border: "none", cursor: "pointer" }}
+        <div
+          style={{
+            height: `${TERMINAL_HEADER_HEIGHT}px`,
+            cursor: "ns-resize",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "0 8px",
+            background: "#111"
+          }}
+          onMouseDown={onResizeStart}
         >
-          &times;
-        </button>
+          <span style={{ color: "#fff", userSelect: "none" }}>
+            Interactive Terminal {terminalHeight < MIN_VISIBLE_TERMINAL_HEIGHT ? "(Minimized)" : ""}
+          </span>
+          <button
+            onClick={onClose}
+            style={{
+              color: "#fff",
+              fontSize: "24px",
+              background: "transparent",
+              border: "none",
+              cursor: "pointer"
+            }}
+          >
+            &times;
+          </button>
+        </div>
+        <div
+          ref={terminalRef}
+          style={{
+            width: "100%",
+            height: `calc(100% - ${TERMINAL_HEADER_HEIGHT}px)`,
+            opacity: terminalHeight < MIN_VISIBLE_TERMINAL_HEIGHT ? 0 : 1,
+            pointerEvents: terminalHeight < MIN_VISIBLE_TERMINAL_HEIGHT ? "none" : "auto",
+            transition: "opacity 0.3s"
+          }}
+          onClick={() => termRef.current?.focus()}
+        />
       </div>
-      <div
-        ref={terminalRef}
-        style={{
-          width: "100%",
-          height: `calc(100% - ${TERMINAL_HEADER_HEIGHT}px)`,
-          opacity: terminalHeight < MIN_VISIBLE_TERMINAL_HEIGHT ? 0 : 1,
-          pointerEvents: terminalHeight < MIN_VISIBLE_TERMINAL_HEIGHT ? "none" : "auto",
-          transition: "opacity 0.3s",
-        }}
-        onClick={() => termRef.current?.focus()}
-      />
-    </div>
-  );
-};
+    );
+  }
+);
+
+TerminalPanel.displayName = "TerminalPanel";
 
 /* ========= MAIN COMPONENT ========= */
 export default function PlaygroundsPage() {
@@ -411,13 +567,12 @@ export default function PlaygroundsPage() {
   const [sheets, setSheets] = useState<Sheet[]>([]);
   const [selectedSheet, setSelectedSheet] = useState<Sheet | null>(null);
   const [selectedFile, setSelectedFile] = useState<FileType | null>(null);
-
   const [sidebarWidth, setSidebarWidth] = useState<number>(250);
   const [editorHeight, setEditorHeight] = useState<number>(300);
   const [fileSidebarWidth, setFileSidebarWidth] = useState<number>(200);
   const [terminalHeight, setTerminalHeight] = useState<number>(TERMINAL_HEADER_HEIGHT);
-  const [graphDropdownOpen, setGraphDropdownOpen] = useState(false);
-  const [runTrigger, setRunTrigger] = useState(0);
+  const [graphData, setGraphData] = useState<any>(null);
+  const [graphLoading, setGraphLoading] = useState<boolean>(false);
 
   const monacoEditorRef = useRef<any>(null);
   const router = useRouter();
@@ -428,6 +583,43 @@ export default function PlaygroundsPage() {
   const [advancedModalOpen, setAdvancedModalOpen] = useState(false);
   const [advancedPlayground, setAdvancedPlayground] = useState<Playground | null>(null);
 
+  // When selectedSheet changes, update the file and graph data from the stored sheet.
+  useEffect(() => {
+    if (selectedSheet) {
+      setSelectedFile(selectedSheet.files[0] || null);
+      setGraphData(selectedSheet.graphData || null);
+    } else {
+      setSelectedFile(null);
+      setGraphData(null);
+    }
+  }, [selectedSheet]);
+
+  // Define refreshGraphData so that it can be passed to TerminalPanel.
+  const refreshGraphData = async () => {
+    if (!selectedSheet || !selectedPlayground || !token) return;
+    setGraphLoading(true);
+    try {
+      const res = await fetch(
+        `/api/playgrounds/${selectedPlayground._id}/sheets/${selectedSheet._id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const data = await res.json();
+      if (data.sheet) {
+        setGraphData(data.sheet.graphData || null);
+        // Optionally, update the global sheet list.
+        setSheets((prev) =>
+          prev.map((sheet) => (sheet._id === data.sheet._id ? data.sheet : sheet))
+        );
+      } else {
+        setGraphData(null);
+      }
+    } catch (error) {
+      console.error("Error refreshing graph data", error);
+      setGraphData(null);
+    }
+    setGraphLoading(false);
+  };
+
   const handleSidebarMouseDown = () => {
     const minWidth = 150, maxWidth = 350;
     const onMouseMove = (e: globalThis.MouseEvent) => {
@@ -437,8 +629,8 @@ export default function PlaygroundsPage() {
       setSidebarWidth(newWidth);
     };
     const onMouseUp = () => {
-      window.removeEventListener("mousemove", onMouseMove as EventListener);
-      window.removeEventListener("mouseup", onMouseUp as EventListener);
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
     };
     window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("mouseup", onMouseUp);
@@ -534,7 +726,7 @@ export default function PlaygroundsPage() {
   const fetchSheets = async (playgroundId: string) => {
     try {
       const res = await fetch(`/api/playgrounds/${playgroundId}/sheets`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
       if (data.sheets) {
@@ -547,35 +739,25 @@ export default function PlaygroundsPage() {
     }
   };
 
-  useEffect(() => {
-    if (selectedSheet && selectedSheet.files.length) {
-      setSelectedFile(selectedSheet.files[0]);
-    } else {
-      setSelectedFile(null);
-    }
-  }, [selectedSheet]);
-
   const handleUploadFile = (file: File) => {
     const reader = new FileReader();
     reader.onload = async () => {
       const content = reader.result as string;
-      const language = file.name.endsWith(".js")
-        ? "javascript"
-        : file.name.endsWith(".py")
-          ? "python"
-          : "";
+      let language = "";
+      if (file.name.endsWith(".js")) language = "javascript";
+      else if (file.name.endsWith(".py")) language = "python";
+      else if (file.name === ".env" || file.name === ".env.local") language = "dotenv";
       try {
         const res = await fetch(
           `/api/playgrounds/${selectedPlayground?._id}/sheets/${selectedSheet?._id}/file`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-            body: JSON.stringify({ filename: file.name, code: content, language }),
+            body: JSON.stringify({ filename: file.name, code: content, language })
           }
         );
         const data = await res.json();
-        if (data.sheet && selectedPlayground)
-          await fetchSheets(selectedPlayground._id);
+        if (data.sheet && selectedPlayground) await fetchSheets(selectedPlayground._id);
       } catch (error) {
         console.error("Error uploading file", error);
       }
@@ -588,7 +770,7 @@ export default function PlaygroundsPage() {
       const res = await fetch("/api/playgrounds", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name, description }),
+        body: JSON.stringify({ name, description })
       });
       const data = await res.json();
       if (data.playground) {
@@ -606,7 +788,7 @@ export default function PlaygroundsPage() {
       const res = await fetch(`/api/playgrounds/${selectedPlayground._id}/sheets`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ title }),
+        body: JSON.stringify({ title })
       });
       const data = await res.json();
       if (data.sheet) {
@@ -621,15 +803,20 @@ export default function PlaygroundsPage() {
   const handleSaveFiles = async () => {
     if (!selectedSheet || !selectedPlayground) return;
     try {
-      const res = await fetch(`/api/playgrounds/${selectedPlayground._id}/sheets/${selectedSheet._id}/file`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ files: selectedSheet.files }),
-      });
+      const res = await fetch(
+        `/api/playgrounds/${selectedPlayground._id}/sheets/${selectedSheet._id}/file`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ files: selectedSheet.files })
+        }
+      );
       const data = await res.json();
       if (data.sheet) {
         alert("Files saved successfully!");
-        setSheets((prev) => prev.map((sheet) => (sheet._id === data.sheet._id ? data.sheet : sheet)));
+        setSheets((prev) =>
+          prev.map((sheet) => (sheet._id === data.sheet._id ? data.sheet : sheet))
+        );
       }
     } catch (error) {
       console.error("Error saving files", error);
@@ -641,15 +828,20 @@ export default function PlaygroundsPage() {
     if (!selectedSheet || !selectedPlayground) return;
     if (!confirm(`Are you sure you want to delete ${filename}?`)) return;
     try {
-      const res = await fetch(`/api/playgrounds/${selectedPlayground._id}/sheets/${selectedSheet._id}/file`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ filename }),
-      });
+      const res = await fetch(
+        `/api/playgrounds/${selectedPlayground._id}/sheets/${selectedSheet._id}/file`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ filename })
+        }
+      );
       const data = await res.json();
       if (data.sheet) {
         alert("File deleted successfully!");
-        setSheets((prev) => prev.map((sheet) => (sheet._id === data.sheet._id ? data.sheet : sheet)));
+        setSheets((prev) =>
+          prev.map((sheet) => (sheet._id === data.sheet._id ? data.sheet : sheet))
+        );
       }
     } catch (error) {
       console.error("Error deleting file", error);
@@ -668,7 +860,7 @@ export default function PlaygroundsPage() {
       const res = await fetch("/api/playgrounds", {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ playgroundId: advancedPlayground._id }),
+        body: JSON.stringify({ playgroundId: advancedPlayground._id })
       });
       const data = await res.json();
       if (data.message) {
@@ -681,35 +873,18 @@ export default function PlaygroundsPage() {
     }
   };
 
-  const handleDeleteSheets = async () => {
-    if (!advancedPlayground) return;
-    try {
-      const res = await fetch(`/api/playgrounds/${advancedPlayground._id}/sheets`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (data.message) {
-        alert("Sheets deleted!");
-        if (selectedPlayground?._id === advancedPlayground._id) {
-          setSheets([]);
-          setSelectedSheet(null);
-        }
-        setAdvancedModalOpen(false);
+  const handleSheetsDeleted = (deletedSheetIds?: string[]) => {
+    if (deletedSheetIds && deletedSheetIds.length > 0) {
+      setSheets((prev) => prev.filter((sheet) => !deletedSheetIds.includes(sheet._id)));
+      if (selectedSheet && deletedSheetIds.includes(selectedSheet._id)) {
+        setSelectedSheet(null);
+        setGraphData(null);
       }
-    } catch (error) {
-      console.error("Error deleting sheets", error);
+    } else {
+      setSheets([]);
+      setSelectedSheet(null);
+      setGraphData(null);
     }
-  };
-
-  const handleRestructureGraph = () => {
-    alert("Graph restructured!");
-    setGraphDropdownOpen(false);
-  };
-
-  const handleEngineerGraph = () => {
-    alert("Graph engineered!");
-    setGraphDropdownOpen(false);
   };
 
   useEffect(() => {
@@ -723,18 +898,26 @@ export default function PlaygroundsPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [selectedSheet, selectedPlayground, token, sheets]);
 
+  // Maintain a ref for the TerminalPanel to trigger code execution imperatively.
+  const terminalPanelRef = useRef<{ triggerRunCode: () => void }>(null);
+
+  // When "Run Code" is pressed, clear the current graph and trigger code execution.
   const handleRunCode = () => {
     if (terminalHeight < MIN_VISIBLE_TERMINAL_HEIGHT) {
       setTerminalHeight(200);
     }
-    setRunTrigger((prev) => prev + 1);
+    setGraphLoading(true);
+    setGraphData(null);
+    terminalPanelRef.current?.triggerRunCode();
   };
 
   return (
     <div className="flex flex-col h-screen bg-black text-white relative overflow-hidden">
       {/* Header */}
       <header className="h-12 bg-black border-b border-gray-700 flex items-center px-4">
-        <div className="px-3 py-1 border border-gray-700 rounded text-sm">{user?.email || "Not Signed In"}</div>
+        <div className="px-3 py-1 border border-gray-700 rounded text-sm">
+          {user?.email || "Not Signed In"}
+        </div>
       </header>
       {/* Main Layout */}
       <div className="flex flex-1 overflow-hidden">
@@ -749,6 +932,7 @@ export default function PlaygroundsPage() {
                 setSelectedPlayground(pg);
                 setSheets([]);
                 setSelectedSheet(null);
+                setGraphData(null);
               }}
               onAdd={() => setShowAddPlaygroundModal(true)}
               onOpenAdvanced={openAdvancedSettings}
@@ -756,13 +940,16 @@ export default function PlaygroundsPage() {
           </div>
           <div onMouseDown={handleSidebarMouseDown} className="absolute top-0 right-0 h-full w-2 cursor-ew-resize bg-gray-700" />
         </div>
-        {/* Right Area: Editor & Graph Pane */}
+        {/* Editor, Graph & Footer Area */}
         <div className="flex flex-col flex-1 overflow-hidden relative">
           {selectedSheet ? (
             <div className="relative border-b border-gray-700 overflow-hidden" style={{ height: editorHeight }}>
               <div className="flex justify-between items-center pl-4 py-1 border-b border-gray-700">
                 <div className="text-xs text-gray-400">Editor Pane</div>
-                <button onClick={() => setShowUploadFileModal(true)} className="bg-gray-700 px-2 py-1 text-xs rounded border border-gray-700 hover:bg-gray-600 transition-colors duration-200 w-48">
+                <button
+                  onClick={() => setShowUploadFileModal(true)}
+                  className="bg-gray-700 px-2 py-1 text-xs rounded border border-gray-700 hover:bg-gray-600 transition-colors duration-200 w-48"
+                >
                   Upload File
                 </button>
               </div>
@@ -783,14 +970,16 @@ export default function PlaygroundsPage() {
                         setSelectedFile(updatedFile);
                         setSelectedSheet({
                           ...selectedSheet,
-                          files: selectedSheet.files.map((file) => (file.filename === updatedFile.filename ? updatedFile : file)),
+                          files: selectedSheet.files.map((file) =>
+                            file.filename === updatedFile.filename ? updatedFile : file
+                          )
                         });
                       }
                     }}
                     options={{
                       automaticLayout: true,
                       wordWrap: "on",
-                      minimap: { enabled: true, side: "right" },
+                      minimap: { enabled: true, side: "right" }
                     }}
                   />
                   <button
@@ -806,21 +995,31 @@ export default function PlaygroundsPage() {
                       border: "none",
                       borderRadius: "4px",
                       padding: "8px 12px",
-                      cursor: "pointer",
+                      cursor: "pointer"
                     }}
                   >
                     Run Code
                   </button>
                 </div>
-                <div className="relative border-l border-gray-700 overflow-y-auto p-4 bg-black flex flex-col" style={{ width: fileSidebarWidth, minWidth: fileSidebarWidth }}>
+                <div
+                  className="relative border-l border-gray-700 overflow-y-auto p-4 bg-black flex flex-col"
+                  style={{ width: fileSidebarWidth, minWidth: fileSidebarWidth }}
+                >
                   <h3 className="text-sm font-semibold mb-2 border-b border-gray-700 pb-1">Files</h3>
                   <ul className="space-y-1 flex-1">
                     {selectedSheet.files.map((file, index) => (
                       <li key={index} className="flex items-center justify-between p-1 cursor-pointer text-xs hover:bg-gray-700">
-                        <span onClick={() => setSelectedFile(file)} className={selectedFile && selectedFile.filename === file.filename ? "bg-gray-700 p-1 rounded" : "p-1"}>
+                        <span
+                          onClick={() => setSelectedFile(file)}
+                          className={selectedFile && selectedFile.filename === file.filename ? "bg-gray-700 p-1 rounded" : "p-1"}
+                        >
                           {file.filename}
                         </span>
-                        <button onClick={() => handleDeleteFile(file.filename)} title="Delete File" className="text-gray-400 hover:text-red-500 focus:outline-none ml-2">
+                        <button
+                          onClick={() => handleDeleteFile(file.filename)}
+                          title="Delete File"
+                          className="text-gray-400 hover:text-red-500 focus:outline-none ml-2"
+                        >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                             <path
                               fillRule="evenodd"
@@ -832,7 +1031,10 @@ export default function PlaygroundsPage() {
                       </li>
                     ))}
                   </ul>
-                  <button onClick={handleSaveFiles} className="w-full mb-[30px] py-2 bg-gray-700 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300">
+                  <button
+                    onClick={handleSaveFiles}
+                    className="w-full mb-[30px] py-2 bg-gray-700 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300"
+                  >
                     Save
                   </button>
                   <Draggable axis="x" position={{ x: 0, y: 0 }} onDrag={handleDrag}>
@@ -847,9 +1049,21 @@ export default function PlaygroundsPage() {
               No sheet selected
             </div>
           )}
+          {/* Graph Visualization Area & Footer */}
           <div className="relative flex-1 overflow-hidden">
             <div className="flex h-full items-center justify-center border-t border-gray-700">
-              <p className="text-gray-400">Graph Placeholder</p>
+              {graphLoading ? (
+                <div className="flex flex-col items-center justify-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-500 mb-4"></div>
+                  <p className="text-gray-400">Analyzing agent graph structure...</p>
+                </div>
+              ) : graphData ? (
+                <div className="w-full h-full">
+                  <GraphVisualization graphData={graphData} />
+                </div>
+              ) : (
+                <p className="text-gray-400">Run your agent code to visualize the graph</p>
+              )}
             </div>
             <div className="absolute bottom-0 left-0 right-0 bg-black border-t border-gray-700 p-2 flex items-center justify-between z-20">
               <div className="flex space-x-2">
@@ -858,7 +1072,9 @@ export default function PlaygroundsPage() {
                     <button
                       key={sheet._id}
                       onClick={() => {
-                        if (selectedSheet && selectedSheet._id !== sheet._id) setSelectedSheet(sheet);
+                        if (selectedSheet && selectedSheet._id !== sheet._id) {
+                          setSelectedSheet(sheet);
+                        }
                       }}
                       className={`px-3 py-1 rounded text-xs border border-gray-600 hover:bg-gray-700 transition-colors duration-300 ${selectedSheet && selectedSheet._id === sheet._id ? "bg-gray-700" : ""
                         }`}
@@ -867,33 +1083,51 @@ export default function PlaygroundsPage() {
                     </button>
                   ))}
               </div>
-              <button onClick={() => setShowAddSheetModal(true)} className="px-3 py-1 rounded text-xs border border-gray-600 hover:bg-gray-700 transition-colors duration-300">
+              <button
+                onClick={() => setShowAddSheetModal(true)}
+                className="px-3 py-1 rounded text-xs border border-gray-600 hover:bg-gray-700 transition-colors duration-300"
+              >
                 + Add Sheet
               </button>
-
             </div>
           </div>
         </div>
       </div>
+      {/* Terminal Panel – mounted once; its socket connects only when Run Code is pressed */}
       {selectedSheet && selectedPlayground && (
         <TerminalPanel
+          ref={terminalPanelRef}
           sheetId={selectedSheet._id}
           playgroundId={selectedPlayground._id}
           terminalHeight={terminalHeight}
           onResizeStart={handleTerminalResizeMouseDown}
           onClose={() => setTerminalHeight(TERMINAL_HEADER_HEIGHT)}
-          runTrigger={runTrigger}
+          onGraphReady={refreshGraphData}
         />
       )}
-      <AddPlaygroundModal isOpen={showAddPlaygroundModal} onClose={() => setShowAddPlaygroundModal(false)} onSubmit={handleAddPlayground} />
-      <AddSheetModal isOpen={showAddSheetModal} onClose={() => setShowAddSheetModal(false)} onSubmit={handleAddSheet} />
-      <UploadFileModal isOpen={showUploadFileModal} onClose={() => setShowUploadFileModal(false)} onSubmit={handleUploadFile} />
+      <AddPlaygroundModal
+        isOpen={showAddPlaygroundModal}
+        onClose={() => setShowAddPlaygroundModal(false)}
+        onSubmit={handleAddPlayground}
+      />
+      <AddSheetModal
+        isOpen={showAddSheetModal}
+        onClose={() => setShowAddSheetModal(false)}
+        onSubmit={handleAddSheet}
+      />
+      <UploadFileModal
+        isOpen={showUploadFileModal}
+        onClose={() => setShowUploadFileModal(false)}
+        onSubmit={handleUploadFile}
+      />
       <AdvancedSettingsModal
         isOpen={advancedModalOpen}
         onClose={() => setAdvancedModalOpen(false)}
         playground={advancedPlayground}
+        token={token}
+        sheets={sheets}
         onDeletePlayground={handleDeletePlayground}
-        onDeleteSheets={handleDeleteSheets}
+        onSheetsDeleted={handleSheetsDeleted}
       />
     </div>
   );
