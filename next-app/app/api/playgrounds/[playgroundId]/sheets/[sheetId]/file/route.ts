@@ -30,19 +30,29 @@ export async function POST(
                 { status: 400 }
             );
         }
+
+        // If the filename is ".env" or ".env.local", default to 'dotenv' if language is not provided.
+        const defaultLanguage =
+            filename === ".env" || filename === ".env.local" ? "dotenv" : "python";
+
         const newFile = {
             filename,
             code,
-            language: language || "python",
+            language: language || defaultLanguage,
             createdAt: new Date(),
             updatedAt: new Date(),
         };
+
         const updatedSheet = await Sheet.findByIdAndUpdate(
             params.sheetId,
             { $push: { files: newFile }, updatedAt: new Date() },
             { new: true }
         );
-        return NextResponse.json({ sheet: updatedSheet });
+
+        // Construct the new file route.
+        const fileRoute = `/api/playground/${params.playgroundId}/sheet/${params.sheetId}/files/${encodeURIComponent(filename)}`;
+
+        return NextResponse.json({ sheet: updatedSheet, route: fileRoute });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

@@ -3,12 +3,7 @@ import express, { Request, Response } from "express";
 import http from "http";
 import cors from "cors";
 import { Server as SocketIOServer, Socket } from "socket.io";
-import {
-  Client as SSHClient,
-  SFTPWrapper,
-  ClientChannel,
-  ExecOptions,
-} from "ssh2";
+import { Client as SSHClient, SFTPWrapper, ClientChannel, ExecOptions } from "ssh2";
 import fs from "fs";
 import path from "path";
 import admin, { ServiceAccount } from "firebase-admin";
@@ -31,6 +26,7 @@ interface Sheet {
   title: string;
   files: FileType[];
   canvasData: any;
+  graphData: any; // Detailed graph JSON
   createdAt: string;
   updatedAt: string;
 }
@@ -39,9 +35,7 @@ interface Sheet {
    Initialize Firebase Admin
    ==================== */
 if (!admin.apps.length) {
-  const serviceAccount: ServiceAccount = JSON.parse(
-    process.env.FIREBASE_ADMIN_CRED || "{}"
-  );
+  const serviceAccount: ServiceAccount = JSON.parse(process.env.FIREBASE_ADMIN_CRED || "{}");
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
   });
@@ -72,17 +66,13 @@ function parseEnvFile(content: string): Record<string, string> {
 /**
  * Recursively creates a directory on the remote SFTP server.
  */
-function mkdirRecursive(
-  sftp: SFTPWrapper,
-  remoteDir: string
-): Promise<void> {
+function mkdirRecursive(sftp: SFTPWrapper, remoteDir: string): Promise<void> {
   return new Promise((resolve, reject) => {
     sftp.mkdir(remoteDir, { mode: 0o755 }, (err: any) => {
       if (!err) {
         console.log(`mkdir: Created ${remoteDir}`);
         return resolve();
       }
-      // If mkdir fails, try stat to see if directory already exists.
       sftp.stat(remoteDir, (statErr: any) => {
         if (!statErr) {
           console.log(`mkdir: ${remoteDir} already exists`);
@@ -97,9 +87,7 @@ function mkdirRecursive(
                 console.error(`mkdir: Error creating ${remoteDir}:`, err2);
                 reject(err2);
               } else {
-                console.log(
-                  `mkdir: Created ${remoteDir} after creating parent directories`
-                );
+                console.log(`mkdir: Created ${remoteDir} after creating parent directories`);
                 resolve();
               }
             });
@@ -112,14 +100,8 @@ function mkdirRecursive(
 
 /**
  * Uploads a file’s content to the remote path.
- *
- * (Modified to use ws.end(content) and listen for "close" event so that the stream properly signals completion.)
  */
-function uploadFile(
-  sftp: SFTPWrapper,
-  remoteFilePath: string,
-  content: string
-): Promise<void> {
+function uploadFile(sftp: SFTPWrapper, remoteFilePath: string, content: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const ws = sftp.createWriteStream(remoteFilePath);
     ws.on("error", (error: any) => {
@@ -137,19 +119,35 @@ function uploadFile(
 /**
  * Uploads multiple files to a remote directory.
  */
-async function uploadFiles(
-  sftp: SFTPWrapper,
-  remoteDir: string,
-  files: FileType[]
-): Promise<void> {
+async function uploadFiles(sftp: SFTPWrapper, remoteDir: string, files: FileType[]): Promise<void> {
   for (const file of files) {
     const remoteFilePath = path.posix.join(remoteDir, file.filename);
     const remoteFileDir = path.posix.dirname(remoteFilePath);
-    console.log(
-      `uploadFiles: Creating directory for file ${file.filename} in ${remoteFileDir}`
-    );
+    console.log(`uploadFiles: Creating directory for file ${file.filename} in ${remoteFileDir}`);
     await mkdirRecursive(sftp, remoteFileDir);
     await uploadFile(sftp, remoteFilePath, file.code);
+  }
+}
+
+/**
+ * Extracts detailed graph JSON from the output string.
+ * Expects the JSON to be printed between:
+ * ---GRAPH_STRUCTURE_BEGIN--- and ---GRAPH_STRUCTURE_END---
+ */
+function extractGraphFromOutput(output: string): any | null {
+  try {
+    const regex = /---GRAPH_STRUCTURE_BEGIN---\s*([\s\S]+?)\s*---GRAPH_STRUCTURE_END---/;
+    const match = output.match(regex);
+    if (match && match[1]) {
+      const jsonStr = match[1].trim();
+      const graphData = JSON.parse(jsonStr);
+      console.log("Graph extracted from output markers:", graphData);
+      return graphData;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error parsing graph JSON from output:", error);
+    return null;
   }
 }
 
@@ -190,8 +188,7 @@ io.on("connection", (socket: Socket) => {
 
     try {
       await dbConnect();
-
-      // Dynamically import the Sheet model
+      // Dynamically import the Sheet model.
       const SheetModel = (await import("./models/Sheet")).default;
       const sheet = (await SheetModel.findOne({
         _id: data.sheetId,
@@ -211,7 +208,6 @@ io.on("connection", (socket: Socket) => {
         return;
       }
 
-      // Merge environment variables from all .env files
       let extraEnv: Record<string, string> = {};
       for (const file of files) {
         if (file.filename.endsWith(".env")) {
@@ -232,122 +228,107 @@ io.on("connection", (socket: Socket) => {
         return;
       }
 
-      const remoteTempDir: string = `/tmp/run-${Date.now()}-${Math.floor(
-        Math.random() * 1000
-      )}`;
+      const remoteTempDir: string = `/tmp/run-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
       console.log("Remote temp dir:", remoteTempDir);
 
       const conn = new SSHClient();
 
       conn.on("ready", () => {
         console.log("SSH Connection ready.");
-        // Start SFTP session
-        conn.sftp(
-          (
-            sftpErr: Error | null | undefined,
-            sftp: SFTPWrapper | undefined
-          ) => {
-            if (sftpErr || !sftp) {
-              socket.emit(
-                "message",
-                `Error establishing SFTP: ${sftpErr ? sftpErr.message : "Unknown error"
-                }\r\n`
-              );
-              socket.disconnect();
-              return;
-            }
-            console.log("SFTP session established.");
-            (async () => {
-              try {
-                console.log("Creating remote directory...");
-                await mkdirRecursive(sftp, remoteTempDir);
-                console.log("Remote directory created.");
-
-                console.log("Uploading files...");
-                await uploadFiles(sftp, remoteTempDir, files);
-                console.log("Files uploaded successfully.");
-
-                // End SFTP session to free the resource.
-                if (typeof sftp.end === "function") {
-                  sftp.end();
-                  console.log("SFTP session ended.");
-                }
-
-                // Build the command string based on language.
-                let cmd: string;
-                if (lang === "javascript") {
-                  const hasPackageJson = files.some(
-                    (f) => f.filename === "package.json"
-                  );
-                  cmd = `cd ${remoteTempDir} && ${hasPackageJson ? "npm install && " : ""
-                    }node ${entryFilename}`;
-                } else {
-                  const pythonCmd = process.env.PYTHON_CMD || "python3";
-                  cmd = `cd ${remoteTempDir} && ${pythonCmd} ${entryFilename}`;
-                }
-
-                console.log("Final remote command:", cmd);
-                socket.emit(
-                  "message",
-                  "Backend: Code execution started.\r\n"
-                );
-
-                // Execute the command using a pseudo-terminal.
-                const execOptions = {
-                  pty: true,
-                  env: { ...process.env, ...extraEnv },
-                } as ExecOptions;
-
-                conn.exec(
-                  cmd,
-                  execOptions,
-                  (
-                    execErr: Error | null | undefined,
-                    stream: ClientChannel | undefined
-                  ) => {
-                    if (execErr || !stream) {
-                      socket.emit(
-                        "message",
-                        `Error executing command: ${execErr ? execErr.message : "Unknown error"
-                        }\r\n`
-                      );
-                      socket.disconnect();
-                      return;
-                    }
-                    console.log("Command execution started.");
-                    // Link the stream so that input can be forwarded
-                    (socket as any).sshStream = stream;
-
-                    stream.on("data", (chunk: Buffer) => {
-                      const output = chunk.toString();
-                      console.log("STDOUT:", output);
-                      socket.emit("message", output);
-                    });
-
-                    stream.stderr.on("data", (chunk: Buffer) => {
-                      const errOutput = chunk.toString();
-                      console.error("STDERR:", errOutput);
-                      socket.emit("message", errOutput);
-                    });
-
-                    stream.on("close", (code: number, signal: string) => {
-                      socket.emit(
-                        "message",
-                        `\r\nBackend: Process exited with code ${code}.\r\n`
-                      );
-                      conn.end();
-                    });
-                  }
-                );
-              } catch (uploadError: unknown) {
-                const errorMessage =
-                  uploadError instanceof Error ? uploadError.message : "Unknown error";
-                socket.emit("message", `Error during file upload: ${errorMessage}\r\n`);
-                conn.end();
-              }
-            })();
+        conn.sftp((sftpErr: Error | null, sftp: SFTPWrapper | undefined) => {
+          if (sftpErr || !sftp) {
+            socket.emit("message", `Error establishing SFTP: ${sftpErr ? sftpErr.message : "Unknown error"}\r\n`);
+            socket.disconnect();
+            return;
           }
-        );
+          console.log("SFTP session established.");
+          (async () => {
+            try {
+              console.log("Creating remote directory...");
+              await mkdirRecursive(sftp, remoteTempDir);
+              console.log("Remote directory created.");
+
+              console.log("Uploading files...");
+              await uploadFiles(sftp, remoteTempDir, files);
+              console.log("Files uploaded successfully.");
+
+              if (typeof sftp.end === "function") {
+                sftp.end();
+                console.log("SFTP session ended.");
+              }
+
+              let cmd: string;
+              if (lang === "javascript") {
+                const hasPackageJson = files.some((f) => f.filename === "package.json");
+                cmd = `cd ${remoteTempDir} && ${hasPackageJson ? "npm install && " : ""}node ${entryFilename}`;
+              } else {
+                const pythonCmd = process.env.PYTHON_CMD || "python3";
+                cmd = `cd ${remoteTempDir} && ${pythonCmd} ${entryFilename}`;
+              }
+
+              console.log("Final remote command:", cmd);
+              socket.emit("message", "Backend: Code execution started.\r\n");
+
+              let outputBuffer = "";
+              let graphExtracted = false;
+
+              const execOptions = {
+                pty: true,
+                env: { ...process.env, ...extraEnv },
+              } as ExecOptions;
+
+              conn.exec(cmd, execOptions, (execErr: Error | null, stream: ClientChannel | undefined) => {
+                if (execErr || !stream) {
+                  socket.emit("message", `Error executing command: ${execErr ? execErr.message : "Unknown error"}\r\n`);
+                  socket.disconnect();
+                  return;
+                }
+                console.log("Command execution started.");
+                (socket as any).sshStream = stream;
+
+                stream.on("data", (chunk: Buffer) => {
+                  const output = chunk.toString();
+                  outputBuffer += output;
+                  socket.emit("message", output);
+
+                  if (!graphExtracted && outputBuffer.includes("---GRAPH_STRUCTURE_BEGIN---") && outputBuffer.includes("---GRAPH_STRUCTURE_END---")) {
+                    const extractedGraph = extractGraphFromOutput(outputBuffer);
+                    if (extractedGraph) {
+                      SheetModel.findByIdAndUpdate(sheet._id, { graphData: extractedGraph })
+                        .then(() => {
+                          socket.emit("graph_ready", { sheetId: data.sheetId, playgroundId: data.playgroundId });
+                          console.log("Graph data saved to MongoDB:", extractedGraph);
+                        })
+                        .catch((dbErr: any) => {
+                          console.error("Error updating graph data in MongoDB:", dbErr);
+                          socket.emit("message", `Error saving graph data: ${dbErr.message}\r\n`);
+                        });
+                      graphExtracted = true;
+                    } else {
+                      console.error("Graph extraction failed despite marker presence.");
+                      socket.emit("message", "Graph markers detected but no graph data could be extracted.\r\n");
+                    }
+                  }
+                });
+
+                stream.stderr.on("data", (chunk: Buffer) => {
+                  const errOutput = chunk.toString();
+                  console.error("STDERR:", errOutput);
+                  socket.emit("message", errOutput);
+                });
+
+                stream.on("close", (code: number, signal: string) => {
+                  socket.emit("message", `\r\nBackend: Process exited with code ${code}.\r\n`);
+                  conn.end();
+                });
+              });
+            } catch (uploadError: unknown) {
+              const errorMessage = uploadError instanceof Error ? uploadError.message : "Unknown error";
+              socket.emit("message", `Error during file upload: ${errorMessage}\r\n`);
+              conn.end();
+            }
+          })();
+        });
       });
 
       conn.on("error", (connErr: Error) => {
@@ -359,9 +340,7 @@ io.on("connection", (socket: Socket) => {
         host: process.env.SSH_HOST!,
         port: process.env.SSH_PORT ? parseInt(process.env.SSH_PORT) : 22,
         username: process.env.SSH_USER!,
-        privateKey: process.env.SSH_PRIVATE_KEY
-          ? fs.readFileSync(process.env.SSH_PRIVATE_KEY)
-          : undefined,
+        privateKey: process.env.SSH_PRIVATE_KEY ? fs.readFileSync(process.env.SSH_PRIVATE_KEY) : undefined,
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
@@ -381,6 +360,9 @@ io.on("connection", (socket: Socket) => {
   });
 });
 
+/* ====================
+   Start the Server
+   ==================== */
 const PORT: number = process.env.PORT ? parseInt(process.env.PORT) : 3001;
 server.listen(PORT, () => {
   console.log(`WebSocket Terminal server is running on port ${PORT}`);
