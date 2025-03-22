@@ -585,12 +585,12 @@ export default function PlaygroundsPage() {
 
   // When selectedSheet changes, update the file and graph data from the stored sheet.
   useEffect(() => {
+    setGraphData(null);
     if (selectedSheet) {
       setSelectedFile(selectedSheet.files[0] || null);
-      setGraphData(selectedSheet.graphData || null);
+      refreshGraphData();
     } else {
       setSelectedFile(null);
-      setGraphData(null);
     }
   }, [selectedSheet]);
 
@@ -731,14 +731,26 @@ export default function PlaygroundsPage() {
       const data = await res.json();
       if (data.sheets) {
         setSheets(data.sheets);
-        if (data.sheets.length > 0) setSelectedSheet(data.sheets[0]);
-        else setSelectedSheet(null);
+        // Preserve the current selected sheet if it exists in the new list
+        if (selectedSheet) {
+          const updatedSheet = data.sheets.find(
+            (sheet: Sheet) => sheet._id === selectedSheet._id
+          );
+          if (updatedSheet) {
+            setSelectedSheet(updatedSheet);
+          } else {
+            // Fallback to the first sheet if the previously selected one is no longer present
+            setSelectedSheet(data.sheets[0]);
+          }
+        } else if (data.sheets.length > 0) {
+          setSelectedSheet(data.sheets[0]);
+        }
       }
     } catch (error) {
       console.error("Error fetching sheets", error);
     }
   };
-
+  
   const handleUploadFile = (file: File) => {
     const reader = new FileReader();
     reader.onload = async () => {
@@ -1059,7 +1071,7 @@ export default function PlaygroundsPage() {
                 </div>
               ) : graphData ? (
                 <div className="w-full h-full">
-                  <GraphVisualization graphData={graphData} />
+                  <GraphVisualization key={selectedSheet._id} graphData={graphData} />
                 </div>
               ) : (
                 <p className="text-gray-400">Run your agent code to visualize the graph</p>
@@ -1096,6 +1108,7 @@ export default function PlaygroundsPage() {
       {/* Terminal Panel – mounted once; its socket connects only when Run Code is pressed */}
       {selectedSheet && selectedPlayground && (
         <TerminalPanel
+          key={selectedSheet._id}
           ref={terminalPanelRef}
           sheetId={selectedSheet._id}
           playgroundId={selectedPlayground._id}
