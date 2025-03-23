@@ -337,7 +337,7 @@ const Sidebar: React.FC<SidebarProps> = ({ playgrounds, selectedId, onSelect, on
   };
   return (
     <div className="h-full flex flex-col">
-      <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+      <div className="flex justify-between items-center mb-4 border-b border-gray-500 pb-2">
         <h2 className="text-xl font-cinzel text-gray-200">Playgrounds</h2>
       </div>
       <ul className="flex-1 overflow-y-auto font-cinzel text-sm text-gray-200">
@@ -969,10 +969,10 @@ export default function PlaygroundsPage() {
           {selectedSheet ? (
             <div className="relative border-b border-gray-700 overflow-hidden" style={{ height: editorHeight }}>
               <div className="flex justify-between items-center pl-4 py-1 border-b border-gray-700">
-                <div className="text-xs text-gray-400">Editor Pane</div>
+                <div className="text-xs text-gray-300">Editor Pane</div>
                 <button
                   onClick={() => setShowUploadFileModal(true)}
-                  className="bg-gray-700 px-2 py-1 text-xs rounded border border-gray-700 hover:bg-gray-600 transition-colors duration-200 w-48"
+                  className="bg-gray-500 px-2 py-1 text-xs rounded border border-gray-700 hover:bg-gray-600 transition-colors duration-200 w-48"
                 >
                   Upload File
                 </button>
@@ -1015,16 +1015,16 @@ export default function PlaygroundsPage() {
 
                 </div>
                 <div
-                  className="relative border-l border-gray-700 overflow-y-auto p-4 bg-black flex flex-col"
+                  className="relative border-l border-gray-700 overflow-y-auto p-4 pr-2 bg-black flex flex-col"
                   style={{ width: fileSidebarWidth, minWidth: fileSidebarWidth }}
                 >
-                  <h3 className="text-sm font-semibold mb-2 border-b border-gray-700 pb-1">Files</h3>
+                  <h3 className="text-sm font-semibold mb-2 border-b border-gray-500 pb-1">Files</h3>
                   <ul className="space-y-1 flex-1">
                     {selectedSheet.files.map((file, index) => (
                       <li key={index} className="flex items-center justify-between p-1 cursor-pointer text-xs hover:bg-gray-700">
                         <span
                           onClick={() => setSelectedFile(file)}
-                          className={selectedFile && selectedFile.filename === file.filename ? "bg-gray-700 p-1 rounded" : "p-1"}
+                          className={selectedFile && selectedFile.filename === file.filename ? "bg-gray-600 p-2 rounded" : "p-1"}
                         >
                           {file.filename}
                         </span>
@@ -1046,7 +1046,7 @@ export default function PlaygroundsPage() {
                   </ul>
                   <button
                     onClick={handleSaveFiles}
-                    className="w-full mb-[30px] py-2 bg-gray-700 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300"
+                    className="w-full mb-[30px] py-2 bg-gray-500 hover:bg-gray-700 rounded text-gray-200 font-cinzel transition-colors duration-300"
                   >
                     Save
                   </button>
@@ -1078,7 +1078,7 @@ export default function PlaygroundsPage() {
                 <p className="text-gray-400">Run your agent code to visualize the graph</p>
               )}
             </div>
-            <div className="absolute bottom-0 left-0 right-0 bg-black border-t border-gray-700 p-2 flex items-center justify-between z-20">
+            <div className="absolute bottom-0 left-0 right-0 bg-black border-t border-gray-500 p-2 flex items-center justify-between z-20">
               <div className="flex space-x-2">
                 {sheets.length > 0 &&
                   sheets.map((sheet) => (
@@ -1089,7 +1089,7 @@ export default function PlaygroundsPage() {
                           setSelectedSheet(sheet);
                         }
                       }}
-                      className={`px-3 py-1 rounded text-xs border border-gray-600 hover:bg-gray-700 transition-colors duration-300 ${selectedSheet && selectedSheet._id === sheet._id ? "bg-gray-700" : ""
+                      className={`px-3 py-1 rounded text-xs border border-gray-600 hover:bg-gray-700 transition-colors duration-300 ${selectedSheet && selectedSheet._id === sheet._id ? "bg-gray-500" : ""
                         }`}
                     >
                       {sheet.title}
@@ -1098,7 +1098,7 @@ export default function PlaygroundsPage() {
               </div>
               <button
                 onClick={() => setShowAddSheetModal(true)}
-                className="px-3 py-1 rounded text-xs border border-gray-600 hover:bg-gray-700 transition-colors duration-300"
+                className="px-3 py-1 rounded text-xs border border-gray-500 hover:bg-gray-700 transition-colors duration-300"
               >
                 + Add Sheet
               </button>
