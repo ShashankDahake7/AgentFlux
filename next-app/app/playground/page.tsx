@@ -77,10 +77,10 @@ const Modal: React.FC<{ isOpen: boolean; onClose: () => void; children: React.Re
   children
 }) => (
   <div
-    className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 transition-opacity duration-300 ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+    className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 transition-opacity duration-300 ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
       }`}
   >
-    <div className="bg-black border border-gray-700 p-6 rounded-lg shadow-xl max-w-md w-full relative transform transition-transform duration-300">
+    <div className="bg-black border border-gray-500 p-6 rounded-lg shadow-xl max-w-md w-full relative transform transition-transform duration-300">
       <button onClick={onClose} className="absolute top-2 right-2 text-gray-400 hover:text-gray-200 text-2xl">
         &times;
       </button>
@@ -260,44 +260,56 @@ const AdvancedSettingsModal: React.FC<AdvancedSettingsModalProps> = ({
   };
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <h2 className="text-xl font-bold text-gray-200 mb-4">
+      <h2 className="text-xl font-cinzel text-gray-200 mb-4">
         Advanced Settings: {playground?.name}
       </h2>
       <button
         onClick={onDeletePlayground}
-        className="w-full py-2 bg-red-700 hover:bg-red-600 rounded text-gray-200 transition-colors duration-300 mb-4"
+        className="w-full py-2 bg-gray-500 hover:bg-red-400 rounded text-gray-200 transition-colors duration-300 mb-4"
       >
         Delete Playground
       </button>
       <div className="bg-gray-800 p-4 rounded mb-4">
-        <h3 className="text-lg font-semibold text-gray-200 mb-2">Select Sheets to Delete</h3>
+        <h3 className="text-lg font-semibold text-gray-200 mb-4">Select Sheets to Delete</h3>
         {sheets && sheets.length > 0 ? (
-          <ul className="max-h-60 overflow-y-auto">
-            {sheets.map((sheet) => (
-              <li key={sheet._id} className="flex items-center mb-2">
-                <input
-                  type="checkbox"
-                  className="mr-2"
-                  checked={selectedSheetIds.includes(sheet._id)}
-                  onChange={() => toggleSheetSelection(sheet._id)}
-                />
-                <span className="text-gray-200">{sheet.title}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="grid grid-cols-1 gap-3 max-h-60 overflow-y-auto">
+            {sheets.map((sheet) => {
+              const isSelected = selectedSheetIds.includes(sheet._id);
+              return (
+                <label
+                  key={sheet._id}
+                  className={`flex items-center justify-between p-3 rounded cursor-pointer transition-all duration-200 border ${isSelected
+                    ? 'bg-red-500 bg-opacity-20 border-red-400'
+                    : 'bg-gray-700 border-gray-600 hover:bg-gray-600'
+                    }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      className="form-checkbox text-red-400"
+                      checked={isSelected}
+                      onChange={() => toggleSheetSelection(sheet._id)}
+                    />
+                    <span className="text-gray-200">{sheet.title}</span>
+                  </div>
+                </label>
+              );
+            })}
+          </div>
         ) : (
           <p className="text-gray-400">No sheets available.</p>
         )}
       </div>
+
       <button
         onClick={handleDeleteSelectedSheets}
-        className="w-full py-2 bg-yellow-700 hover:bg-yellow-600 rounded text-gray-200 transition-colors duration-300 mb-2"
+        className="w-full py-2 bg-gray-500 hover:bg-red-300 rounded text-gray-200 transition-colors duration-300 mb-2"
       >
         Delete Selected Sheets
       </button>
       <button
         onClick={handleDeleteAllSheets}
-        className="w-full py-2 bg-yellow-700 hover:bg-yellow-600 rounded text-gray-200 transition-colors duration-300"
+        className="w-full py-2 bg-gray-500 hover:bg-red-300 rounded text-gray-200 transition-colors duration-300"
       >
         Delete All Sheets
       </button>
@@ -332,7 +344,7 @@ const Sidebar: React.FC<SidebarProps> = ({ playgrounds, selectedId, onSelect, on
         {playgrounds.map((pg) => (
           <li
             key={pg._id}
-            className={`p-2 rounded cursor-pointer mb-2 ${selectedId === pg._id ? "bg-gray-700" : "hover:bg-gray-800"
+            className={`p-2 rounded border-b border-gray-600 cursor-pointer mb-2 ${selectedId === pg._id ? "bg-gray-500" : "hover:bg-gray-700"
               }`}
           >
             <div className="flex items-center justify-between">
@@ -358,7 +370,7 @@ const Sidebar: React.FC<SidebarProps> = ({ playgrounds, selectedId, onSelect, on
           </li>
         ))}
       </ul>
-      <button onClick={onAdd} className="mt-2 py-2 bg-gray-700 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300">
+      <button onClick={onAdd} className="mt-2 py-2 font-cinzel bg-gray-500 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300">
         Add Playground
       </button>
     </div>
@@ -927,7 +939,7 @@ export default function PlaygroundsPage() {
     <div className="flex flex-col h-screen bg-black text-white relative overflow-hidden">
       {/* Header */}
       <header className="h-12 bg-black border-b border-gray-700 flex items-center px-4">
-        <div className="px-3 py-1 border border-gray-700 rounded text-sm">
+        <div className="px-3 py-1 border border-gray-500 rounded text-sm">
           {user?.email || "Not Signed In"}
         </div>
       </header>
