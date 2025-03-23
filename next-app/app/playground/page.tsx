@@ -77,10 +77,10 @@ const Modal: React.FC<{ isOpen: boolean; onClose: () => void; children: React.Re
   children
 }) => (
   <div
-    className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 transition-opacity duration-300 ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+    className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 transition-opacity duration-300 ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
       }`}
   >
-    <div className="bg-black border border-gray-700 p-6 rounded-lg shadow-xl max-w-md w-full relative transform transition-transform duration-300">
+    <div className="bg-black border border-gray-500 p-6 rounded-lg shadow-xl max-w-md w-full relative transform transition-transform duration-300">
       <button onClick={onClose} className="absolute top-2 right-2 text-gray-400 hover:text-gray-200 text-2xl">
         &times;
       </button>
@@ -260,44 +260,56 @@ const AdvancedSettingsModal: React.FC<AdvancedSettingsModalProps> = ({
   };
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <h2 className="text-xl font-bold text-gray-200 mb-4">
+      <h2 className="text-xl font-cinzel text-gray-200 mb-4">
         Advanced Settings: {playground?.name}
       </h2>
       <button
         onClick={onDeletePlayground}
-        className="w-full py-2 bg-red-700 hover:bg-red-600 rounded text-gray-200 transition-colors duration-300 mb-4"
+        className="w-full py-2 bg-gray-500 hover:bg-red-400 rounded text-gray-200 transition-colors duration-300 mb-4"
       >
         Delete Playground
       </button>
       <div className="bg-gray-800 p-4 rounded mb-4">
-        <h3 className="text-lg font-semibold text-gray-200 mb-2">Select Sheets to Delete</h3>
+        <h3 className="text-lg font-semibold text-gray-200 mb-4">Select Sheets to Delete</h3>
         {sheets && sheets.length > 0 ? (
-          <ul className="max-h-60 overflow-y-auto">
-            {sheets.map((sheet) => (
-              <li key={sheet._id} className="flex items-center mb-2">
-                <input
-                  type="checkbox"
-                  className="mr-2"
-                  checked={selectedSheetIds.includes(sheet._id)}
-                  onChange={() => toggleSheetSelection(sheet._id)}
-                />
-                <span className="text-gray-200">{sheet.title}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="grid grid-cols-1 gap-3 max-h-60 overflow-y-auto">
+            {sheets.map((sheet) => {
+              const isSelected = selectedSheetIds.includes(sheet._id);
+              return (
+                <label
+                  key={sheet._id}
+                  className={`flex items-center justify-between p-3 rounded cursor-pointer transition-all duration-200 border ${isSelected
+                    ? 'bg-red-500 bg-opacity-20 border-red-400'
+                    : 'bg-gray-700 border-gray-600 hover:bg-gray-600'
+                    }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      className="form-checkbox text-red-400"
+                      checked={isSelected}
+                      onChange={() => toggleSheetSelection(sheet._id)}
+                    />
+                    <span className="text-gray-200">{sheet.title}</span>
+                  </div>
+                </label>
+              );
+            })}
+          </div>
         ) : (
           <p className="text-gray-400">No sheets available.</p>
         )}
       </div>
+
       <button
         onClick={handleDeleteSelectedSheets}
-        className="w-full py-2 bg-yellow-700 hover:bg-yellow-600 rounded text-gray-200 transition-colors duration-300 mb-2"
+        className="w-full py-2 bg-gray-500 hover:bg-red-300 rounded text-gray-200 transition-colors duration-300 mb-2"
       >
         Delete Selected Sheets
       </button>
       <button
         onClick={handleDeleteAllSheets}
-        className="w-full py-2 bg-yellow-700 hover:bg-yellow-600 rounded text-gray-200 transition-colors duration-300"
+        className="w-full py-2 bg-gray-500 hover:bg-red-300 rounded text-gray-200 transition-colors duration-300"
       >
         Delete All Sheets
       </button>
@@ -325,14 +337,14 @@ const Sidebar: React.FC<SidebarProps> = ({ playgrounds, selectedId, onSelect, on
   };
   return (
     <div className="h-full flex flex-col">
-      <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+      <div className="flex justify-between items-center mb-4 border-b border-gray-500 pb-2">
         <h2 className="text-xl font-cinzel text-gray-200">Playgrounds</h2>
       </div>
       <ul className="flex-1 overflow-y-auto font-cinzel text-sm text-gray-200">
         {playgrounds.map((pg) => (
           <li
             key={pg._id}
-            className={`p-2 rounded cursor-pointer mb-2 ${selectedId === pg._id ? "bg-gray-700" : "hover:bg-gray-800"
+            className={`p-2 rounded border-b border-gray-600 cursor-pointer mb-2 ${selectedId === pg._id ? "bg-gray-500" : "hover:bg-gray-700"
               }`}
           >
             <div className="flex items-center justify-between">
@@ -358,7 +370,34 @@ const Sidebar: React.FC<SidebarProps> = ({ playgrounds, selectedId, onSelect, on
           </li>
         ))}
       </ul>
-      <button onClick={onAdd} className="mt-2 py-2 bg-gray-700 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300">
+      <div
+        className="w-full p-2 mb-2 h-[75px] flex justify-between items-center gap-4 rounded-2xl"
+        style={{
+          border: '1px dashed #aaa',
+          borderRadius: '1rem',
+          boxSizing: 'border-box',
+        }}
+      >
+        <video
+          src="/agentops.mp4"
+          className="h-full rounded-lg"
+          muted
+          autoPlay
+          loop
+        />
+        <a
+          href="#"
+          className="text-sm font-cinzel transition-colors duration-200"
+          style={{ color: '#c4b5fd' }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = '#f5deb3')} // violet-300
+          onMouseLeave={(e) => (e.currentTarget.style.color = '#c4b5fd')}
+        >
+          Understand how to use
+        </a>
+      </div>
+
+
+      <button onClick={onAdd} className="mt-2 py-2 font-cinzel bg-gray-500 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300">
         Add Playground
       </button>
     </div>
@@ -750,7 +789,7 @@ export default function PlaygroundsPage() {
       console.error("Error fetching sheets", error);
     }
   };
-  
+
   const handleUploadFile = (file: File) => {
     const reader = new FileReader();
     reader.onload = async () => {
@@ -926,15 +965,15 @@ export default function PlaygroundsPage() {
   return (
     <div className="flex flex-col h-screen bg-black text-white relative overflow-hidden">
       {/* Header */}
-      <header className="h-12 bg-black border-b border-gray-700 flex items-center px-4">
-        <div className="px-3 py-1 border border-gray-700 rounded text-sm">
+      <header className="h-12 bg-black border-b border-gray-500 flex items-center px-4">
+        <div className="px-3 py-1 border border-gray-500 rounded text-sm">
           {user?.email || "Not Signed In"}
         </div>
       </header>
       {/* Main Layout */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar */}
-        <div className="relative bg-black border-r border-gray-700" style={{ width: sidebarWidth }}>
+        <div className="relative bg-black border-r border-gray-400" style={{ width: sidebarWidth }}>
           <div className="h-full py-4 pl-2 pr-4">
             <Sidebar
               playgrounds={playgrounds}
@@ -955,12 +994,12 @@ export default function PlaygroundsPage() {
         {/* Editor, Graph & Footer Area */}
         <div className="flex flex-col flex-1 overflow-hidden relative">
           {selectedSheet ? (
-            <div className="relative border-b border-gray-700 overflow-hidden" style={{ height: editorHeight }}>
-              <div className="flex justify-between items-center pl-4 py-1 border-b border-gray-700">
-                <div className="text-xs text-gray-400">Editor Pane</div>
+            <div className="relative border-b border-gray-500 overflow-hidden" style={{ height: editorHeight }}>
+              <div className="flex justify-between items-center pl-4 py-1 border-b border-gray-500">
+                <div className="text-xs text-gray-300">Editor Pane</div>
                 <button
                   onClick={() => setShowUploadFileModal(true)}
-                  className="bg-gray-700 px-2 py-1 text-xs rounded border border-gray-700 hover:bg-gray-600 transition-colors duration-200 w-48"
+                  className="bg-gray-500 px-2 py-1 text-xs rounded border border-gray-700 hover:bg-gray-600 transition-colors duration-200 w-48"
                 >
                   Upload File
                 </button>
@@ -996,34 +1035,23 @@ export default function PlaygroundsPage() {
                   />
                   <button
                     onClick={handleRunCode}
-                    style={{
-                      position: "absolute",
-                      bottom: "40px",
-                      right: "20px",
-                      zIndex: 10,
-                      boxShadow: "0 4px 8px rgba(0,0,0,0.5)",
-                      background: "#000",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: "4px",
-                      padding: "8px 12px",
-                      cursor: "pointer"
-                    }}
+                    className="animated-border absolute bottom-[50px] right-4 z-10 px-4 py-2 text-white bg-black rounded-md shadow-md border-[3px] border-solid"
                   >
                     Run Code
                   </button>
+
                 </div>
                 <div
-                  className="relative border-l border-gray-700 overflow-y-auto p-4 bg-black flex flex-col"
+                  className="relative border-l border-gray-700 overflow-y-auto p-4 pr-2 bg-black flex flex-col"
                   style={{ width: fileSidebarWidth, minWidth: fileSidebarWidth }}
                 >
-                  <h3 className="text-sm font-semibold mb-2 border-b border-gray-700 pb-1">Files</h3>
+                  <h3 className="text-sm font-semibold mb-2 border-b border-gray-500 pb-1">Files</h3>
                   <ul className="space-y-1 flex-1">
                     {selectedSheet.files.map((file, index) => (
                       <li key={index} className="flex items-center justify-between p-1 cursor-pointer text-xs hover:bg-gray-700">
                         <span
                           onClick={() => setSelectedFile(file)}
-                          className={selectedFile && selectedFile.filename === file.filename ? "bg-gray-700 p-1 rounded" : "p-1"}
+                          className={selectedFile && selectedFile.filename === file.filename ? "bg-gray-600 p-2 rounded" : "p-1"}
                         >
                           {file.filename}
                         </span>
@@ -1045,7 +1073,7 @@ export default function PlaygroundsPage() {
                   </ul>
                   <button
                     onClick={handleSaveFiles}
-                    className="w-full mb-[30px] py-2 bg-gray-700 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300"
+                    className="w-full mb-[30px] py-2 bg-gray-500 hover:bg-gray-700 rounded text-gray-200 font-cinzel transition-colors duration-300"
                   >
                     Save
                   </button>
@@ -1077,7 +1105,7 @@ export default function PlaygroundsPage() {
                 <p className="text-gray-400">Run your agent code to visualize the graph</p>
               )}
             </div>
-            <div className="absolute bottom-0 left-0 right-0 bg-black border-t border-gray-700 p-2 flex items-center justify-between z-20">
+            <div className="absolute bottom-0 left-0 right-0 bg-black border-t border-gray-500 p-2 flex items-center justify-between z-20">
               <div className="flex space-x-2">
                 {sheets.length > 0 &&
                   sheets.map((sheet) => (
@@ -1088,7 +1116,7 @@ export default function PlaygroundsPage() {
                           setSelectedSheet(sheet);
                         }
                       }}
-                      className={`px-3 py-1 rounded text-xs border border-gray-600 hover:bg-gray-700 transition-colors duration-300 ${selectedSheet && selectedSheet._id === sheet._id ? "bg-gray-700" : ""
+                      className={`px-3 py-1 rounded text-xs border border-gray-600 hover:bg-gray-700 transition-colors duration-300 ${selectedSheet && selectedSheet._id === sheet._id ? "bg-gray-500" : ""
                         }`}
                     >
                       {sheet.title}
@@ -1097,7 +1125,7 @@ export default function PlaygroundsPage() {
               </div>
               <button
                 onClick={() => setShowAddSheetModal(true)}
-                className="px-3 py-1 rounded text-xs border border-gray-600 hover:bg-gray-700 transition-colors duration-300"
+                className="px-3 py-1 rounded text-xs border border-gray-500 hover:bg-gray-700 transition-colors duration-300"
               >
                 + Add Sheet
               </button>
