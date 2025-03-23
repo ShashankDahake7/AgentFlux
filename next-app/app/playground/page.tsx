@@ -938,7 +938,7 @@ export default function PlaygroundsPage() {
   return (
     <div className="flex flex-col h-screen bg-black text-white relative overflow-hidden">
       {/* Header */}
-      <header className="h-12 bg-black border-b border-gray-700 flex items-center px-4">
+      <header className="h-12 bg-black border-b border-gray-500 flex items-center px-4">
         <div className="px-3 py-1 border border-gray-500 rounded text-sm">
           {user?.email || "Not Signed In"}
         </div>
@@ -946,7 +946,7 @@ export default function PlaygroundsPage() {
       {/* Main Layout */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar */}
-        <div className="relative bg-black border-r border-gray-700" style={{ width: sidebarWidth }}>
+        <div className="relative bg-black border-r border-gray-400" style={{ width: sidebarWidth }}>
           <div className="h-full py-4 pl-2 pr-4">
             <Sidebar
               playgrounds={playgrounds}
@@ -967,8 +967,8 @@ export default function PlaygroundsPage() {
         {/* Editor, Graph & Footer Area */}
         <div className="flex flex-col flex-1 overflow-hidden relative">
           {selectedSheet ? (
-            <div className="relative border-b border-gray-700 overflow-hidden" style={{ height: editorHeight }}>
-              <div className="flex justify-between items-center pl-4 py-1 border-b border-gray-700">
+            <div className="relative border-b border-gray-500 overflow-hidden" style={{ height: editorHeight }}>
+              <div className="flex justify-between items-center pl-4 py-1 border-b border-gray-500">
                 <div className="text-xs text-gray-300">Editor Pane</div>
                 <button
                   onClick={() => setShowUploadFileModal(true)}
