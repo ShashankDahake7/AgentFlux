@@ -750,7 +750,7 @@ export default function PlaygroundsPage() {
       console.error("Error fetching sheets", error);
     }
   };
-  
+
   const handleUploadFile = (file: File) => {
     const reader = new FileReader();
     reader.onload = async () => {
@@ -996,22 +996,11 @@ export default function PlaygroundsPage() {
                   />
                   <button
                     onClick={handleRunCode}
-                    style={{
-                      position: "absolute",
-                      bottom: "40px",
-                      right: "20px",
-                      zIndex: 10,
-                      boxShadow: "0 4px 8px rgba(0,0,0,0.5)",
-                      background: "#000",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: "4px",
-                      padding: "8px 12px",
-                      cursor: "pointer"
-                    }}
+                    className="animated-border absolute bottom-[50px] right-4 z-10 px-4 py-2 text-white bg-black rounded-md shadow-md border-[3px] border-solid"
                   >
                     Run Code
                   </button>
+
                 </div>
                 <div
                   className="relative border-l border-gray-700 overflow-y-auto p-4 bg-black flex flex-col"

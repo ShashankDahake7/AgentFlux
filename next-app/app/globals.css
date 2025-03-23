@@ -3,7 +3,28 @@
 @tailwind utilities;
 
 @layer base {
-    .font-montserrat {
-      font-family: "Montserrat", sans-serif; 
-    }
+  .font-montserrat {
+    font-family: "Montserrat", sans-serif;
+  }
+}
+
+@keyframes borderMove {
+  0% {
+    border-image: linear-gradient(0deg, #fd0866, #8d3cff) 1;
+  }
+
+  50% {
+    border-image: linear-gradient(180deg, #fd0866, #8d3cff) 1;
+  }
+
+  100% {
+    border-image: linear-gradient(360deg, #fd0866, #8d3cff) 1;
+  }
+}
+
+.animated-border {
+  border-width: 3px;
+  border-style: solid;
+  border-image-slice: 1;
+  animation: borderMove 3s linear infinite;
 }
