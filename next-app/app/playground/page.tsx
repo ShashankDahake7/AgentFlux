@@ -370,6 +370,33 @@ const Sidebar: React.FC<SidebarProps> = ({ playgrounds, selectedId, onSelect, on
           </li>
         ))}
       </ul>
+      <div
+        className="w-full p-2 mb-2 h-[75px] flex justify-between items-center gap-4 rounded-2xl"
+        style={{
+          border: '1px dashed #aaa',
+          borderRadius: '1rem',
+          boxSizing: 'border-box',
+        }}
+      >
+        <video
+          src="/agentops.mp4"
+          className="h-full rounded-lg"
+          muted
+          autoPlay
+          loop
+        />
+        <a
+          href="#"
+          className="text-sm font-cinzel transition-colors duration-200"
+          style={{ color: '#c4b5fd' }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = '#f5deb3')} // violet-300
+          onMouseLeave={(e) => (e.currentTarget.style.color = '#c4b5fd')}
+        >
+          Understand how to use
+        </a>
+      </div>
+
+
       <button onClick={onAdd} className="mt-2 py-2 font-cinzel bg-gray-500 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300">
         Add Playground
       </button>
