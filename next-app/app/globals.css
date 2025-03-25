@@ -22,9 +22,28 @@
   }
 }
 
+@keyframes borderMoveHover {
+  0% {
+    border-image: linear-gradient(0deg, #00ffcc, #ffcc00) 1;
+  }
+
+  50% {
+    border-image: linear-gradient(180deg, #00ffcc, #ffcc00) 1;
+  }
+
+  100% {
+    border-image: linear-gradient(360deg, #00ffcc, #ffcc00) 1;
+  }
+}
+
 .animated-border {
   border-width: 3px;
   border-style: solid;
   border-image-slice: 1;
   animation: borderMove 3s linear infinite;
+  transition: all 1s ease-in-out;
+}
+
+.animated-border:hover {
+  animation: borderMoveHover 3s linear infinite;
 }
