@@ -384,6 +384,9 @@ const Sidebar: React.FC<SidebarProps> = ({ playgrounds, selectedId, onSelect, on
           muted
           autoPlay
           loop
+          style={{
+            boxShadow: '0 4px 12px rgba(255, 248, 220, 0.8)', // light creamy shadow
+          }}
         />
         <a
           href="#"
@@ -544,9 +547,9 @@ const TerminalPanel = forwardRef(
           left: "255px",
           right: "5px",
           background: "#000",
-          borderTop: "1px solid #444",
-          borderLeft: "1px solid #444",
-          borderRight: "1px solid #444",
+          borderTop: "1px solid white",
+          borderLeft: "1px solid white",
+          borderRight: "1px solid white",
           zIndex: 50,
           height: terminalHeight
         }}
