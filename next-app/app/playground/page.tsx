@@ -1102,7 +1102,7 @@ export default function PlaygroundsPage() {
                 </div>
               ) : graphData ? (
                 <div className="w-full h-full">
-                  <GraphVisualization key={selectedSheet._id} graphData={graphData} />
+                  <GraphVisualization key={selectedSheet?._id} graphData={graphData} />
                 </div>
               ) : (
                 <p className="text-gray-400">Run your agent code to visualize the graph</p>

@@ -10,4 +10,4 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-Command to run node.js server externally in root directory: npx ts-node --project tsconfig.server.json server.ts
+Command to run node.js server externally in root directory: npx ts-node --project tsconfig.server.json --transpile-only server.ts
