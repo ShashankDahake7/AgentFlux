@@ -1,5 +1,4 @@
 "use client";
-// Shim browser globals for xterm.
 if (typeof window !== "undefined" && typeof self === "undefined") {
   (window as any).self = window;
 }
@@ -437,7 +436,6 @@ const TerminalPanel = forwardRef(
       currentPlaygroundIdRef.current = playgroundId;
     }, [playgroundId]);
 
-    // Initialize xterm only once.
     useEffect(() => {
       import("xterm").then(({ Terminal }) => {
         const term = new Terminal({
