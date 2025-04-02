@@ -13,7 +13,8 @@ const SheetSchema = new Schema({
     title: { type: String, required: true },
     files: { type: [FileSchema], default: [] },
     canvasData: { type: Object, default: {} },
-    graphData: { type: Object, default: null }, // <-- NEW FIELD FOR GRAPH DATA
+    graphData: { type: Object, default: null },
+    associatedModels: { type: [String], default: [] }, // NEW FIELD
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
 });
