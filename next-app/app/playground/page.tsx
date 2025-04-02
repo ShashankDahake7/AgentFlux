@@ -1,4 +1,5 @@
 "use client";
+import { ChevronUp, ChevronDown } from "lucide-react";
 if (typeof window !== "undefined" && typeof self === "undefined") {
   (window as any).self = window;
 }
@@ -10,7 +11,7 @@ import React, {
   useImperativeHandle,
   forwardRef,
   ChangeEvent,
-  MouseEvent
+  MouseEvent,
 } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/app/firebase/firebaseConfig";
@@ -22,7 +23,6 @@ import "xterm/css/xterm.css";
 
 // Dynamically import MonacoEditor (SSR disabled)
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
-
 // Dynamically import GraphVisualization component
 const GraphVisualization = dynamic(
   () => import("@/components/GraphVisualization"),
@@ -32,7 +32,7 @@ const GraphVisualization = dynamic(
       <div className="w-full h-full flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-500"></div>
       </div>
-    )
+    ),
   }
 );
 
@@ -61,6 +61,7 @@ interface Sheet {
   files: FileType[];
   canvasData: any;
   graphData?: any;
+  associatedModels?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -73,14 +74,17 @@ const TERMINAL_HEADER_HEIGHT = 40;
 const Modal: React.FC<{ isOpen: boolean; onClose: () => void; children: React.ReactNode }> = ({
   isOpen,
   onClose,
-  children
+  children,
 }) => (
   <div
     className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 transition-opacity duration-300 ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
       }`}
   >
     <div className="bg-black border border-gray-500 p-6 rounded-lg shadow-xl max-w-md w-full relative transform transition-transform duration-300">
-      <button onClick={onClose} className="absolute top-2 right-2 text-gray-400 hover:text-gray-200 text-2xl">
+      <button
+        onClick={onClose}
+        className="absolute top-2 right-2 text-gray-400 hover:text-gray-200 text-2xl"
+      >
         &times;
       </button>
       {children}
@@ -131,7 +135,7 @@ const AddPlaygroundModal: React.FC<{
 const AddSheetModal: React.FC<{ isOpen: boolean; onClose: () => void; onSubmit: (title: string) => void }> = ({
   isOpen,
   onClose,
-  onSubmit
+  onSubmit,
 }) => {
   const [title, setTitle] = useState("");
   const handleSubmit = () => {
@@ -189,7 +193,7 @@ const UploadFileModal: React.FC<{
   );
 };
 
-interface AdvancedSettingsModalProps {
+const AdvancedSettingsModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   playground: Playground | null;
@@ -197,17 +201,7 @@ interface AdvancedSettingsModalProps {
   sheets: Sheet[];
   onDeletePlayground: () => void;
   onSheetsDeleted: (deletedSheetIds?: string[]) => void;
-}
-
-const AdvancedSettingsModal: React.FC<AdvancedSettingsModalProps> = ({
-  isOpen,
-  onClose,
-  playground,
-  token,
-  sheets,
-  onDeletePlayground,
-  onSheetsDeleted
-}) => {
+}> = ({ isOpen, onClose, playground, token, sheets, onDeletePlayground, onSheetsDeleted }) => {
   const [selectedSheetIds, setSelectedSheetIds] = useState<string[]>([]);
   const toggleSheetSelection = (sheetId: string) => {
     if (selectedSheetIds.includes(sheetId)) {
@@ -226,8 +220,11 @@ const AdvancedSettingsModal: React.FC<AdvancedSettingsModalProps> = ({
     try {
       const res = await fetch(`/api/playgrounds/${playground._id}/sheets`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ sheetIds: idsToDelete })
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ sheetIds: idsToDelete }),
       });
       const data = await res.json();
       if (data.message) {
@@ -245,7 +242,7 @@ const AdvancedSettingsModal: React.FC<AdvancedSettingsModalProps> = ({
     try {
       const res = await fetch(`/api/playgrounds/${playground._id}/sheets`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       if (data.message) {
@@ -278,8 +275,8 @@ const AdvancedSettingsModal: React.FC<AdvancedSettingsModalProps> = ({
                 <label
                   key={sheet._id}
                   className={`flex items-center justify-between p-3 rounded cursor-pointer transition-all duration-200 border ${isSelected
-                    ? 'bg-red-500 bg-opacity-20 border-red-400'
-                    : 'bg-gray-700 border-gray-600 hover:bg-gray-600'
+                    ? "bg-red-500 bg-opacity-20 border-red-400"
+                    : "bg-gray-700 border-gray-600 hover:bg-gray-600"
                     }`}
                 >
                   <div className="flex items-center gap-3">
@@ -299,7 +296,6 @@ const AdvancedSettingsModal: React.FC<AdvancedSettingsModalProps> = ({
           <p className="text-gray-400">No sheets available.</p>
         )}
       </div>
-
       <button
         onClick={handleDeleteSelectedSheets}
         className="w-full py-2 bg-gray-500 hover:bg-red-300 rounded text-gray-200 transition-colors duration-300 mb-2"
@@ -316,6 +312,211 @@ const AdvancedSettingsModal: React.FC<AdvancedSettingsModalProps> = ({
   );
 };
 
+const MultiSelectDropdown: React.FC<{
+  options: string[];
+  selected: string[];
+  onSelect: (value: string) => void;
+  onDeselect: (value: string) => void;
+  placeholder: string;
+}> = ({ options, selected, onSelect, onDeselect, placeholder }) => {
+  const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const availableOptions = options.filter((opt) => !selected.includes(opt));
+
+  // Close dropdown if clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <div
+        className="border rounded px-2 py-1 cursor-pointer flex flex-wrap gap-1 items-center"
+        onClick={() => setDropdownOpen(!dropdownOpen)}
+      >
+        {selected.length === 0 && <span className="text-gray-400 flex-1">{placeholder}</span>}
+        {selected.map((item) => (
+          <span
+            key={item}
+            className="inline-flex items-center bg-gray-700 text-gray-200 rounded-full px-2 py-1"
+          >
+            {item}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDeselect(item);
+              }}
+              className="ml-1 text-red-400"
+            >
+              &times;
+            </button>
+          </span>
+        ))}
+        <span className="ml-auto">
+          {dropdownOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </span>
+      </div>
+      {dropdownOpen && (
+        <div className="absolute z-10 bg-black border border-gray-500 mt-1 w-full rounded shadow-lg max-h-60 overflow-y-auto">
+          {availableOptions.map((opt) => (
+            <div
+              key={opt}
+              onClick={() => onSelect(opt)}
+              className="px-2 py-1 hover:bg-gray-700 cursor-pointer"
+            >
+              {opt}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const MultiSelectDropdownForSheets: React.FC<{
+  options: { id: string; label: string }[];
+  selected: string[];
+  onSelect: (value: string) => void;
+  onDeselect: (value: string) => void;
+  placeholder: string;
+}> = ({ options, selected, onSelect, onDeselect, placeholder }) => {
+  const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const availableOptions = options.filter((opt) => !selected.includes(opt.id));
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <div
+        className="border rounded px-2 py-1 cursor-pointer flex flex-wrap gap-1 items-center"
+        onClick={() => setDropdownOpen(!dropdownOpen)}
+      >
+        {selected.length === 0 && <span className="text-gray-400 flex-1">{placeholder}</span>}
+        {selected.map((id) => {
+          const item = options.find((opt) => opt.id === id);
+          return (
+            item && (
+              <span key={id} className="inline-flex items-center bg-gray-700 text-gray-200 rounded-full px-2 py-1">
+                {item.label}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeselect(id);
+                  }}
+                  className="ml-1 text-red-400"
+                >
+                  &times;
+                </button>
+              </span>
+            )
+          );
+        })}
+        <span className="ml-auto">
+          {dropdownOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </span>
+      </div>
+      {dropdownOpen && (
+        <div className="absolute z-10 bg-black border border-gray-500 mt-1 w-full rounded shadow-lg max-h-60 overflow-y-auto">
+          {availableOptions.map((opt) => (
+            <div
+              key={opt.id}
+              onClick={() => onSelect(opt.id)}
+              className="px-2 py-1 hover:bg-gray-700 cursor-pointer"
+            >
+              {opt.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Updated AssociateModelsModal component using the dropdown multi-selects with arrow indicators
+export const AssociateModelsModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  sheets: Sheet[];
+  onSubmit: (selectedSheetIds: string[], selectedModels: string[]) => void;
+}> = ({ isOpen, onClose, sheets, onSubmit }) => {
+  const availableModels = ["deepseek-r1", "gemini-1.5-pro", "gemini-1.5-flash", "gemini-1.0-pro", "openai-gpt-3.5-turbo", "openai-gpt-4"];
+  const [selectedModels, setSelectedModels] = useState<string[]>([]);
+  const [selectedSheetIds, setSelectedSheetIds] = useState<string[]>([]);
+
+  const handleModelSelect = (value: string) => {
+    setSelectedModels([...selectedModels, value]);
+  };
+
+  const handleModelDeselect = (value: string) => {
+    setSelectedModels(selectedModels.filter((m) => m !== value));
+  };
+
+  const handleSheetSelect = (sheetId: string) => {
+    setSelectedSheetIds([...selectedSheetIds, sheetId]);
+  };
+
+  const handleSheetDeselect = (sheetId: string) => {
+    setSelectedSheetIds(selectedSheetIds.filter((id) => id !== sheetId));
+  };
+
+  const handleSubmit = () => {
+    if (selectedModels.length === 0) return alert("Please select at least one model.");
+    if (selectedSheetIds.length === 0) return alert("Please select at least one sheet.");
+    onSubmit(selectedSheetIds, selectedModels);
+    setSelectedModels([]);
+    setSelectedSheetIds([]);
+    onClose();
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose}>
+      <h2 className="text-xl font-bold text-gray-200 mb-4">Associate Models</h2>
+      <div className="mb-4">
+        <h3 className="text-lg font-semibold text-gray-200 mb-2">Select Models</h3>
+        <MultiSelectDropdown
+          options={availableModels}
+          selected={selectedModels}
+          onSelect={handleModelSelect}
+          onDeselect={handleModelDeselect}
+          placeholder="Select models..."
+        />
+      </div>
+      <div className="mb-4">
+        <h3 className="text-lg font-semibold text-gray-200 mb-2">Select Sheets</h3>
+        <MultiSelectDropdownForSheets
+          options={sheets.map((sheet) => ({ id: sheet._id, label: sheet.title }))}
+          selected={selectedSheetIds}
+          onSelect={handleSheetSelect}
+          onDeselect={handleSheetDeselect}
+          placeholder="Select sheets..."
+        />
+      </div>
+      <button
+        onClick={handleSubmit}
+        className="w-full py-2 bg-gray-700 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300"
+      >
+        Associate
+      </button>
+    </Modal>
+  );
+};
 /* ========= SIDEBAR ========= */
 interface SidebarProps {
   playgrounds: Playground[];
@@ -323,9 +524,17 @@ interface SidebarProps {
   onSelect: (pg: Playground) => void;
   onAdd: () => void;
   onOpenAdvanced: (pg: Playground) => void;
+  onOpenAssociateModels: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ playgrounds, selectedId, onSelect, onAdd, onOpenAdvanced }) => {
+const Sidebar: React.FC<SidebarProps> = ({
+  playgrounds,
+  selectedId,
+  onSelect,
+  onAdd,
+  onOpenAdvanced,
+  onOpenAssociateModels,
+}) => {
   const logos = ["/logo1.png", "/logo2.png", "/logo3.png"];
   const getLogoForPlayground = (id: string) => {
     let sum = 0;
@@ -362,7 +571,11 @@ const Sidebar: React.FC<SidebarProps> = ({ playgrounds, selectedId, onSelect, on
                 />
                 <span>{pg.name}</span>
               </div>
-              <button onClick={() => onOpenAdvanced(pg)} title="Advanced settings" className="text-gray-400 hover:text-gray-200 focus:outline-none">
+              <button
+                onClick={() => onOpenAdvanced(pg)}
+                title="Advanced settings"
+                className="text-gray-400 hover:text-gray-200 focus:outline-none"
+              >
                 <span className="text-2xl leading-none">{'\u22EE'}</span>
               </button>
             </div>
@@ -372,9 +585,9 @@ const Sidebar: React.FC<SidebarProps> = ({ playgrounds, selectedId, onSelect, on
       <div
         className="w-full p-2 mb-2 h-[75px] flex justify-between items-center gap-4 rounded-2xl"
         style={{
-          border: '1px dashed #aaa',
-          borderRadius: '1rem',
-          boxSizing: 'border-box',
+          border: "1px dashed #aaa",
+          borderRadius: "1rem",
+          boxSizing: "border-box",
         }}
       >
         <video
@@ -383,23 +596,39 @@ const Sidebar: React.FC<SidebarProps> = ({ playgrounds, selectedId, onSelect, on
           muted
           autoPlay
           loop
-          style={{
-            boxShadow: '0 4px 12px rgba(255, 248, 220, 0.8)', // light creamy shadow
-          }}
+          style={{ boxShadow: "0 4px 12px rgba(255, 248, 220, 0.8)" }}
         />
         <a
           href="#"
           className="text-sm font-cinzel transition-colors duration-200"
-          style={{ color: '#c4b5fd' }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = '#f5deb3')} // violet-300
-          onMouseLeave={(e) => (e.currentTarget.style.color = '#c4b5fd')}
+          style={{ color: "#c4b5fd" }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "#f5deb3")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "#c4b5fd")}
         >
           Understand how to use
         </a>
       </div>
+      <div className="flex items-center mt-2">
+        {/* Image (1/4th width, same height as button) */}
+        <img
+          src="models.png"
+          alt="Icon"
+          className="h-10 w-1/6 object-cover rounded"
+        />
 
+        {/* Button (3/4th width) */}
+        <button
+          onClick={onOpenAssociateModels}
+          className="flex-1 py-2 font-cinzel bg-gray-500 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300 ml-2"
+        >
+          Associate Models
+        </button>
+      </div>
 
-      <button onClick={onAdd} className="mt-2 py-2 font-cinzel bg-gray-500 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300">
+      <button
+        onClick={onAdd}
+        className="mt-2 py-2 font-cinzel bg-gray-500 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300"
+      >
         Add Playground
       </button>
     </div>
@@ -407,8 +636,6 @@ const Sidebar: React.FC<SidebarProps> = ({ playgrounds, selectedId, onSelect, on
 };
 
 /* ========= TERMINAL PANEL ========= */
-// TerminalPanel is a forwardRef component that initializes xterm on mount
-// but does not connect its socket until triggerRunCode() is called.
 interface TerminalPanelProps {
   sheetId: string;
   playgroundId: string;
@@ -426,12 +653,13 @@ const TerminalPanel = forwardRef(
     const fitAddonRef = useRef<any>(null);
     const socketRef = useRef<any>(null);
     const commandBufferRef = useRef<string>("");
-    // Keep track of the current IDs.
     const currentSheetIdRef = useRef(sheetId);
     const currentPlaygroundIdRef = useRef(playgroundId);
+
     useEffect(() => {
       currentSheetIdRef.current = sheetId;
     }, [sheetId]);
+
     useEffect(() => {
       currentPlaygroundIdRef.current = playgroundId;
     }, [playgroundId]);
@@ -441,7 +669,7 @@ const TerminalPanel = forwardRef(
         const term = new Terminal({
           convertEol: true,
           cursorBlink: true,
-          theme: { background: "#000", foreground: "#fff" }
+          theme: { background: "#000", foreground: "#fff" },
         });
         termRef.current = term;
         import("xterm-addon-fit").then(({ FitAddon }) => {
@@ -485,14 +713,13 @@ const TerminalPanel = forwardRef(
       };
     }, []);
 
-    // Expose triggerRunCode() so that the parent can connect the socket on demand.
     useImperativeHandle(ref, () => ({
       triggerRunCode() {
         if (socketRef.current && socketRef.current.connected) {
           termRef.current?.write("\r\nStarting code execution...\r\n");
           socketRef.current.emit("start", {
             sheetId: currentSheetIdRef.current,
-            playgroundId: currentPlaygroundIdRef.current
+            playgroundId: currentPlaygroundIdRef.current,
           });
         } else {
           const backendUrl = process.env.NEXT_PUBLIC_WS_URL || "http://localhost:3001";
@@ -503,7 +730,7 @@ const TerminalPanel = forwardRef(
               termRef.current?.write("Connected to backend.\r\n");
               socket.emit("start", {
                 sheetId: currentSheetIdRef.current,
-                playgroundId: currentPlaygroundIdRef.current
+                playgroundId: currentPlaygroundIdRef.current,
               });
             });
             socket.on("message", (msg: string) => {
@@ -521,7 +748,7 @@ const TerminalPanel = forwardRef(
             });
           });
         }
-      }
+      },
     }));
 
     useEffect(() => {
@@ -549,7 +776,7 @@ const TerminalPanel = forwardRef(
           borderLeft: "1px solid white",
           borderRight: "1px solid white",
           zIndex: 50,
-          height: terminalHeight
+          height: terminalHeight,
         }}
       >
         <div
@@ -560,7 +787,7 @@ const TerminalPanel = forwardRef(
             alignItems: "center",
             justifyContent: "space-between",
             padding: "0 8px",
-            background: "#111"
+            background: "#111",
           }}
           onMouseDown={onResizeStart}
         >
@@ -574,7 +801,7 @@ const TerminalPanel = forwardRef(
               fontSize: "24px",
               background: "transparent",
               border: "none",
-              cursor: "pointer"
+              cursor: "pointer",
             }}
           >
             &times;
@@ -587,7 +814,7 @@ const TerminalPanel = forwardRef(
             height: `calc(100% - ${TERMINAL_HEADER_HEIGHT}px)`,
             opacity: terminalHeight < MIN_VISIBLE_TERMINAL_HEIGHT ? 0 : 1,
             pointerEvents: terminalHeight < MIN_VISIBLE_TERMINAL_HEIGHT ? "none" : "auto",
-            transition: "opacity 0.3s"
+            transition: "opacity 0.3s",
           }}
           onClick={() => termRef.current?.focus()}
         />
@@ -607,6 +834,9 @@ export default function PlaygroundsPage() {
   const [sheets, setSheets] = useState<Sheet[]>([]);
   const [selectedSheet, setSelectedSheet] = useState<Sheet | null>(null);
   const [selectedFile, setSelectedFile] = useState<FileType | null>(null);
+  // Editor code is stored locally so the graph pane doesn't reload on each keystroke.
+  const [editorCode, setEditorCode] = useState<string>("");
+
   const [sidebarWidth, setSidebarWidth] = useState<number>(250);
   const [editorHeight, setEditorHeight] = useState<number>(300);
   const [fileSidebarWidth, setFileSidebarWidth] = useState<number>(200);
@@ -614,55 +844,77 @@ export default function PlaygroundsPage() {
   const [graphData, setGraphData] = useState<any>(null);
   const [graphLoading, setGraphLoading] = useState<boolean>(false);
 
-  const monacoEditorRef = useRef<any>(null);
-  const router = useRouter();
-
   const [showAddPlaygroundModal, setShowAddPlaygroundModal] = useState(false);
   const [showAddSheetModal, setShowAddSheetModal] = useState(false);
   const [showUploadFileModal, setShowUploadFileModal] = useState(false);
   const [advancedModalOpen, setAdvancedModalOpen] = useState(false);
   const [advancedPlayground, setAdvancedPlayground] = useState<Playground | null>(null);
+  const [showAssociateModelsModal, setShowAssociateModelsModal] = useState(false);
 
-  // When selectedSheet changes, update the file and graph data from the stored sheet.
+  const monacoEditorRef = useRef<any>(null);
+  const terminalPanelRef = useRef<{ triggerRunCode: () => void }>(null);
+  const router = useRouter();
+
+  // Authenticate and load playgrounds
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        const idToken = await currentUser.getIdToken();
+        setToken(idToken);
+        fetchPlaygrounds(idToken);
+      } else {
+        setUser(null);
+        router.push("/signin");
+      }
+    });
+    return () => unsubscribe();
+  }, [router]);
+
+  // Fetch sheets when a playground is selected
+  useEffect(() => {
+    if (selectedPlayground && token) {
+      fetchSheets(selectedPlayground._id);
+    }
+  }, [selectedPlayground, token]);
+
+  // When selectedSheet changes, update file and editorCode state and refresh graph
   useEffect(() => {
     setGraphData(null);
     if (selectedSheet) {
       setSelectedFile(selectedSheet.files[0] || null);
+      setEditorCode(selectedSheet.files[0]?.code || "");
       refreshGraphData();
     } else {
       setSelectedFile(null);
+      setEditorCode("");
     }
   }, [selectedSheet]);
 
-  // Define refreshGraphData so that it can be passed to TerminalPanel.
-  const refreshGraphData = async () => {
-    if (!selectedSheet || !selectedPlayground || !token) return;
-    setGraphLoading(true);
-    try {
-      const res = await fetch(
-        `/api/playgrounds/${selectedPlayground._id}/sheets/${selectedSheet._id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const data = await res.json();
-      if (data.sheet) {
-        setGraphData(data.sheet.graphData || null);
-        // Optionally, update the global sheet list.
-        setSheets((prev) =>
-          prev.map((sheet) => (sheet._id === data.sheet._id ? data.sheet : sheet))
-        );
-      } else {
-        setGraphData(null);
-      }
-    } catch (error) {
-      console.error("Error refreshing graph data", error);
-      setGraphData(null);
+  // Trigger layout update when dimensions change
+  useEffect(() => {
+    if (monacoEditorRef.current) {
+      monacoEditorRef.current.layout();
     }
-    setGraphLoading(false);
-  };
+  }, [editorHeight, sidebarWidth, fileSidebarWidth]);
 
+  // Shortcut for save (Ctrl+S)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        handleSaveFiles();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedSheet, selectedPlayground, token, sheets, editorCode]);
+
+  // Sidebar resizing
   const handleSidebarMouseDown = () => {
-    const minWidth = 150, maxWidth = 350;
-    const onMouseMove = (e: globalThis.MouseEvent) => {
+    const minWidth = 150,
+      maxWidth = 350;
+    const onMouseMove = (e: MouseEvent) => {
       let newWidth = e.clientX;
       if (newWidth < minWidth) newWidth = minWidth;
       if (newWidth > maxWidth) newWidth = maxWidth;
@@ -676,9 +928,11 @@ export default function PlaygroundsPage() {
     window.addEventListener("mouseup", onMouseUp);
   };
 
+  // Editor resizing
   const handleEditorResizeMouseDown = () => {
-    const minHeight = 100, maxHeight = window.innerHeight - 100;
-    const onMouseMove = (e: globalThis.MouseEvent) => {
+    const minHeight = 100,
+      maxHeight = window.innerHeight - 100;
+    const onMouseMove = (e: MouseEvent) => {
       let newHeight = e.clientY - 12;
       if (newHeight < minHeight) newHeight = minHeight;
       if (newHeight > maxHeight) newHeight = maxHeight;
@@ -692,14 +946,17 @@ export default function PlaygroundsPage() {
     window.addEventListener("mouseup", onMouseUp);
   };
 
+  // File sidebar drag resizing
   const handleDrag = (e: any, data: any) => {
-    const minWidth = 50, maxWidth = 400;
+    const minWidth = 50,
+      maxWidth = 400;
     let newWidth = fileSidebarWidth - data.deltaX;
     if (newWidth < minWidth) newWidth = minWidth;
     if (newWidth > maxWidth) newWidth = maxWidth;
     setFileSidebarWidth(newWidth);
   };
 
+  // Terminal resizing
   const handleTerminalResizeMouseDown = (e: MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -707,7 +964,7 @@ export default function PlaygroundsPage() {
     const startHeight = terminalHeight;
     const minHeight = TERMINAL_HEADER_HEIGHT;
     const maxHeight = window.innerHeight - 100;
-    const onMouseMove = (event: globalThis.MouseEvent) => {
+    const onMouseMove = (event: MouseEvent) => {
       let newHeight = startHeight + (startY - event.clientY);
       if (newHeight < minHeight) newHeight = minHeight;
       if (newHeight > maxHeight) newHeight = maxHeight;
@@ -721,65 +978,38 @@ export default function PlaygroundsPage() {
     window.addEventListener("mouseup", onMouseUp);
   };
 
-  useEffect(() => {
-    if (monacoEditorRef.current) {
-      monacoEditorRef.current.layout();
-    }
-  }, [editorHeight, sidebarWidth, fileSidebarWidth]);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-        const idToken = await currentUser.getIdToken();
-        setToken(idToken);
-      } else {
-        setUser(null);
-        router.push("/signin");
-      }
-    });
-    return () => unsubscribe();
-  }, [router]);
-
-  useEffect(() => {
-    if (token) fetchPlaygrounds();
-  }, [token]);
-
-  const fetchPlaygrounds = async () => {
+  // Fetch playgrounds
+  const fetchPlaygrounds = async (token: string) => {
     try {
-      const res = await fetch("/api/playgrounds", { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch("/api/playgrounds", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await res.json();
       if (data.playgrounds) {
         setPlaygrounds(data.playgrounds);
-        if (data.playgrounds.length && !selectedPlayground)
+        if (!selectedPlayground && data.playgrounds.length > 0) {
           setSelectedPlayground(data.playgrounds[0]);
+        }
       }
     } catch (error) {
       console.error("Error fetching playgrounds", error);
     }
   };
 
-  useEffect(() => {
-    if (token && selectedPlayground) fetchSheets(selectedPlayground._id);
-  }, [selectedPlayground, token]);
-
+  // Fetch sheets for a playground
   const fetchSheets = async (playgroundId: string) => {
     try {
       const res = await fetch(`/api/playgrounds/${playgroundId}/sheets`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       if (data.sheets) {
         setSheets(data.sheets);
-        // Preserve the current selected sheet if it exists in the new list
         if (selectedSheet) {
-          const updatedSheet = data.sheets.find(
-            (sheet: Sheet) => sheet._id === selectedSheet._id
-          );
+          const updatedSheet = data.sheets.find((sheet: Sheet) => sheet._id === selectedSheet._id);
           if (updatedSheet) {
             setSelectedSheet(updatedSheet);
           } else {
-            // Fallback to the first sheet if the previously selected one is no longer present
             setSelectedSheet(data.sheets[0]);
           }
         } else if (data.sheets.length > 0) {
@@ -791,6 +1021,32 @@ export default function PlaygroundsPage() {
     }
   };
 
+  // Refresh graph data
+  const refreshGraphData = async () => {
+    if (!selectedSheet || !selectedPlayground || !token) return;
+    setGraphLoading(true);
+    try {
+      const res = await fetch(
+        `/api/playgrounds/${selectedPlayground._id}/sheets/${selectedSheet._id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const data = await res.json();
+      if (data.sheet) {
+        setGraphData(data.sheet.graphData || null);
+        setSheets((prev) =>
+          prev.map((sheet) => (sheet._id === data.sheet._id ? data.sheet : sheet))
+        );
+      } else {
+        setGraphData(null);
+      }
+    } catch (error) {
+      console.error("Error refreshing graph data", error);
+      setGraphData(null);
+    }
+    setGraphLoading(false);
+  };
+
+  // File upload
   const handleUploadFile = (file: File) => {
     const reader = new FileReader();
     reader.onload = async () => {
@@ -804,12 +1060,17 @@ export default function PlaygroundsPage() {
           `/api/playgrounds/${selectedPlayground?._id}/sheets/${selectedSheet?._id}/file`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-            body: JSON.stringify({ filename: file.name, code: content, language })
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ filename: file.name, code: content, language }),
           }
         );
         const data = await res.json();
-        if (data.sheet && selectedPlayground) await fetchSheets(selectedPlayground._id);
+        if (data.sheet && selectedPlayground) {
+          await fetchSheets(selectedPlayground._id);
+        }
       } catch (error) {
         console.error("Error uploading file", error);
       }
@@ -817,12 +1078,16 @@ export default function PlaygroundsPage() {
     reader.readAsText(file);
   };
 
+  // Add Playground
   const handleAddPlayground = async (name: string, description: string) => {
     try {
       const res = await fetch("/api/playgrounds", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name, description })
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name, description }),
       });
       const data = await res.json();
       if (data.playground) {
@@ -834,13 +1099,17 @@ export default function PlaygroundsPage() {
     }
   };
 
+  // Add Sheet
   const handleAddSheet = async (title: string) => {
     if (!selectedPlayground) return;
     try {
       const res = await fetch(`/api/playgrounds/${selectedPlayground._id}/sheets`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ title })
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title }),
       });
       const data = await res.json();
       if (data.sheet) {
@@ -852,15 +1121,22 @@ export default function PlaygroundsPage() {
     }
   };
 
+  // Save Files – update using separately stored editorCode
   const handleSaveFiles = async () => {
     if (!selectedSheet || !selectedPlayground) return;
     try {
+      const updatedFiles = selectedSheet.files.map((file) =>
+        file.filename === selectedFile?.filename ? { ...file, code: editorCode } : file
+      );
       const res = await fetch(
         `/api/playgrounds/${selectedPlayground._id}/sheets/${selectedSheet._id}/file`,
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ files: selectedSheet.files })
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ files: updatedFiles }),
         }
       );
       const data = await res.json();
@@ -876,6 +1152,7 @@ export default function PlaygroundsPage() {
     }
   };
 
+  // Delete File
   const handleDeleteFile = async (filename: string) => {
     if (!selectedSheet || !selectedPlayground) return;
     if (!confirm(`Are you sure you want to delete ${filename}?`)) return;
@@ -884,8 +1161,11 @@ export default function PlaygroundsPage() {
         `/api/playgrounds/${selectedPlayground._id}/sheets/${selectedSheet._id}/file`,
         {
           method: "DELETE",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ filename })
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ filename }),
         }
       );
       const data = await res.json();
@@ -901,6 +1181,7 @@ export default function PlaygroundsPage() {
     }
   };
 
+  // Advanced Settings functions
   const openAdvancedSettings = (pg: Playground) => {
     setAdvancedPlayground(pg);
     setAdvancedModalOpen(true);
@@ -911,8 +1192,11 @@ export default function PlaygroundsPage() {
     try {
       const res = await fetch("/api/playgrounds", {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ playgroundId: advancedPlayground._id })
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ playgroundId: advancedPlayground._id }),
       });
       const data = await res.json();
       if (data.message) {
@@ -939,21 +1223,41 @@ export default function PlaygroundsPage() {
     }
   };
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
-        e.preventDefault();
-        handleSaveFiles();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedSheet, selectedPlayground, token, sheets]);
+  const associateModels = async (selectedSheetIds: string[], selectedModels: string[]) => {
+    // Ensure that the selected playground is available and get its id.
+    if (!selectedPlayground?._id) {
+      alert("No playground selected!");
+      return;
+    }
+    const playgroundId = selectedPlayground._id; // obtain the playground id from state
 
-  // Maintain a ref for the TerminalPanel to trigger code execution imperatively.
-  const terminalPanelRef = useRef<{ triggerRunCode: () => void }>(null);
+    try {
+      await Promise.all(
+        selectedSheetIds.map(async (sheetId) => {
+          // Use the corrected API path with the playground id included
+          const res = await fetch(
+            `/api/playgrounds/${playgroundId}/sheets/${sheetId}/associate-models`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ models: selectedModels }),
+            }
+          );
+          if (!res.ok) throw new Error("Failed to associate models");
+        })
+      );
+      alert("Models associated successfully!");
+      setShowAssociateModelsModal(false);
+    } catch (error) {
+      console.error("Error associating models", error);
+      alert("Error associating models!");
+    }
+  };
 
-  // When "Run Code" is pressed, clear the current graph and trigger code execution.
+  // Terminal run code
   const handleRunCode = () => {
     if (terminalHeight < MIN_VISIBLE_TERMINAL_HEIGHT) {
       setTerminalHeight(200);
@@ -987,6 +1291,7 @@ export default function PlaygroundsPage() {
                 setGraphData(null);
               }}
               onAdd={() => setShowAddPlaygroundModal(true)}
+              onOpenAssociateModels={() => setShowAssociateModelsModal(true)}
               onOpenAdvanced={openAdvancedSettings}
             />
           </div>
@@ -1012,26 +1317,15 @@ export default function PlaygroundsPage() {
                     width="100%"
                     language={selectedFile?.language || "python"}
                     theme="vs-dark"
-                    value={selectedFile?.code || ""}
-                    onMount={(editor) => {
-                      monacoEditorRef.current = editor;
-                    }}
+                    value={editorCode}
+                    onMount={(editor) => { monacoEditorRef.current = editor; }}
                     onChange={(newValue) => {
-                      if (selectedFile && selectedSheet) {
-                        const updatedFile = { ...selectedFile, code: newValue || "" };
-                        setSelectedFile(updatedFile);
-                        setSelectedSheet({
-                          ...selectedSheet,
-                          files: selectedSheet.files.map((file) =>
-                            file.filename === updatedFile.filename ? updatedFile : file
-                          )
-                        });
-                      }
+                      setEditorCode(newValue || "");
                     }}
                     options={{
                       automaticLayout: true,
                       wordWrap: "on",
-                      minimap: { enabled: true, side: "right" }
+                      minimap: { enabled: true, side: "right" },
                     }}
                   />
                   <button
@@ -1040,7 +1334,6 @@ export default function PlaygroundsPage() {
                   >
                     Run Code
                   </button>
-
                 </div>
                 <div
                   className="relative border-l border-gray-700 overflow-y-auto p-4 pr-2 bg-black flex flex-col"
@@ -1134,7 +1427,7 @@ export default function PlaygroundsPage() {
           </div>
         </div>
       </div>
-      {/* Terminal Panel – mounted once; its socket connects only when Run Code is pressed */}
+      {/* Terminal Panel */}
       {selectedSheet && selectedPlayground && (
         <TerminalPanel
           key={selectedSheet._id}
@@ -1170,6 +1463,12 @@ export default function PlaygroundsPage() {
         sheets={sheets}
         onDeletePlayground={handleDeletePlayground}
         onSheetsDeleted={handleSheetsDeleted}
+      />
+      <AssociateModelsModal
+        isOpen={showAssociateModelsModal}
+        onClose={() => setShowAssociateModelsModal(false)}
+        sheets={sheets}
+        onSubmit={associateModels}
       />
     </div>
   );
