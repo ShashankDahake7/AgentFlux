@@ -24,7 +24,7 @@ const GraphAgentControls: React.FC<GraphAgentControlsProps> = ({ onSubmit, loadi
             <button
                 onClick={() => onSubmit(selectedOption)}
                 disabled={loading}
-                className="bg-purple-600 hover:bg-purple-700 text-gray-200 px-3 py-1 rounded transition-colors duration-300"
+                className="bg-purple-600 hover:bg-pink-700 text-gray-200 px-3 py-1 rounded transition-colors duration-300"
             >
                 Go
             </button>

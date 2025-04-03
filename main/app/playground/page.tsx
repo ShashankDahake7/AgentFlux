@@ -620,7 +620,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         {/* Button (3/4th width) */}
         <button
           onClick={onOpenAssociateModels}
-          className="flex-1 py-2 font-cinzel bg-gray-500 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300 ml-2"
+          className="flex-1 py-1 font-cinzel bg-gray-500 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300 ml-2"
         >
           Associate Models
         </button>
@@ -835,11 +835,10 @@ export default function PlaygroundsPage() {
   const [sheets, setSheets] = useState<Sheet[]>([]);
   const [selectedSheet, setSelectedSheet] = useState<Sheet | null>(null);
   const [selectedFile, setSelectedFile] = useState<FileType | null>(null);
-  // Editor code is stored locally so the graph pane doesn't reload on each keystroke.
   const [editorCode, setEditorCode] = useState<string>("");
 
   const [sidebarWidth, setSidebarWidth] = useState<number>(250);
-  const [editorHeight, setEditorHeight] = useState<number>(300);
+  const [editorHeight, setEditorHeight] = useState<number>(370);
   const [fileSidebarWidth, setFileSidebarWidth] = useState<number>(200);
   const [terminalHeight, setTerminalHeight] = useState<number>(TERMINAL_HEADER_HEIGHT);
   const [graphData, setGraphData] = useState<any>(null);
@@ -1458,7 +1457,7 @@ export default function PlaygroundsPage() {
                 <p className="text-gray-400">Run your agent code to visualize the graph</p>
               )}
             </div>
-            <div className="absolute bottom-0 left-0 right-0 bg-black border-t border-gray-500 p-2 flex items-center justify-between z-20">
+            <div className="absolute bottom-0 left-0 right-0 bg-black border-t border-gray-800 p-2 flex items-center justify-between z-[999]">
               <div className="flex space-x-2">
                 {sheets.length > 0 &&
                   sheets.map((sheet) => (
