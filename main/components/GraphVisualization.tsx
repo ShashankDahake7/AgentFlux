@@ -240,7 +240,7 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({ graphData }) =>
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 nodeTypes={nodeTypes}
-                fitView
+                defaultViewport={{ x: 40, y: 40, zoom: 0.75 }}
             >
                 <Controls />
                 <MiniMap nodeColor={nodeColor} style={{ background: "#1e1e1e" }} />

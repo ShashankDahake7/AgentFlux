@@ -1,9 +1,10 @@
 "use client";
-import { ChevronUp, ChevronDown } from "lucide-react";
 if (typeof window !== "undefined" && typeof self === "undefined") {
   (window as any).self = window;
 }
-
+import { ChevronUp, ChevronDown } from "lucide-react";
+import GraphAgentControls, { RefinementType } from "@/components/GraphAgentControls";
+import AgentGraphDiffModal from "@/components/AgentGraphDiffModal";
 import React, {
   useState,
   useEffect,
@@ -619,7 +620,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         {/* Button (3/4th width) */}
         <button
           onClick={onOpenAssociateModels}
-          className="flex-1 py-2 font-cinzel bg-gray-500 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300 ml-2"
+          className="flex-1 py-1 font-cinzel bg-gray-500 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300 ml-2"
         >
           Associate Models
         </button>
@@ -834,11 +835,10 @@ export default function PlaygroundsPage() {
   const [sheets, setSheets] = useState<Sheet[]>([]);
   const [selectedSheet, setSelectedSheet] = useState<Sheet | null>(null);
   const [selectedFile, setSelectedFile] = useState<FileType | null>(null);
-  // Editor code is stored locally so the graph pane doesn't reload on each keystroke.
   const [editorCode, setEditorCode] = useState<string>("");
 
   const [sidebarWidth, setSidebarWidth] = useState<number>(250);
-  const [editorHeight, setEditorHeight] = useState<number>(300);
+  const [editorHeight, setEditorHeight] = useState<number>(370);
   const [fileSidebarWidth, setFileSidebarWidth] = useState<number>(200);
   const [terminalHeight, setTerminalHeight] = useState<number>(TERMINAL_HEADER_HEIGHT);
   const [graphData, setGraphData] = useState<any>(null);
@@ -854,6 +854,63 @@ export default function PlaygroundsPage() {
   const monacoEditorRef = useRef<any>(null);
   const terminalPanelRef = useRef<{ triggerRunCode: () => void }>(null);
   const router = useRouter();
+
+  const [agentProcessing, setAgentProcessing] = useState<boolean>(false);
+  const [agentResult, setAgentResult] = useState({
+    diffReport: "",
+    refinedGraphCode: "",
+    refinedGraphDiagram: "",
+  });
+  const [agentModalOpen, setAgentModalOpen] = useState<boolean>(false);
+
+  const handleAgentRequest = async (refinementType: RefinementType) => {
+    if (!selectedSheet) {
+      alert("No sheet selected.");
+      return;
+    }
+    // Aggregate code from all files in the selected sheet.
+    const filesCode = selectedSheet.files.map((file) => ({
+      filename: file.filename,
+      code: file.code,
+    }));
+    // Use allowed models from the sheet's associatedModels field.
+    const allowedModels =
+      selectedSheet.associatedModels && selectedSheet.associatedModels.length > 0
+        ? selectedSheet.associatedModels
+        : [];
+    if (!allowedModels.length) {
+      alert("No allowed models found for this sheet. Please update this sheet with the allowed models.");
+      return;
+    }
+
+    setAgentProcessing(true);
+    try {
+      const res = await fetch("/api/agent/process", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          refinementType,
+          files: filesCode,
+          allowedModels,
+        }),
+      });
+      const data = await res.json();
+      setAgentResult({
+        diffReport: data.diffReport,
+        refinedGraphCode: data.refinedGraphCode,
+        refinedGraphDiagram: data.refinedGraphDiagram,
+      });
+      setAgentModalOpen(true);
+    } catch (err) {
+      console.error("Error processing agent request", err);
+      alert("Error processing agent request");
+    } finally {
+      setAgentProcessing(false);
+    }
+  };
 
   // Authenticate and load playgrounds
   useEffect(() => {
@@ -1385,6 +1442,7 @@ export default function PlaygroundsPage() {
           )}
           {/* Graph Visualization Area & Footer */}
           <div className="relative flex-1 overflow-hidden">
+            <GraphAgentControls onSubmit={handleAgentRequest} loading={agentProcessing} />
             <div className="flex h-full items-center justify-center border-t border-gray-700">
               {graphLoading ? (
                 <div className="flex flex-col items-center justify-center">
@@ -1399,7 +1457,7 @@ export default function PlaygroundsPage() {
                 <p className="text-gray-400">Run your agent code to visualize the graph</p>
               )}
             </div>
-            <div className="absolute bottom-0 left-0 right-0 bg-black border-t border-gray-500 p-2 flex items-center justify-between z-20">
+            <div className="absolute bottom-0 left-0 right-0 bg-black border-t border-gray-800 p-2 flex items-center justify-between z-[999]">
               <div className="flex space-x-2">
                 {sheets.length > 0 &&
                   sheets.map((sheet) => (
