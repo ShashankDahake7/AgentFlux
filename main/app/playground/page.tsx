@@ -1,9 +1,10 @@
 "use client";
-import { ChevronUp, ChevronDown } from "lucide-react";
 if (typeof window !== "undefined" && typeof self === "undefined") {
   (window as any).self = window;
 }
-
+import { ChevronUp, ChevronDown } from "lucide-react";
+import GraphAgentControls, { RefinementType } from "@/components/GraphAgentControls";
+import AgentGraphDiffModal from "@/components/AgentGraphDiffModal";
 import React, {
   useState,
   useEffect,
@@ -855,6 +856,63 @@ export default function PlaygroundsPage() {
   const terminalPanelRef = useRef<{ triggerRunCode: () => void }>(null);
   const router = useRouter();
 
+  const [agentProcessing, setAgentProcessing] = useState<boolean>(false);
+  const [agentResult, setAgentResult] = useState({
+    diffReport: "",
+    refinedGraphCode: "",
+    refinedGraphDiagram: "",
+  });
+  const [agentModalOpen, setAgentModalOpen] = useState<boolean>(false);
+
+  const handleAgentRequest = async (refinementType: RefinementType) => {
+    if (!selectedSheet) {
+      alert("No sheet selected.");
+      return;
+    }
+    // Aggregate code from all files in the selected sheet.
+    const filesCode = selectedSheet.files.map((file) => ({
+      filename: file.filename,
+      code: file.code,
+    }));
+    // Use allowed models from the sheet's associatedModels field.
+    const allowedModels =
+      selectedSheet.associatedModels && selectedSheet.associatedModels.length > 0
+        ? selectedSheet.associatedModels
+        : [];
+    if (!allowedModels.length) {
+      alert("No allowed models found for this sheet. Please update this sheet with the allowed models.");
+      return;
+    }
+
+    setAgentProcessing(true);
+    try {
+      const res = await fetch("/api/agent/process", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          refinementType,
+          files: filesCode,
+          allowedModels,
+        }),
+      });
+      const data = await res.json();
+      setAgentResult({
+        diffReport: data.diffReport,
+        refinedGraphCode: data.refinedGraphCode,
+        refinedGraphDiagram: data.refinedGraphDiagram,
+      });
+      setAgentModalOpen(true);
+    } catch (err) {
+      console.error("Error processing agent request", err);
+      alert("Error processing agent request");
+    } finally {
+      setAgentProcessing(false);
+    }
+  };
+
   // Authenticate and load playgrounds
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -1385,6 +1443,7 @@ export default function PlaygroundsPage() {
           )}
           {/* Graph Visualization Area & Footer */}
           <div className="relative flex-1 overflow-hidden">
+            <GraphAgentControls onSubmit={handleAgentRequest} loading={agentProcessing} />
             <div className="flex h-full items-center justify-center border-t border-gray-700">
               {graphLoading ? (
                 <div className="flex flex-col items-center justify-center">

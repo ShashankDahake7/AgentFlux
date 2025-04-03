@@ -1,6 +1,4 @@
-# AgentFlux
+# AgentOps
 
-## next-app
-
-cd next-app
+cd main
 npm run dev
