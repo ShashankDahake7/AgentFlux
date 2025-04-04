@@ -838,7 +838,7 @@ export default function PlaygroundsPage() {
   const [editorCode, setEditorCode] = useState<string>("");
 
   const [sidebarWidth, setSidebarWidth] = useState<number>(250);
-  const [editorHeight, setEditorHeight] = useState<number>(370);
+  const [editorHeight, setEditorHeight] = useState<number>(400);
   const [fileSidebarWidth, setFileSidebarWidth] = useState<number>(200);
   const [terminalHeight, setTerminalHeight] = useState<number>(TERMINAL_HEADER_HEIGHT);
   const [graphData, setGraphData] = useState<any>(null);
@@ -868,11 +868,15 @@ export default function PlaygroundsPage() {
       alert("No sheet selected.");
       return;
     }
-    // Aggregate code from all files in the selected sheet.
-    const filesCode = selectedSheet.files.map((file) => ({
-      filename: file.filename,
-      code: file.code,
-    }));
+    // Instead of merging all files into one continuous string,
+    // map them to a structured format.
+    const filesCode = selectedSheet.files
+      .map(
+        (file) =>
+          `${file.filename}:\n\`\`\`python\n${file.code}\n\`\`\``
+      )
+      .join("\n\n");
+
     // Use allowed models from the sheet's associatedModels field.
     const allowedModels =
       selectedSheet.associatedModels && selectedSheet.associatedModels.length > 0
@@ -885,7 +889,8 @@ export default function PlaygroundsPage() {
 
     setAgentProcessing(true);
     try {
-      const res = await fetch("/api/agent/process", {
+      console.log();
+      const res = await fetch(`${process.env.NEXT_PUBLIC_AGENT_API_URL}/api/agent/process`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -893,11 +898,17 @@ export default function PlaygroundsPage() {
         },
         body: JSON.stringify({
           refinementType,
-          files: filesCode,
+          files: [
+            {
+              filename: "structured_submission",
+              code: filesCode,
+            },
+          ],
           allowedModels,
         }),
       });
       const data = await res.json();
+      console.log("Agent response:", data);
       setAgentResult({
         diffReport: data.diffReport,
         refinedGraphCode: data.refinedGraphCode,
@@ -947,6 +958,17 @@ export default function PlaygroundsPage() {
       setEditorCode("");
     }
   }, [selectedSheet]);
+  useEffect(() => {
+    // When the selected file changes, update the editorCode.
+    if (selectedFile) {
+      setEditorCode(selectedFile.code);
+      // Also, if you're using monaco editor's ref, update its value directly:
+      if (monacoEditorRef.current) {
+        monacoEditorRef.current.setValue(selectedFile.code);
+      }
+    }
+  }, [selectedFile]);
+
 
   // Trigger layout update when dimensions change
   useEffect(() => {
@@ -1527,6 +1549,13 @@ export default function PlaygroundsPage() {
         onClose={() => setShowAssociateModelsModal(false)}
         sheets={sheets}
         onSubmit={associateModels}
+      />
+      <AgentGraphDiffModal
+        isOpen={agentModalOpen}
+        onClose={() => setAgentModalOpen(false)}
+        diffReport={agentResult.diffReport}
+        refinedGraphCode={agentResult.refinedGraphCode}
+        refinedGraphDiagram={agentResult.refinedGraphDiagram}
       />
     </div>
   );
