@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict
+import time
 
 app = FastAPI()
 
@@ -33,7 +34,7 @@ async def process_agent_request(req: AgentRequest):
     for file in req.files:
         print(f"File: {file.get('filename')}")
         print(file.get("code"))
-    
+    time.sleep(10000)
     # Return a hard-coded response for testing purposes.
     dummy_response = {
         "diffReport": "Dummy diff report: No differences found.",
