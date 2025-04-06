@@ -81,7 +81,7 @@ const Modal: React.FC<{ isOpen: boolean; onClose: () => void; children: React.Re
     className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 transition-opacity duration-300 ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
       }`}
   >
-    <div className="bg-black border border-gray-500 p-6 rounded-lg shadow-xl max-w-md w-full relative transform transition-transform duration-300">
+    <div className="bg-black border-2 border-gray-300 p-6 rounded-lg shadow-xl max-w-md w-full relative transform transition-transform duration-300">
       <button
         onClick={onClose}
         className="absolute top-2 right-2 text-gray-400 hover:text-gray-200 text-2xl"
@@ -857,10 +857,12 @@ export default function PlaygroundsPage() {
 
   const [agentProcessing, setAgentProcessing] = useState<boolean>(false);
   const [agentResult, setAgentResult] = useState({
-    diffReport: "",
+    diffReport: {},
     refinedGraphCode: "",
     refinedGraphDiagram: "",
+    brokenDownRefined: {},
   });
+
   const [agentModalOpen, setAgentModalOpen] = useState<boolean>(false);
 
   const handleAgentRequest = async (refinementType: RefinementType) => {
@@ -873,9 +875,14 @@ export default function PlaygroundsPage() {
     const filesCode = selectedSheet.files
       .map(
         (file) =>
-          `${file.filename}:\n\`\`\`python\n${file.code}\n\`\`\``
+          `%%%%${file.filename}:\n$$$$\n${file.code}$$$$`
       )
       .join("\n\n");
+
+    const brokenDownOriginal: { [filename: string]: string } = {};
+    selectedSheet.files.forEach((file) => {
+      brokenDownOriginal[file.filename] = file.code;
+    });
 
     // Use allowed models from the sheet's associatedModels field.
     const allowedModels =
@@ -898,21 +905,18 @@ export default function PlaygroundsPage() {
         },
         body: JSON.stringify({
           refinementType,
-          files: [
-            {
-              filename: "structured_submission",
-              code: filesCode,
-            },
-          ],
+          code: filesCode,
+          brokenDownOriginal,
           allowedModels,
         }),
       });
       const data = await res.json();
       console.log("Agent response:", data);
       setAgentResult({
-        diffReport: data.diffReport,
-        refinedGraphCode: data.refinedGraphCode,
-        refinedGraphDiagram: data.refinedGraphDiagram,
+        diffReport: data.diffReport, // Populate diff reports per file
+        refinedGraphCode: data.refinedGraphCode, // Aggregated refined code
+        refinedGraphDiagram: data.refinedGraphDiagram, // Graph visualization data (if any)
+        brokenDownRefined: data.brokenDownRefined, // Refined code for each file
       });
       setAgentModalOpen(true);
     } catch (err) {
@@ -1006,6 +1010,7 @@ export default function PlaygroundsPage() {
     window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("mouseup", onMouseUp);
   };
+
 
   // Editor resizing
   const handleEditorResizeMouseDown = () => {
@@ -1200,12 +1205,16 @@ export default function PlaygroundsPage() {
     }
   };
 
-  // Save Files – update using separately stored editorCode
-  const handleSaveFiles = async () => {
+  const handleSaveFiles = async (mergedFiles?: { [filename: string]: string }) => {
     if (!selectedSheet || !selectedPlayground) return;
     try {
+      // If mergedFiles is provided, update each file's code using it; otherwise use the current editorCode for the active file.
       const updatedFiles = selectedSheet.files.map((file) =>
-        file.filename === selectedFile?.filename ? { ...file, code: editorCode } : file
+        mergedFiles && mergedFiles[file.filename]
+          ? { ...file, code: mergedFiles[file.filename] }
+          : file.filename === selectedFile?.filename
+            ? { ...file, code: editorCode }
+            : file
       );
       const res = await fetch(
         `/api/playgrounds/${selectedPlayground._id}/sheets/${selectedSheet._id}/file`,
@@ -1224,6 +1233,17 @@ export default function PlaygroundsPage() {
         setSheets((prev) =>
           prev.map((sheet) => (sheet._id === data.sheet._id ? data.sheet : sheet))
         );
+        // Update the active file and main editor using the updated files from the saved sheet.
+        const activeFile =
+          updatedFiles.find((file) => file.filename === selectedFile?.filename) ||
+          updatedFiles[0];
+        if (activeFile) {
+          setSelectedFile(activeFile);
+          setEditorCode(activeFile.code);
+          if (monacoEditorRef.current) {
+            monacoEditorRef.current.setValue(activeFile.code);
+          }
+        }
       }
     } catch (error) {
       console.error("Error saving files", error);
@@ -1259,6 +1279,60 @@ export default function PlaygroundsPage() {
       alert("Error deleting file!");
     }
   };
+
+  const handleMergeFromModal = async (mergedFiles: { [filename: string]: string }) => {
+    if (selectedSheet) {
+      // Update every file in the sheet with its merged code.
+      const updatedFiles = selectedSheet.files.map((file) =>
+        mergedFiles[file.filename] ? { ...file, code: mergedFiles[file.filename] } : file
+      );
+      // Update the local state for the sheet.
+      setSheets((prev) =>
+        prev.map((sheet) =>
+          sheet._id === selectedSheet._id ? { ...sheet, files: updatedFiles } : sheet
+        )
+      );
+      // Update the active file and main editor with the corresponding merged code.
+      if (selectedFile) {
+        const updatedActiveFile = updatedFiles.find(
+          (file) => file.filename === selectedFile.filename
+        );
+        if (updatedActiveFile) {
+          setSelectedFile(updatedActiveFile);
+          setEditorCode(updatedActiveFile.code);
+          if (monacoEditorRef.current) {
+            monacoEditorRef.current.setValue(updatedActiveFile.code);
+          }
+        }
+      }
+      // Trigger autosave to persist all changes.
+      await handleSaveFiles(mergedFiles);
+      // Save run details (including diff reports and merged files) into MongoDB.
+      try {
+        const res = await fetch("/api/refines", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            sheetId: selectedSheet._id,
+            diffReport: agentResult.diffReport,
+            mergedFiles, // The edited merged code per file.
+          }),
+        });
+        const data = await res.json();
+        if (data.error) {
+          alert("Error saving run details: " + data.error);
+        } else {
+          console.log("Run details saved:", data);
+        }
+      } catch (error) {
+        console.error("Error saving run details:", error);
+      }
+    }
+  };
+
+
 
   // Advanced Settings functions
   const openAdvancedSettings = (pg: Playground) => {
@@ -1350,7 +1424,7 @@ export default function PlaygroundsPage() {
     <div className="flex flex-col h-screen bg-black text-white relative overflow-hidden">
       {/* Header */}
       <header className="h-12 bg-black border-b border-gray-500 flex items-center px-4">
-        <div className="px-3 py-1 border border-gray-500 rounded text-sm">
+        <div className="px-3 py-1 border border-purple-400 rounded text-sm">
           {user?.email || "Not Signed In"}
         </div>
       </header>
@@ -1465,7 +1539,7 @@ export default function PlaygroundsPage() {
           {/* Graph Visualization Area & Footer */}
           <div className="relative flex-1 overflow-hidden">
             <GraphAgentControls onSubmit={handleAgentRequest} loading={agentProcessing} />
-            <div className="flex h-full items-center justify-center border-t border-gray-700">
+            <div className="flex h-full items-center justify-center border-t border-gray-400">
               {graphLoading ? (
                 <div className="flex flex-col items-center justify-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-500 mb-4"></div>
@@ -1553,9 +1627,8 @@ export default function PlaygroundsPage() {
       <AgentGraphDiffModal
         isOpen={agentModalOpen}
         onClose={() => setAgentModalOpen(false)}
-        diffReport={agentResult.diffReport}
-        refinedGraphCode={agentResult.refinedGraphCode}
-        refinedGraphDiagram={agentResult.refinedGraphDiagram}
+        agentResult={agentResult}
+        onMerge={handleMergeFromModal}
       />
     </div>
   );
