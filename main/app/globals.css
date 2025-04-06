@@ -47,3 +47,12 @@
 .animated-border:hover {
   animation: borderMoveHover 3s linear infinite;
 }
+
+.xterm .xterm-rows {
+  transform: translateY(-20px);
+}
+
+.xterm {
+  position: absolute;
+  z-index: -1;
+}

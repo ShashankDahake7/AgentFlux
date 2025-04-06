@@ -1,47 +1,77 @@
+import logging
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict
-import time
+from helper_funcs import generate_diff_report_per_file, parse_aggregated_code
+from crews import promptrefinement, rearchitect
+
+# Set up production-grade logging.
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, limit this to your frontend's domain.
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Define the data models for the request and response.
+# Updated AgentRequest to include brokenDownOriginal.
 class AgentRequest(BaseModel):
-    refinementType: str            # e.g., "refine_prompts" or "rearchitect_graph"
-    files: List[Dict[str, str]]     # Each file: {"filename": str, "code": str}
+    refinementType: str          
+    code: str   
+    brokenDownOriginal: Dict[str, str]
     allowedModels: List[str]
 
+# Updated AgentResponse now contains a diffReport as a dictionary and brokenDownRefined mapping.
 class AgentResponse(BaseModel):
-    diffReport: str
+    diffReport: Dict[str, str]
     refinedGraphCode: str
     refinedGraphDiagram: str
+    brokenDownRefined: Dict[str, str]
+
 
 @app.post("/api/agent/process", response_model=AgentResponse)
 async def process_agent_request(req: AgentRequest):
-    # Print the received data to the console
-    print("Received Agent Request:")
-    print("Refinement Type:", req.refinementType)
-    print("Allowed Models:", req.allowedModels)
-    for file in req.files:
-        print(f"File: {file.get('filename')}")
-        print(file.get("code"))
-    time.sleep(10000)
-    # Return a hard-coded response for testing purposes.
-    dummy_response = {
-        "diffReport": "Dummy diff report: No differences found.",
-        "refinedGraphCode": "# Dummy refined agent graph code",
-        "refinedGraphDiagram": ""  # You can leave this empty or add dummy base64 string.
+    try:
+        original_code = req.code
+        logger.info(f"Received aggregated original code: {original_code[:100]}...")
+    except Exception as e:
+        logger.exception("File aggregation error:")
+        raise HTTPException(status_code=400, detail=f"File aggregation error: {str(e)}")
+    
+    refined_code = original_code 
+
+    try:
+        if req.refinementType == "refine_prompts":
+            refined_code = promptrefinement(original_code)
+        elif req.refinementType == "rearchitect_graph":
+            refined_code = rearchitect(original_code, req.allowedModels)
+        else:
+            raise HTTPException(status_code=400, detail="Invalid refinementType provided.")
+    except Exception as e:
+        logger.exception("Crew execution error:")
+        raise HTTPException(status_code=500, detail=f"Agent execution error: {str(e)}")
+    
+    
+    brokenDownRefined = parse_aggregated_code(refined_code)
+    
+    
+    diffReport = {}
+    for filename, orig in req.brokenDownOriginal.items():
+        refined = brokenDownRefined.get(filename, "")
+        diffReport[filename] = generate_diff_report_per_file(orig, refined)
+    
+    return {
+        "diffReport": diffReport,
+        "refinedGraphCode": refined_code,
+        "refinedGraphDiagram": "",
+        "brokenDownRefined": brokenDownRefined,
     }
-    return dummy_response
 
 if __name__ == "__main__":
     import uvicorn
