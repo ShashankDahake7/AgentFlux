@@ -457,7 +457,7 @@ export const AssociateModelsModal: React.FC<{
   sheets: Sheet[];
   onSubmit: (selectedSheetIds: string[], selectedModels: string[]) => void;
 }> = ({ isOpen, onClose, sheets, onSubmit }) => {
-  const availableModels = ["deepseek-r1", "gemini-1.5-pro", "gemini-1.5-flash", "gemini-1.0-pro", "openai-gpt-3.5-turbo", "openai-gpt-4"];
+  const availableModels = ["deepseek-r1", "gemini-1.5-pro", "gemini-1.5-flash", "gemini-2.0-flash", "openai-gpt-3.5-turbo", "openai-gpt-4"];
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
   const [selectedSheetIds, setSelectedSheetIds] = useState<string[]>([]);
 
