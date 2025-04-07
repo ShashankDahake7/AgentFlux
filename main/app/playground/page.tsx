@@ -813,6 +813,9 @@ const TerminalPanel = forwardRef(
           style={{
             width: "100%",
             height: `calc(100% - ${TERMINAL_HEADER_HEIGHT}px)`,
+            overflowY: "auto",       
+            position: "relative",    
+            zIndex: 60,             
             opacity: terminalHeight < MIN_VISIBLE_TERMINAL_HEIGHT ? 0 : 1,
             pointerEvents: terminalHeight < MIN_VISIBLE_TERMINAL_HEIGHT ? "none" : "auto",
             transition: "opacity 0.3s",
