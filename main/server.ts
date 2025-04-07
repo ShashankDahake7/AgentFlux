@@ -8,6 +8,8 @@ import fs from "fs";
 import path from "path";
 import admin, { ServiceAccount } from "firebase-admin";
 import dbConnect from "./lib/mongodb";
+// Import the graph injection function
+import { injectGraphVisualization } from "./injectGraphVisualization";
 
 /* ====================
    Define Interfaces 
@@ -222,6 +224,11 @@ io.on("connection", (socket: Socket) => {
         entryFilename = "index.js";
       } else if (lang === "python" && files.some((f) => f.filename === "main.py")) {
         entryFilename = "main.py";
+        // Inject the graph visualization code into main.py before uploading
+        const mainFile = files.find((f) => f.filename === "main.py");
+        if (mainFile) {
+          mainFile.code = injectGraphVisualization(mainFile.code);
+        }
       } else if (lang !== "javascript" && lang !== "python") {
         socket.emit("message", "Error: Unsupported language.\r\n");
         socket.disconnect();

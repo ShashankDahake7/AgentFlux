@@ -38,11 +38,12 @@ class Main_Tasks:
             "original code:\n{code}\n"
             "understand that there can be multiple instances where the code can include human given messages or prompts, you must refine all of them. "
             "Additionally, you must not remove any lines of code or replace them with placeholder text like 'same as before'. "
+            "if multiple files are given then follow the same format for outputtting code as in original code \n%%%%filename:\n$$$\ncode\n$$$\n%%%%filename...and so on.\n"
         )
         expected_output = (
             "The task outputs the original code (unchanged) with refined prompts in place of the human messages that were earlier given. No line should be removed from the original code with placeholder text. Output the entire code with proper indentations and formatting such that it can be copy pasted and directly executed. "
-            "if multiple files are given then follow the same format for outputtting code as in original code %%%%filename:\n$$$\ncode\n$$$\n%%%%filename...and so on.\n"
-            "The output should be a complete codebase with all the refined prompts integrated into it. "
+            "if multiple files are given then follow the same format for outputtting code as in original code \n%%%%filename:\n$$$\ncode\n$$$\n%%%%filename...and so on. The format must be strictly followed even with the first file as it is extremely important.\n"
+            "The output should be a complete codebase with all the refined prompts integrated into it with the proper markers as specified."
         )
         return Task(
             description=description,
@@ -62,11 +63,21 @@ class Main_Tasks:
             "The output must be a complete, operational codebase with all the nodes and their connections clearly defined. "
             "Ensure API keys from .env are referenced appropriately. The output must be a complete, operational codebase."
             "\n\nThe original code sent by the user is this: \n{code}\n"
+            "the allowedModels list is this: {allowedModels}\n"
+            """Your sequence of steps to follow is as follows: 1. Analyze the original code and identify the main tasks and sub-tasks. 2. Break down complex tasks into smaller,
+            manageable sub-tasks with proper break down into nodes with proper roles and functions. 3. Assign appropriate LLMs from the allowedModels list to each task. 
+            4. Ensure that the nodes are connected logically to achieve the user's goal effectively. 5. Refine the prompts given by the human user and ensure your own prompts are descriptive and follow a ReAct format too. 
+            6. Ensure that all agent roles are clearly defined with proper LLM assignments.
+            7. if multiple files are given then follow the same format for outputtting code as in original code \n%%%%filename:\n$$$\ncode\n$$$\n%%%%filename...and so on.\n"
+            "The output should be a complete codebase with all the changes integrated into it. "
+            """
 
         )
         expected_output = (
             "A completely restructured agent graph code. All agent roles should be clearly defined with proper LLM assignments. "
             "The code should be production ready and free of placeholders. Ensure that the code is copy pastable and can be directly executed."
+            "if multiple files are given then follow the same format for outputtting code as in original code \n%%%%filename:\n$$$\ncode\n$$$\n%%%%filename...and so on.\n"
+            "The output should be a complete codebase with all the changes integrated into it. "
         )
         return Task(
             description=description,
@@ -78,25 +89,25 @@ class Main_Tasks:
             # callback=default_task_callback
         )
 
-    def refine_prompts_after(self, agent, context): 
-        description = (
-            "This task focuses exclusively on refining the human-written prompt that was extracted from the code submission. "
-            "Without modifying any other portion of the code, transform the raw human message content into a clear, unambiguous and descriptive prompt with proper system instructions."
-            "Ensure that only the prompt text is modified and finally output the whole code with the refined prompts integrated into it with the same structure as it was given to you.\n"
-            "understand that there can be multiple instances where the code can include human given messages or prompts, you must refine all of them. "
-            "Additionally, you must not remove any lines of code or replace them with placeholder text like 'same as before'. "
-        )
-        expected_output = (
-            "The task outputs the original code (unchanged) with refined prompts in place of the human messages that were earlier given. No line should be removed from the original code with placeholder text. Output the entire code with proper indentations and formatting such that it can be copy pasted and directly executed. "
-            "if multiple files are given then follow the same format for outputtting code as in original code %%%%filename:\n$$$\ncode\n$$$\n%%%%filename...and so on.\n"
-            "The output should be a complete codebase with all the refined prompts integrated into it. "
-        )
-        return Task(
-            description=description,
-            expected_output=expected_output,
-            agent=agent,
-            # output_pydantic=RefinementOutput,
-            # guardrail=validate_refined_code,
-            max_retries=3,
-        )
+    # def refine_prompts_after(self, agent, context): 
+    #     description = (
+    #         "This task focuses exclusively on refining the human-written prompt that was extracted from the code submission. "
+    #         "Without modifying any other portion of the code, transform the raw human message content into a clear, unambiguous and descriptive prompt with proper system instructions."
+    #         "Ensure that only the prompt text is modified and finally output the whole code with the refined prompts integrated into it with the same structure as it was given to you.\n"
+    #         "understand that there can be multiple instances where the code can include human given messages or prompts, you must refine all of them. "
+    #         "Additionally, you must not remove any lines of code or replace them with placeholder text like 'same as before'. "
+    #     )
+    #     expected_output = (
+    #         "The task outputs the original code (unchanged) with refined prompts in place of the human messages that were earlier given. No line should be removed from the original code with placeholder text. Output the entire code with proper indentations and formatting such that it can be copy pasted and directly executed. "
+    #         "if multiple files are given then follow the same format for outputtting code as in original code %%%%filename:\n$$$\ncode\n$$$\n%%%%filename...and so on.\n"
+    #         "The output should be a complete codebase with all the refined prompts integrated into it. "
+    #     )
+    #     return Task(
+    #         description=description,
+    #         expected_output=expected_output,
+    #         agent=agent,
+    #         # output_pydantic=RefinementOutput,
+    #         # guardrail=validate_refined_code,
+    #         max_retries=3,
+    #     )
 

@@ -10,14 +10,16 @@ gemini_api_key = os.getenv('GEMINI_API_KEY')
 gemini_model = GoogleGenerativeAI(
     model="gemini-1.5-pro",
     google_api_key=gemini_api_key,
-    temperature=1
+    temperature=0, 
+    http_options={'api_version': 'v1alpha'}
 )
 
 gemini_api_key_2 = os.getenv('GEM_API_KEY')
 gemini_model_2 = GoogleGenerativeAI(
     model="gemini-1.5-pro",
     google_api_key=gemini_api_key_2,
-    temperature=1
+    temperature=0, 
+    http_options={'api_version': 'v1alpha'}
 )
 
 
@@ -54,7 +56,7 @@ class Main_agents:
             ),
             backstory=(
                 "A veteran architect in AI systems, your expertise lies in creating modular, scalable workflows. "
-                "You have restructured many complex systems and ensure that every agent is optimally deployed. Your output is strictly validated."
+                "You have restructured many complex systems and ensured that every agent is optimally deployed. Your output is strictly validated."
             ),
             max_iter=30,
             verbose=True,

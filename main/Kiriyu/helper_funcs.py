@@ -1,25 +1,33 @@
 import difflib
 from typing import List, Dict
+import re
 
 # ---------- Helper Functions ----------
+
 def parse_aggregated_code(aggregated_code: str) -> Dict[str, str]:
-    """
-    Parse the aggregated code (using the marker format: "%%%%filename:\n$$$$\n<code>$$$$")
-    into a dictionary mapping filename to code.
-    """
     result = {}
-    parts = aggregated_code.split("%%%%")
-    for part in parts:
-        if not part.strip():
-            continue
-        try:
-            header, rest = part.split(":\n$$$$\n", 1)
-            code, _ = rest.split("$$$$", 1)
-            filename = header.strip()
-            result[filename] = code
-        except Exception as e:
-            print(f"Error parsing part '{part}': {e}")
+    # Match: %%%%filename: ... until next %%%% or end
+    file_block_pattern = re.compile(r"%{2,5}([^:\n]+):([\s\S]*?)(?=(?:%{2,5}[^:\n]+:)|\Z)")
+    
+    # Match $$..$$ flexible code markers within the block
+    dollar_code_pattern = re.compile(r"\${2,5}(.*?)\${2,5}", re.DOTALL)
+
+    for match in file_block_pattern.finditer(aggregated_code):
+        filename = match.group(1).strip()
+        block_content = match.group(2).strip()
+
+        # Try to extract code between dollar markers
+        dollar_match = dollar_code_pattern.search(block_content)
+        if dollar_match:
+            code = dollar_match.group(1).strip()
+        else:
+            code = block_content
+
+        result[filename] = code
+
     return result
+
+
 
 def generate_diff_report_per_file(original: str, refined: str) -> str:
     """

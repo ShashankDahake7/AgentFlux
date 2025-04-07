@@ -22,17 +22,15 @@ def promptrefinement(original_code):
     inputs = {"code": original_code}
     crew_result = prompt_crew.kickoff(inputs=inputs)
     refined_code = crew_result.raw
-    print(crew_result.tasks_output[0])
+    refined_code = refined_code.replace("```python", "").replace("```", "")
     return refined_code
 
 def rearchitect(original_code, allowedModels):
     graph_architect = main_agents.graph_architect()
     rearchitect_task = main_tasks.re_architect_graph(graph_architect)
-    prompt_refiner = main_agents.prompt_refiner()
-    prompt_refiner_task = main_tasks.refine_prompts_after(prompt_refiner, [rearchitect_task])
     graph_crew = Crew(
-        agents=[graph_architect,prompt_refiner],
-        tasks=[rearchitect_task, prompt_refiner_task],
+        agents=[graph_architect],
+        tasks=[rearchitect_task],
         verbose=True,
         max_rpm=60,
         cache=True,
@@ -42,5 +40,5 @@ def rearchitect(original_code, allowedModels):
     inputs = {"code": original_code, "allowedModels": allowedModels}
     crew_output = graph_crew.kickoff(inputs=inputs)
     refined_code = crew_output.raw
-    print(crew_output.tasks_output[0])
+    refined_code = refined_code.replace("```python", "").replace("```", "")
     return refined_code
