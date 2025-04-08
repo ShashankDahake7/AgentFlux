@@ -43,6 +43,7 @@ export const Header: React.FC<HeaderProps> = ({ user, scrollToSection }) => {
           <button onClick={() => scrollToSection("home")} className="text-white-600 font-cinzel hover:text-violet-300 transition">Home</button>
           <button onClick={() => scrollToSection("features")} className="text-white-600 font-cinzel hover:text-violet-300 transition">Features</button>
           <button onClick={() => scrollToSection("about")} className="text-white-600 font-cinzel hover:text-violet-300 transition">About</button>
+          <button className="text-white-600 font-cinzel hover:text-violet-300 transition"><Link href="/observe">Observe</Link></button>
         </nav>
 
         {/* Desktop Auth Buttons */}

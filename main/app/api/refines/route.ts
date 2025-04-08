@@ -24,3 +24,19 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Error saving refine details." }, { status: 500 });
     }
 }
+
+export async function GET(request: Request) {
+    await dbConnect();
+    try {
+        const { searchParams } = new URL(request.url);
+        const sheetId = searchParams.get("sheetId");
+        if (!sheetId) {
+            return NextResponse.json({ error: "Missing sheetId parameter." }, { status: 400 });
+        }
+        const runs = await RefineHistory.find({ sheetId }).sort({ timestamp: -1 });
+        return NextResponse.json({ runs }, { status: 200 });
+    } catch (error: any) {
+        console.error("Error fetching refine details: ", error);
+        return NextResponse.json({ error: "Error fetching refine details." }, { status: 500 });
+    }
+}

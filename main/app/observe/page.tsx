@@ -1,11 +1,10 @@
-// pages/CustomPlaygroundPage.tsx
 "use client";
 
 import React, { useEffect, useState, MouseEvent } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "@/app/firebase/firebaseConfig";
 import { useRouter } from "next/navigation";
 import { ChevronUp, ChevronDown } from "lucide-react";
+import { auth } from "@/app/firebase/firebaseConfig";
 
 interface Playground {
   _id: string;
@@ -38,31 +37,47 @@ interface Sheet {
   updatedAt: string;
 }
 
+interface RefineHistory {
+  _id: string;
+  sheetId: string;
+  diffReport: { [filename: string]: string };
+  mergedFiles: { [filename: string]: string };
+  timestamp: string;
+}
+
 const MIN_VISIBLE_TERMINAL_HEIGHT = 100;
 const TERMINAL_HEADER_HEIGHT = 40;
 
-const CustomPlaygroundPage: React.FC = () => {
-  // Authentication state and token
+const CustomObservePage: React.FC = () => {
+  // Authentication and routing
   const [user, setUser] = useState<any>(null);
   const [token, setToken] = useState<string>("");
   const router = useRouter();
 
-  // Layout state (using vh for rows and percentage for horizontal splits)
-  const [topSectionHeight, setTopSectionHeight] = useState<number>(33);
+  // Layout: percentages
+  const [topSectionHeight, setTopSectionHeight] = useState<number>(35);
   const bottomSectionHeight = 100 - topSectionHeight;
-  const [topLeftWidth, setTopLeftWidth] = useState<number>(33);
-  const [bottomRightWidth, setBottomRightWidth] = useState<number>(33);
+  const [sideBarWidth, setSideBarWidth] = useState<number>(25);
+  const [bottomRightWidth, setBottomRightWidth] = useState<number>(50); // Divide bottom evenly: 50% Diff, 50% Code
 
   // Data states
   const [playgrounds, setPlaygrounds] = useState<Playground[]>([]);
-  const [selectedPlayground, setSelectedPlayground] = useState<Playground | null>(null);
   const [sheets, setSheets] = useState<Sheet[]>([]);
+  const [selectedPlayground, setSelectedPlayground] = useState<Playground | null>(null);
   const [selectedSheet, setSelectedSheet] = useState<Sheet | null>(null);
   const [selectedFile, setSelectedFile] = useState<string>("");
+  // For the Code Pane (right bottom)
   const [codeContent, setCodeContent] = useState<string>("");
-  const [modelOutput, setModelOutput] = useState<string>("");
+  // For the Diff Pane (left bottom) – backend provides an HTML diff report per file.
+  const [diffReport, setDiffReport] = useState<string>("");
+  // Graph Visualization dummy data remains in its own state; here we keep a placeholder.
   const [graphData, setGraphData] = useState<any>(null);
-  const [graphLoading, setGraphLoading] = useState<boolean>(false);
+  // Refine histories keyed by sheet id
+  const [refineHistories, setRefineHistories] = useState<{ [sheetId: string]: RefineHistory[] }>({});
+
+  // Sidebar tree expansion states
+  const [expandedPlaygroundIds, setExpandedPlaygroundIds] = useState<{ [pgId: string]: boolean }>({});
+  const [expandedSheetIds, setExpandedSheetIds] = useState<{ [sheetId: string]: boolean }>({});
 
   // ------------------------- AUTHENTICATION -------------------------
   useEffect(() => {
@@ -90,10 +105,10 @@ const CustomPlaygroundPage: React.FC = () => {
         const data = await res.json();
         if (data.playgrounds && data.playgrounds.length > 0) {
           setPlaygrounds(data.playgrounds);
-          setSelectedPlayground(data.playgrounds[0]);
+          if (!selectedPlayground) setSelectedPlayground(data.playgrounds[0]);
         }
-      } catch (err) {
-        console.error("Error fetching playgrounds:", err);
+      } catch (error) {
+        console.error("Error fetching playgrounds:", error);
       }
     };
     fetchPlaygrounds();
@@ -104,93 +119,102 @@ const CustomPlaygroundPage: React.FC = () => {
     if (!selectedPlayground || !token) return;
     const fetchSheets = async () => {
       try {
-        const res = await fetch(
-          `/api/playgrounds/${selectedPlayground._id}/sheets`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const res = await fetch(`/api/playgrounds/${selectedPlayground._id}/sheets`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         const data = await res.json();
         if (data.sheets && data.sheets.length > 0) {
           setSheets(data.sheets);
-          setSelectedSheet(data.sheets[0]);
-          const fileKeys =
-            data.sheets[0].mergedFiles && Object.keys(data.sheets[0].mergedFiles).length > 0
+          if (!selectedSheet) {
+            setSelectedSheet(data.sheets[0]);
+            const fileKeys = data.sheets[0].mergedFiles && Object.keys(data.sheets[0].mergedFiles).length > 0
               ? Object.keys(data.sheets[0].mergedFiles)
               : data.sheets[0].files
-              ? data.sheets[0].files.map((f: FileType) => f.filename)
-              : [];
-          if (fileKeys.length > 0) {
-            setSelectedFile(fileKeys[0]);
-            setCodeContent(
-              data.sheets[0].mergedFiles && data.sheets[0].mergedFiles[fileKeys[0]]
-                ? data.sheets[0].mergedFiles[fileKeys[0]]
-                : data.sheets[0].files
-                ? data.sheets[0].files.find((f: FileType) => f.filename === fileKeys[0])?.code || ""
-                : ""
-            );
+                ? data.sheets[0].files.map((f: FileType) => f.filename)
+                : [];
+            if (fileKeys.length > 0) {
+              setSelectedFile(fileKeys[0]);
+              setCodeContent(
+                data.sheets[0].mergedFiles && data.sheets[0].mergedFiles[fileKeys[0]]
+                  ? data.sheets[0].mergedFiles[fileKeys[0]]
+                  : data.sheets[0].files
+                    ? data.sheets[0].files.find((f: FileType) => f.filename === fileKeys[0])?.code || ""
+                    : ""
+              );
+            }
           }
         } else {
           setSheets([]);
           setSelectedSheet(null);
         }
-      } catch (err) {
-        console.error("Error fetching sheets:", err);
+      } catch (error) {
+        console.error("Error fetching sheets:", error);
       }
     };
     fetchSheets();
   }, [selectedPlayground, token]);
 
-  // ------------------------- UPDATE CODE CONTENT -------------------------
+  // ------------------------- FETCH REFINE HISTORIES -------------------------
+  const fetchRefineHistories = async (sheetId: string) => {
+    if (!token) return;
+    try {
+      const res = await fetch(`/api/refines?sheetId=${sheetId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.runs) {
+        setRefineHistories(prev => ({ ...prev, [sheetId]: data.runs }));
+      }
+    } catch (error) {
+      console.error("Error fetching refine histories:", error);
+    }
+  };
+
+  // ------------------------- UPDATE CODE AND DIFF CONTENT -------------------------
   useEffect(() => {
     if (selectedSheet && selectedFile) {
-      const fileKeys =
-        selectedSheet.mergedFiles && Object.keys(selectedSheet.mergedFiles).length > 0
-          ? Object.keys(selectedSheet.mergedFiles)
-          : selectedSheet.files
+      // Determine file list keys
+      const fileKeys = selectedSheet.mergedFiles && Object.keys(selectedSheet.mergedFiles).length > 0
+        ? Object.keys(selectedSheet.mergedFiles)
+        : selectedSheet.files
           ? selectedSheet.files.map((f: FileType) => f.filename)
           : [];
       if (fileKeys.includes(selectedFile)) {
-        const newCode =
-          selectedSheet.mergedFiles && selectedSheet.mergedFiles[selectedFile]
-            ? selectedSheet.mergedFiles[selectedFile]
-            : selectedSheet.files
+        const newCode = selectedSheet.mergedFiles && selectedSheet.mergedFiles[selectedFile]
+          ? selectedSheet.mergedFiles[selectedFile]
+          : selectedSheet.files
             ? selectedSheet.files.find((f: FileType) => f.filename === selectedFile)?.code || ""
             : "";
         setCodeContent(newCode);
+        // Also update diff content if available:
+        const newDiff = selectedSheet.diffReport && selectedSheet.diffReport[selectedFile]
+          ? selectedSheet.diffReport[selectedFile]
+          : "";
+        setDiffReport(newDiff);
       }
     }
   }, [selectedSheet, selectedFile]);
 
-  // ------------------------- FETCH FRESH SHEET DATA -------------------------
+  // ------------------------- FETCH SHEET BY ID -------------------------
   const fetchSheetById = async (sheetId: string) => {
     if (!selectedPlayground || !token) return;
     try {
-      const res = await fetch(
-        `/api/playgrounds/${selectedPlayground._id}/sheets/${sheetId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await fetch(`/api/playgrounds/${selectedPlayground._id}/sheets/${sheetId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await res.json();
       if (data.sheet) {
         setSelectedSheet(data.sheet);
-        const fileKeys =
-          data.sheet.mergedFiles && Object.keys(data.sheet.mergedFiles).length > 0
-            ? Object.keys(data.sheet.mergedFiles)
-            : data.sheet.files
-            ? data.sheet.files.map((f: FileType) => f.filename)
-            : [];
+        const fileKeys = data.sheet.mergedFiles && Object.keys(data.sheet.mergedFiles).length > 0
+          ? Object.keys(data.sheet.mergedFiles)
+          : data.sheet.files ? data.sheet.files.map((f: FileType) => f.filename) : [];
         if (fileKeys.length > 0) {
           setSelectedFile(fileKeys[0]);
           setCodeContent(
             data.sheet.mergedFiles && data.sheet.mergedFiles[fileKeys[0]]
               ? data.sheet.mergedFiles[fileKeys[0]]
-              : data.sheet.files
-              ? data.sheet.files.find((f: FileType) => f.filename === fileKeys[0])?.code || ""
-              : ""
+              : data.sheet.files ? data.sheet.files.find((f: FileType) => f.filename === fileKeys[0])?.code || "" : ""
           );
-          fetchModelOutputForFile(fileKeys[0]);
-        } else {
-          setSelectedFile("");
-          setCodeContent("");
-          setModelOutput("");
         }
       }
     } catch (error) {
@@ -198,28 +222,8 @@ const CustomPlaygroundPage: React.FC = () => {
     }
   };
 
-  // ------------------------- FETCH MODEL OUTPUT -------------------------
-  const fetchModelOutputForFile = async (fname: string) => {
-    if (!selectedPlayground || !selectedSheet || !token) return;
-    if (selectedSheet.diffReport && selectedSheet.diffReport[fname]) {
-      setModelOutput(selectedSheet.diffReport[fname]);
-      return;
-    }
-    try {
-      const res = await fetch(
-        `/api/playgrounds/${selectedPlayground._id}/sheets/${selectedSheet._id}/model-output?file=${encodeURIComponent(fname)}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const outputText = await res.text();
-      setModelOutput(outputText);
-    } catch (error) {
-      console.error("Error fetching model output:", error);
-      setModelOutput("No model output available.");
-    }
-  };
-
   // ------------------------- RESIZER HANDLERS -------------------------
-  const handleVerticalResize = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+  const handleVerticalResize = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     const startY = e.clientY;
     const startTop = topSectionHeight;
@@ -236,14 +240,14 @@ const CustomPlaygroundPage: React.FC = () => {
     window.addEventListener("mouseup", onMouseUp);
   };
 
-  const handleTopHorizontalResize = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+  const handleTopHorizontalResize = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     const startX = e.clientX;
-    const startLeft = topLeftWidth;
+    const startWidth = sideBarWidth;
     const onMouseMove = (event: MouseEvent) => {
       const delta = ((event.clientX - startX) / window.innerWidth) * 100;
-      const newLeft = startLeft + delta;
-      if (newLeft >= 20 && newLeft <= 80) setTopLeftWidth(newLeft);
+      const newWidth = startWidth + delta;
+      if (newWidth >= 20 && newWidth <= 50) setSideBarWidth(newWidth);
     };
     const onMouseUp = () => {
       window.removeEventListener("mousemove", onMouseMove);
@@ -253,14 +257,14 @@ const CustomPlaygroundPage: React.FC = () => {
     window.addEventListener("mouseup", onMouseUp);
   };
 
-  const handleBottomHorizontalResize = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+  const handleBottomHorizontalResize = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     const startX = e.clientX;
     const startRight = bottomRightWidth;
     const onMouseMove = (event: MouseEvent) => {
       const delta = ((startX - event.clientX) / window.innerWidth) * 100;
       const newRight = startRight + delta;
-      if (newRight >= 20 && newRight <= 80) setBottomRightWidth(newRight);
+      if (newRight >= 20 && newRight <= 50) setBottomRightWidth(newRight);
     };
     const onMouseUp = () => {
       window.removeEventListener("mousemove", onMouseMove);
@@ -270,191 +274,189 @@ const CustomPlaygroundPage: React.FC = () => {
     window.addEventListener("mouseup", onMouseUp);
   };
 
+  // ------------------------- SIDEBAR TREE FUNCTIONS -------------------------
+  const toggleExpandPlayground = (pgId: string) => {
+    setExpandedPlaygroundIds(prev => ({ ...prev, [pgId]: !prev[pgId] }));
+  };
+
+  const toggleExpandSheet = (sheetId: string) => {
+    if (!expandedSheetIds[sheetId]) {
+      fetchRefineHistories(sheetId);
+    }
+    setExpandedSheetIds(prev => ({ ...prev, [sheetId]: !prev[sheetId] }));
+  };
+
+  const selectRefineHistory = (sheet: Sheet, history: RefineHistory) => {
+    // Update the selected sheet with the refine run details.
+    const updatedSheet = { ...sheet, mergedFiles: history.mergedFiles, diffReport: history.diffReport };
+    setSelectedSheet(updatedSheet);
+    const fileKeys = updatedSheet.mergedFiles && Object.keys(updatedSheet.mergedFiles).length > 0
+      ? Object.keys(updatedSheet.mergedFiles)
+      : updatedSheet.files ? updatedSheet.files.map((f: FileType) => f.filename) : [];
+    if (fileKeys.length > 0) {
+      setSelectedFile(fileKeys[0]);
+      setCodeContent(
+        updatedSheet.mergedFiles && updatedSheet.mergedFiles[fileKeys[0]]
+          ? updatedSheet.mergedFiles[fileKeys[0]]
+          : updatedSheet.files ? updatedSheet.files.find((f: FileType) => f.filename === fileKeys[0])?.code || "" : ""
+      );
+    }
+  };
+
+  // ------------------------- FILE TABS FOR BOTTOM PANES -------------------------
+  const getFileKeys = (): string[] => {
+    if (!selectedSheet) return [];
+    if (selectedSheet.mergedFiles && Object.keys(selectedSheet.mergedFiles).length > 0) {
+      return Object.keys(selectedSheet.mergedFiles);
+    } else if (selectedSheet.files) {
+      return selectedSheet.files.map((f: FileType) => f.filename);
+    }
+    return [];
+  };
+
   // ------------------------- LAYOUT RENDERING -------------------------
   return (
-    <div className="flex flex-col h-screen bg-black text-white overflow-hidden">
-      {/* Header with gradient and cinzel font */}
-      <header className="h-12 bg-gradient-to-r from-gray-900 via-gray-800 to-black border-b border-gray-600 flex items-center px-4 font-cinzel text-lg">
-        <div className="px-3 py-1 border border-gray-500 rounded animated-border transition-colors duration-200">
+    <div className="flex flex-col h-screen bg-black text-gray-200 overflow-hidden font-cinzel">
+      {/* Header */}
+      <header className="h-12 bg-black border-b border-gray-300 flex items-center px-4 text-lg">
+        <div className="px-3 py-1 border border-purple-400 rounded transition-colors duration-200">
           {user?.email || "Not Signed In"}
         </div>
       </header>
 
-      {/* Main Content: Two Rows */}
       <div className="flex flex-col flex-1 relative">
-        {/* TOP ROW – Playground & Graph Visualization */}
+        {/* TOP ROW – Sidebar Tree & Graph Visualization */}
         <div className="flex relative" style={{ height: `${topSectionHeight}vh` }}>
-          {/* Left Panel: Playground and Sheet Selection */}
-          <div
-            className="bg-gray-900 border-r border-gray-700 p-4 overflow-y-auto"
-            style={{ width: `${topLeftWidth}%` }}
-          >
-            <h2 className="text-xl font-bold mb-4 font-cinzel">Playgrounds</h2>
-            {/* Playground Dropdown */}
-            <div className="mb-2">
-              <label htmlFor="pg-select" className="block mb-1 text-sm">
-                Select Playground:
-              </label>
-              <select
-                id="pg-select"
-                value={selectedPlayground ? selectedPlayground._id : ""}
-                onChange={(e) => {
-                  const pg = playgrounds.find((p) => p._id === e.target.value);
-                  if (pg) setSelectedPlayground(pg);
-                }}
-                className="p-2 bg-gray-800 border border-gray-600 rounded w-full text-sm"
-              >
-                {playgrounds.map((pg) => (
-                  <option key={pg._id} value={pg._id}>
-                    {pg.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {/* Sheet Dropdown */}
-            {selectedPlayground && sheets.length > 0 && (
-              <div className="mb-4">
-                <label htmlFor="sheet-select" className="block mb-1 text-sm">
-                  Select Sheet:
-                </label>
-                <select
-                  id="sheet-select"
-                  value={selectedSheet ? selectedSheet._id : ""}
-                  onChange={(e) => {
-                    const sheet = sheets.find((s) => s._id === e.target.value);
-                    if (sheet) fetchSheetById(sheet._id);
-                  }}
-                  className="p-2 bg-gray-800 border border-gray-600 rounded w-full text-sm"
-                >
-                  {sheets.map((sheet) => (
-                    <option key={sheet._id} value={sheet._id}>
-                      {sheet.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-            {/* List of All Sheets */}
-            {/* {selectedPlayground && (
-              <div>
-                <h3 className="text-lg font-semibold mb-2 font-cinzel">All Sheets</h3>
-                <ul className="space-y-2 text-sm">
-                  {sheets.map((sheet) => (
-                    <li
-                      key={sheet._id}
-                      onClick={() => fetchSheetById(sheet._id)}
-                      className={`p-2 rounded cursor-pointer ${
-                        selectedSheet && selectedSheet._id === sheet._id
-                          ? "bg-gray-700"
-                          : "hover:bg-gray-800"
-                      }`}
-                    >
-                      {sheet.title}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )} */}
+          {/* Left Panel: Sidebar Tree */}
+          <div className="bg-black border-r border-gray-300 p-4 overflow-y-auto" style={{ width: "25%" }}>
+            <h2 className="text-2xl font-cinzel mb-4">Playgrounds</h2>
+            <ul>
+              {playgrounds.map((pg) => (
+                <li key={pg._id} className="mb-2">
+                  <div onClick={() => toggleExpandPlayground(pg._id)} className="cursor-pointer flex items-center">
+                    <span>{pg.name}</span>
+                    {expandedPlaygroundIds[pg._id] ? (
+                      <ChevronUp size={16} className="ml-1" />
+                    ) : (
+                      <ChevronDown size={16} className="ml-1" />
+                    )}
+                  </div>
+                  {expandedPlaygroundIds[pg._id] && (
+                    <ul className="ml-4 mt-2 border-l border-gray-400 pl-2">
+                      {sheets.filter((s) => s.playgroundId === pg._id).map((sheet) => (
+                        <li key={sheet._id} className="mb-1">
+                          <div onClick={() => toggleExpandSheet(sheet._id)} className="cursor-pointer flex items-center text-sm">
+                            <span>{sheet.title}</span>
+                            {expandedSheetIds[sheet._id] ? (
+                              <ChevronUp size={14} className="ml-1" />
+                            ) : (
+                              <ChevronDown size={14} className="ml-1" />
+                            )}
+                          </div>
+                          {expandedSheetIds[sheet._id] && (
+                            <ul className="ml-4 mt-1 border-l border-purple-500 pl-2">
+                              {(refineHistories[sheet._id] || []).map((history) => (
+                                <li
+                                  key={history._id}
+                                  onClick={() => selectRefineHistory(sheet, history)}
+                                  className="cursor-pointer text-xs border border-gray-400 rounded px-2 py-1 my-1"
+                                >
+                                  {new Date(history.timestamp).toLocaleString()}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              ))}
+            </ul>
           </div>
 
           {/* TOP HORIZONTAL RESIZER */}
-          <div
-            onMouseDown={handleTopHorizontalResize}
-            className="cursor-ew-resize bg-gray-700"
-            style={{ width: "4px" }}
-          ></div>
+          <div onMouseDown={handleTopHorizontalResize} className="cursor-ew-resize bg-gray-400" style={{ width: "4px" }}></div>
 
           {/* Right Panel: Graph Visualization */}
-          <div className="flex-1 bg-gray-800 p-4 overflow-hidden">
-            <h3 className="text-lg font-bold mb-2 font-cinzel">Graph Visualization</h3>
-            <div className="h-full flex items-center justify-center text-gray-400 text-sm">
-              Graph output goes here...
+          <div className="flex-1 bg-black p-4 overflow-hidden">
+            <h3 className="text-lg font-bold mb-2">Graph Visualization</h3>
+            <div className="flex gap-4 h-full">
+              <div className="flex-1 bg-gray-800 border border-gray-300 rounded flex items-center justify-center">
+                <p className="text-sm">Line Chart: Agent Runtime (Before/After)</p>
+              </div>
+              <div className="flex-1 bg-gray-800 border border-gray-300 rounded flex items-center justify-center">
+                <p className="text-sm">Pie Chart: Agent Run Distribution</p>
+              </div>
+              <div className="flex-1 bg-gray-800 border border-gray-300 rounded flex items-center justify-center">
+                <p className="text-sm">Placeholder: Refined Model Output</p>
+              </div>
             </div>
           </div>
         </div>
 
         {/* VERTICAL RESIZER */}
-        <div
-          onMouseDown={handleVerticalResize}
-          className="cursor-ns-resize bg-gray-700"
-          style={{ height: "4px" }}
-        ></div>
+        <div onMouseDown={handleVerticalResize} className="cursor-ns-resize bg-gray-400" style={{ height: "4px" }}></div>
 
-{/* BOTTOM ROW – Code Panel & Model Output */}
-<div className="flex relative" style={{ height: `${bottomSectionHeight}vh` }}>
-  {/* Left Panel: Code Panel with Sticky Header for file-tabs */}
-  <div
-    className="bg-gray-800 overflow-y-auto"
-    style={{ width: `${100 - bottomRightWidth}%` }}
-  >
-    {/* Sticky header for Code Panel */}
-    <div className="sticky top-0 z-10 bg-gray-800 px-4 py-2 border-b border-gray-600 flex justify-between items-center">
-      <h3 className="text-lg font-bold font-cinzel">Code Panel</h3>
-      <div className="flex space-x-2">
-        {selectedSheet &&
-          (selectedSheet.mergedFiles && Object.keys(selectedSheet.mergedFiles).length > 0
-            ? Object.keys(selectedSheet.mergedFiles)
-            : selectedSheet.files
-            ? selectedSheet.files.map((f) => f.filename)
-            : []
-          ).map((fname) => (
-            <button
-              key={fname}
-              onClick={() => {
-                setSelectedFile(fname);
-                if (selectedSheet.mergedFiles && selectedSheet.mergedFiles[fname]) {
-                  setCodeContent(selectedSheet.mergedFiles[fname]);
-                } else if (selectedSheet.files) {
-                  const fileObj = selectedSheet.files.find((f) => f.filename === fname);
-                  setCodeContent(fileObj ? fileObj.code : "");
-                }
-                fetchModelOutputForFile(fname);
-              }}
-              className={`animated-border px-2 py-1 border rounded text-xs transition-colors duration-200 ${
-                selectedFile === fname ? "bg-gray-700" : "bg-gray-600 hover:bg-gray-700"
-              }`}
-            >
-              {fname}
-            </button>
-          ))}
-      </div>
-    </div>
-    {/* Code content scrollable area */}
-    <div className="px-4 py-2">
-      <pre className="bg-black border border-gray-600 rounded p-2 text-sm font-mono whitespace-pre-wrap">
-        {codeContent}
-      </pre>
-    </div>
-  </div>
+        {/* BOTTOM ROW – Diff Pane & Code Pane */}
+        <div className="flex relative" style={{ height: `${bottomSectionHeight}vh` }}>
+          {/* Left Panel: Diff Report Pane with File Tabs */}
+          <div className="bg-black overflow-y-auto" style={{ width: "60%" }}>
+            <div className="sticky top-0 z-10 bg-black px-4 py-2 border-b border-gray-300 flex justify-between items-center">
+              <h3 className="text-lg font-cinzel">Diff Report</h3>
+              <div className="flex space-x-2">
+                {getFileKeys().map((fname) => (
+                  <button
+                    key={fname}
+                    onClick={() => setSelectedFile(fname)}
+                    className={`px-2 py-1 border rounded text-xs transition-colors duration-200 border-purple-500 ${selectedFile === fname ? "bg-gray-800" : "bg-gray-700 hover:bg-gray-800"}`}
+                  >
+                    {fname}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="px-4 py-2">
+              {selectedSheet && selectedSheet.diffReport && selectedSheet.diffReport[selectedFile] ? (
+                <div
+                  className="bg-black border border-gray-300 rounded p-2 text-sm font-mono whitespace-pre-wrap"
+                  dangerouslySetInnerHTML={{ __html: selectedSheet.diffReport[selectedFile] }}
+                ></div>
+              ) : (
+                <p>No diff report available.</p>
+              )}
+            </div>
+          </div>
 
-  {/* BOTTOM HORIZONTAL RESIZER */}
-  <div
-    onMouseDown={handleBottomHorizontalResize}
-    className="cursor-ew-resize bg-gray-700"
-    style={{ width: "4px" }}
-  ></div>
+          {/* BOTTOM VERTICAL RESIZER */}
+          <div onMouseDown={handleBottomHorizontalResize} className="cursor-ew-resize bg-gray-400" style={{ width: "4px" }}></div>
 
-  {/* Right Panel: Model Output */}
-  <div
-    className="bg-gray-900 p-4 overflow-y-auto"
-    style={{ width: `${bottomRightWidth}%` }}
-  >
-    <h3 className="text-lg font-bold mb-4 font-cinzel">Model Output</h3>
-    {modelOutput ? (
-      <pre className="bg-black border border-gray-600 rounded p-2 text-sm font-mono whitespace-pre-wrap">
-        {modelOutput}
-      </pre>
-    ) : (
-      <p className="text-gray-400 text-sm">
-        Model output will be rendered here...
-      </p>
-    )}
-  </div>
-</div>
-
+          {/* Right Panel: Code Pane with File Tabs */}
+          <div className="bg-black overflow-y-auto" style={{ width: "46%" }}>
+            <div className="sticky top-0 z-10 bg-black px-4 py-2 border-b border-gray-300 flex justify-between items-center">
+              <h3 className="text-lg font-bold">Code</h3>
+              <div className="flex space-x-2">
+                {getFileKeys().map((fname) => (
+                  <button
+                    key={fname}
+                    onClick={() => setSelectedFile(fname)}
+                    className={`px-2 py-1 border rounded text-xs transition-colors duration-200 border-purple-500 ${selectedFile === fname ? "bg-gray-800" : "bg-gray-700 hover:bg-gray-800"}`}
+                  >
+                    {fname}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="px-4 py-2">
+              <pre className="bg-black border border-gray-300 rounded p-2 text-sm font-mono whitespace-pre-wrap">
+                {codeContent}
+              </pre>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
-export default CustomPlaygroundPage;
+export default CustomObservePage;
