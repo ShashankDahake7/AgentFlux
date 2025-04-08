@@ -1427,7 +1427,7 @@ export default function PlaygroundsPage() {
   return (
     <div className="flex flex-col h-screen bg-black text-white relative overflow-hidden">
       {/* Header */}
-      <header className="h-12 bg-black border-b border-gray-500 flex items-center px-4 flex justify-between">
+      <header className="h-12 bg-zinc-900 border-b border-gray-300 flex items-center px-4 flex justify-between">
         <div className="px-3 py-1 border border-purple-400 rounded text-sm">
           {user?.email || "Not Signed In"}
         </div>
