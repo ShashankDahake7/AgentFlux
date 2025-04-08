@@ -2,12 +2,22 @@ import os
 from crewai import Agent
 from langchain_google_genai import GoogleGenerativeAI
 from dotenv import load_dotenv
+# from crewai import LLM
 
 load_dotenv()
 
-# Securely initialize the Gemini model.
+
 gemini_api_key = os.getenv('GEMINI_API_KEY')
-gemini_model = GoogleGenerativeAI(
+hf_token = os.getenv('HUGGINGFACE_TOKEN')
+
+# llm = LLM(
+#     model="deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+#     base_url="https://VidyutCx/deepseek-prompttune.huggingface.cloud",
+#     api_key=hf_token,
+#     provider="huggingface",
+# )
+
+model = GoogleGenerativeAI(
     model="gemini-1.5-pro",
     google_api_key=gemini_api_key,
     temperature=0, 
@@ -15,7 +25,7 @@ gemini_model = GoogleGenerativeAI(
 )
 
 gemini_api_key_2 = os.getenv('GEM_API_KEY')
-gemini_model_2 = GoogleGenerativeAI(
+model_2 = GoogleGenerativeAI(
     model="gemini-1.5-pro",
     google_api_key=gemini_api_key_2,
     temperature=0, 
@@ -24,6 +34,29 @@ gemini_model_2 = GoogleGenerativeAI(
 
 
 class Main_agents:
+    def agent_manager(self):
+        """
+        Agent Manager: Responsible for coordinating the Prompt Refiner and Graph Architect agents.
+        It ensures that each agent's outputs are aligned with the overall objective and facilitates smooth inter-agent communication.
+        """
+        return Agent(
+            role='Agent Manager',
+            goal=(
+                "Coordinate and manage the operations of the Prompt Refiner and Graph Architect agents. "
+                "Monitor their progress, integrate their outputs, and reassign tasks if necessary to ensure that the overall objective is met efficiently. "
+                "Ensure clear communication between the agents, provide adjustments and context when needed, and validate that the outputs are consistent and optimal."
+            ),
+            backstory=(
+                "You are a seasoned orchestrator of multi-agent systems with a proven track record in managing complex workflows. "
+                "Your expertise lies in harmonizing diverse functionalities into a unified, effective system. "
+                "By overseeing the specialized agents, you ensure that every component contributes effectively to achieving the final goal."
+            ),
+            max_iter=25,
+            verbose=True,
+            llm=model, 
+            allow_delegation=True
+        )
+
     def prompt_refiner(self):
         """
         Prompt Refiner: Specializes in optimizing the human-written prompt.
@@ -44,7 +77,7 @@ class Main_agents:
             ),
             max_iter=20,
             verbose=True,
-            llm=gemini_model_2,
+            llm=model_2,
             allow_delegation=True
         )
     def graph_architect(self):
@@ -60,6 +93,6 @@ class Main_agents:
             ),
             max_iter=30,
             verbose=True,
-            llm=gemini_model,
+            llm=model,
             allow_delegation=True
         )

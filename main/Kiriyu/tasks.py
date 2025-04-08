@@ -1,6 +1,4 @@
-import json
 from crewai import Task
-from typing import List
 from pydantic import BaseModel
 
 # ---------- Pydantic Model for Output Parsing ----------
@@ -30,6 +28,29 @@ def validate_refined_code(result: str):
 
 
 class Main_Tasks:
+    def manage_agents(self, agent):
+        description = (
+            "This task directs the managing agent to coordinate and execute both the refine_prompts and re_architect_graph tasks. "
+            "It must ensure that the human-written prompts are refined for clarity without altering any code structure, "
+            "and that the overall agent graph is restructured into a modular, production-ready codebase. "
+            "The task should invoke the refine_prompts task to update all human messages in the code and then call the re_architect_graph "
+            "task to decompose complex nodes and assign the proper language models. "
+            "The original code is provided as: \n{code}\n and the allowedModels list is provided as: \n{allowedModels}\n"
+            "If multiple files are included, the output must follow the exact file formatting as in the original submission "
+            "(e.g., \n%%%%filename:\n$$$\ncode\n$$$\n%%%%filename...)."
+        )
+        expected_output = (
+            "The final output should be a complete and integrated codebase where all human prompts are refined and the agent graph "
+            "is fully restructured. All changes must be incorporated without removing any lines from the original code or replacing "
+            "them with placeholder text. The code should be properly formatted for multiple files (if applicable) and directly executable."
+        )
+        return Task(
+            description=description,
+            expected_output=expected_output,
+            agent=agent,
+            max_retries=5,
+        )
+
     def refine_prompts(self, agent):
         description = (
             "This task focuses exclusively on refining the human-written prompt that was extracted from the code submission. "
@@ -89,25 +110,5 @@ class Main_Tasks:
             # callback=default_task_callback
         )
 
-    # def refine_prompts_after(self, agent, context): 
-    #     description = (
-    #         "This task focuses exclusively on refining the human-written prompt that was extracted from the code submission. "
-    #         "Without modifying any other portion of the code, transform the raw human message content into a clear, unambiguous and descriptive prompt with proper system instructions."
-    #         "Ensure that only the prompt text is modified and finally output the whole code with the refined prompts integrated into it with the same structure as it was given to you.\n"
-    #         "understand that there can be multiple instances where the code can include human given messages or prompts, you must refine all of them. "
-    #         "Additionally, you must not remove any lines of code or replace them with placeholder text like 'same as before'. "
-    #     )
-    #     expected_output = (
-    #         "The task outputs the original code (unchanged) with refined prompts in place of the human messages that were earlier given. No line should be removed from the original code with placeholder text. Output the entire code with proper indentations and formatting such that it can be copy pasted and directly executed. "
-    #         "if multiple files are given then follow the same format for outputtting code as in original code %%%%filename:\n$$$\ncode\n$$$\n%%%%filename...and so on.\n"
-    #         "The output should be a complete codebase with all the refined prompts integrated into it. "
-    #     )
-    #     return Task(
-    #         description=description,
-    #         expected_output=expected_output,
-    #         agent=agent,
-    #         # output_pydantic=RefinementOutput,
-    #         # guardrail=validate_refined_code,
-    #         max_retries=3,
-    #     )
+
 

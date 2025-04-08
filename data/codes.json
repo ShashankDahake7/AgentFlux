@@ -1,0 +1,2180 @@
+[
+    {
+        "agent_name": "DataCollectorAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "data_collector",
+                "description": "Collects raw data from various sources.",
+                "code": "def data_collector(state: AgentState) -> AgentState:\n    # Collect raw data\n    data = 'raw data collected'\n    state['collected_data'] = data\n    state['messages'].append({'role': 'collector', 'content': data})\n    return state"
+            },
+            {
+                "name": "data_processor",
+                "description": "Processes the collected data to extract meaningful information.",
+                "code": "def data_processor(state: AgentState) -> AgentState:\n    raw = state.get('collected_data', '')\n    processed = raw.upper()  # Dummy processing\n    state['processed_data'] = processed\n    state['messages'].append({'role': 'processor', 'content': processed})\n    return state"
+            },
+            {
+                "name": "final_evaluator",
+                "description": "Evaluates the processed data and generates a final report.",
+                "code": "def final_evaluator(state: AgentState) -> AgentState:\n    processed = state.get('processed_data', '')\n    report = f'Report: {processed}'\n    state['final_report'] = report\n    state['messages'].append({'role': 'evaluator', 'content': report})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "data_collector",
+                "to": "data_processor"
+            },
+            {
+                "from": "data_processor",
+                "to": "final_evaluator"
+            },
+            {
+                "from": "final_evaluator",
+                "to": "END"
+            }
+        ],
+        "entry_point": "data_collector"
+    },
+    {
+        "agent_name": "WebScraperAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "scraper",
+                "description": "Scrapes web data based on a query.",
+                "code": "def scraper(state: AgentState) -> AgentState:\n    query = state.get('question', '')\n    data = f'Scraped data for {query}'\n    state['scraped_data'] = data\n    state['messages'].append({'role': 'scraper', 'content': data})\n    return state"
+            },
+            {
+                "name": "summarizer",
+                "description": "Summarizes the scraped content into key points.",
+                "code": "def summarizer(state: AgentState) -> AgentState:\n    scraped = state.get('scraped_data', '')\n    summary = f'Summary of {scraped}'\n    state['summary'] = summary\n    state['messages'].append({'role': 'summarizer', 'content': summary})\n    return state"
+            },
+            {
+                "name": "responder",
+                "description": "Generates a final response using the summary.",
+                "code": "def responder(state: AgentState) -> AgentState:\n    summary = state.get('summary', '')\n    final_response = f'Final response based on summary: {summary}'\n    state['final_response'] = final_response\n    state['messages'].append({'role': 'responder', 'content': final_response})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "scraper",
+                "to": "summarizer"
+            },
+            {
+                "from": "summarizer",
+                "to": "responder"
+            },
+            {
+                "from": "responder",
+                "to": "END"
+            }
+        ],
+        "entry_point": "scraper"
+    },
+    {
+        "agent_name": "QueryAnalysisAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "query_fetcher",
+                "description": "Fetches query details and context.",
+                "code": "def query_fetcher(state: AgentState) -> AgentState:\n    query = state.get('question', '')\n    details = f'Context for {query}'\n    state['query_details'] = details\n    state['messages'].append({'role': 'fetcher', 'content': details})\n    return state"
+            },
+            {
+                "name": "result_analyzer",
+                "description": "Analyzes the fetched query and context.",
+                "code": "def result_analyzer(state: AgentState) -> AgentState:\n    details = state.get('query_details', '')\n    analysis = f'Analysis of {details}'\n    state['analysis'] = analysis\n    state['messages'].append({'role': 'analyzer', 'content': analysis})\n    return state"
+            },
+            {
+                "name": "answer_generator",
+                "description": "Generates a comprehensive answer based on the analysis.",
+                "code": "def answer_generator(state: AgentState) -> AgentState:\n    analysis = state.get('analysis', '')\n    answer = f'Final answer derived from analysis: {analysis}'\n    state['final_answer'] = answer\n    state['messages'].append({'role': 'generator', 'content': answer})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "query_fetcher",
+                "to": "result_analyzer"
+            },
+            {
+                "from": "result_analyzer",
+                "to": "answer_generator"
+            },
+            {
+                "from": "answer_generator",
+                "to": "END"
+            }
+        ],
+        "entry_point": "query_fetcher"
+    },
+    {
+        "agent_name": "InfoInsightAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "info_retriever",
+                "description": "Retrieves necessary information from various sources.",
+                "code": "def info_retriever(state: AgentState) -> AgentState:\n    info = 'Retrieved information'\n    state['info'] = info\n    state['messages'].append({'role': 'retriever', 'content': info})\n    return state"
+            },
+            {
+                "name": "insight_builder",
+                "description": "Builds insights based on the retrieved information.",
+                "code": "def insight_builder(state: AgentState) -> AgentState:\n    info = state.get('info', '')\n    insights = f'Insights based on {info}'\n    state['insights'] = insights\n    state['messages'].append({'role': 'builder', 'content': insights})\n    return state"
+            },
+            {
+                "name": "solution_presenter",
+                "description": "Presents a solution based on the insights.",
+                "code": "def solution_presenter(state: AgentState) -> AgentState:\n    insights = state.get('insights', '')\n    solution = f'Solution derived from insights: {insights}'\n    state['solution'] = solution\n    state['messages'].append({'role': 'presenter', 'content': solution})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "info_retriever",
+                "to": "insight_builder"
+            },
+            {
+                "from": "insight_builder",
+                "to": "solution_presenter"
+            },
+            {
+                "from": "solution_presenter",
+                "to": "END"
+            }
+        ],
+        "entry_point": "info_retriever"
+    },
+    {
+        "agent_name": "ObservationConclusionAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "observer",
+                "description": "Observes and gathers initial data points.",
+                "code": "def observer(state: AgentState) -> AgentState:\n    observation = 'Initial observations recorded'\n    state['observation'] = observation\n    state['messages'].append({'role': 'observer', 'content': observation})\n    return state"
+            },
+            {
+                "name": "interpreter",
+                "description": "Interprets the observations to detect patterns.",
+                "code": "def interpreter(state: AgentState) -> AgentState:\n    observation = state.get('observation', '')\n    interpretation = f'Interpreted data from {observation}'\n    state['interpretation'] = interpretation\n    state['messages'].append({'role': 'interpreter', 'content': interpretation})\n    return state"
+            },
+            {
+                "name": "concluder",
+                "description": "Draws final conclusions and delivers a summary.",
+                "code": "def concluder(state: AgentState) -> AgentState:\n    interpretation = state.get('interpretation', '')\n    conclusion = f'Conclusion based on interpretation: {interpretation}'\n    state['final_conclusion'] = conclusion\n    state['messages'].append({'role': 'concluder', 'content': conclusion})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "observer",
+                "to": "interpreter"
+            },
+            {
+                "from": "interpreter",
+                "to": "concluder"
+            },
+            {
+                "from": "concluder",
+                "to": "END"
+            }
+        ],
+        "entry_point": "observer"
+    },
+    {
+        "agent_name": "SmallTalkAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "greeting",
+                "description": "Initiates the conversation with a friendly greeting.",
+                "code": "def greeting(state: AgentState) -> AgentState:\n    greet = 'Hello! How can I help you today?'\n    state['messages'].append({'role': 'greeting', 'content': greet})\n    return state"
+            },
+            {
+                "name": "conversation_handler",
+                "description": "Handles the ongoing casual conversation.",
+                "code": "def conversation_handler(state: AgentState) -> AgentState:\n    response = 'That sounds interesting, tell me more!'\n    state['messages'].append({'role': 'conversation', 'content': response})\n    return state"
+            },
+            {
+                "name": "closing",
+                "description": "Closes the conversation gracefully.",
+                "code": "def closing(state: AgentState) -> AgentState:\n    bye = 'It was great chatting with you! Have a wonderful day.'\n    state['messages'].append({'role': 'closing', 'content': bye})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "greeting",
+                "to": "conversation_handler"
+            },
+            {
+                "from": "conversation_handler",
+                "to": "closing"
+            },
+            {
+                "from": "closing",
+                "to": "END"
+            }
+        ],
+        "entry_point": "greeting"
+    },
+    {
+        "agent_name": "FAQAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "question_understander",
+                "description": "Interprets user questions to identify key queries.",
+                "code": "def question_understander(state: AgentState) -> AgentState:\n    question = state.get('question', '')\n    interpreted = f'Interpreted FAQ query: {question}'\n    state['messages'].append({'role': 'understander', 'content': interpreted})\n    return state"
+            },
+            {
+                "name": "answer_retriever",
+                "description": "Retrieves relevant answers from a FAQ database.",
+                "code": "def answer_retriever(state: AgentState) -> AgentState:\n    answer = 'Here is the answer from our FAQ repository.'\n    state['messages'].append({'role': 'retriever', 'content': answer})\n    return state"
+            },
+            {
+                "name": "answer_formatter",
+                "description": "Formats the retrieved answer in a user-friendly way.",
+                "code": "def answer_formatter(state: AgentState) -> AgentState:\n    answer = 'Formatted answer: Please follow the provided guidelines.'\n    state['final_answer'] = answer\n    state['messages'].append({'role': 'formatter', 'content': answer})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "question_understander",
+                "to": "answer_retriever"
+            },
+            {
+                "from": "answer_retriever",
+                "to": "answer_formatter"
+            },
+            {
+                "from": "answer_formatter",
+                "to": "END"
+            }
+        ],
+        "entry_point": "question_understander"
+    },
+    {
+        "agent_name": "CustomerSupportAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "issue_collector",
+                "description": "Collects customer issues and queries.",
+                "code": "def issue_collector(state: AgentState) -> AgentState:\n    issue = state.get('question', 'No issue provided')\n    state['issue'] = issue\n    state['messages'].append({'role': 'collector', 'content': f'Issue collected: {issue}'})\n    return state"
+            },
+            {
+                "name": "solution_finder",
+                "description": "Searches for solutions based on the collected issue.",
+                "code": "def solution_finder(state: AgentState) -> AgentState:\n    solution = 'Based on your issue, please try restarting your device.'\n    state['solution'] = solution\n    state['messages'].append({'role': 'finder', 'content': solution})\n    return state"
+            },
+            {
+                "name": "response_generator",
+                "description": "Generates a comprehensive support response.",
+                "code": "def response_generator(state: AgentState) -> AgentState:\n    final = f'Support response: {state.get('solution', '')}'\n    state['final_response'] = final\n    state['messages'].append({'role': 'responder', 'content': final})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "issue_collector",
+                "to": "solution_finder"
+            },
+            {
+                "from": "solution_finder",
+                "to": "response_generator"
+            },
+            {
+                "from": "response_generator",
+                "to": "END"
+            }
+        ],
+        "entry_point": "issue_collector"
+    },
+    {
+        "agent_name": "WeatherChatAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "weather_fetcher",
+                "description": "Fetches weather information for the user's location.",
+                "code": "def weather_fetcher(state: AgentState) -> AgentState:\n    weather = 'It is sunny with a chance of rain.'\n    state['weather'] = weather\n    state['messages'].append({'role': 'fetcher', 'content': weather})\n    return state"
+            },
+            {
+                "name": "forecast_interpreter",
+                "description": "Interprets the weather data and explains its implications.",
+                "code": "def forecast_interpreter(state: AgentState) -> AgentState:\n    interpretation = 'Expect mild weather with occasional showers.'\n    state['interpretation'] = interpretation\n    state['messages'].append({'role': 'interpreter', 'content': interpretation})\n    return state"
+            },
+            {
+                "name": "summary_presenter",
+                "description": "Presents a final weather summary to the user.",
+                "code": "def summary_presenter(state: AgentState) -> AgentState:\n    summary = f'Weather summary: {state.get('interpretation', '')}'\n    state['final_summary'] = summary\n    state['messages'].append({'role': 'presenter', 'content': summary})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "weather_fetcher",
+                "to": "forecast_interpreter"
+            },
+            {
+                "from": "forecast_interpreter",
+                "to": "summary_presenter"
+            },
+            {
+                "from": "summary_presenter",
+                "to": "END"
+            }
+        ],
+        "entry_point": "weather_fetcher"
+    },
+    {
+        "agent_name": "NewsChatAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "news_fetcher",
+                "description": "Fetches the latest news headlines.",
+                "code": "def news_fetcher(state: AgentState) -> AgentState:\n    news = 'Today’s top news: Market hits record high.'\n    state['news'] = news\n    state['messages'].append({'role': 'fetcher', 'content': news})\n    return state"
+            },
+            {
+                "name": "summary_generator",
+                "description": "Generates a concise summary of the news.",
+                "code": "def summary_generator(state: AgentState) -> AgentState:\n    summary = f'News summary: {state.get('news', '')} in brief.'\n    state['summary'] = summary\n    state['messages'].append({'role': 'summarizer', 'content': summary})\n    return state"
+            },
+            {
+                "name": "discussion_prompter",
+                "description": "Prompts the user to discuss or ask follow-up questions about the news.",
+                "code": "def discussion_prompter(state: AgentState) -> AgentState:\n    prompt = 'Would you like to discuss this further?'\n    state['final_prompt'] = prompt\n    state['messages'].append({'role': 'prompter', 'content': prompt})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "news_fetcher",
+                "to": "summary_generator"
+            },
+            {
+                "from": "summary_generator",
+                "to": "discussion_prompter"
+            },
+            {
+                "from": "discussion_prompter",
+                "to": "END"
+            }
+        ],
+        "entry_point": "news_fetcher"
+    },
+    {
+        "agent_name": "MentalHealthChatAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "empathy_detector",
+                "description": "Detects the emotional tone of the user's message.",
+                "code": "def empathy_detector(state: AgentState) -> AgentState:\n    tone = 'It seems like you are feeling overwhelmed.'\n    state['tone'] = tone\n    state['messages'].append({'role': 'detector', 'content': tone})\n    return state"
+            },
+            {
+                "name": "resource_recommender",
+                "description": "Recommends helpful mental health resources.",
+                "code": "def resource_recommender(state: AgentState) -> AgentState:\n    resources = 'Consider speaking to a counselor or trying mindfulness exercises.'\n    state['resources'] = resources\n    state['messages'].append({'role': 'recommender', 'content': resources})\n    return state"
+            },
+            {
+                "name": "supportive_message_generator",
+                "description": "Generates a supportive message for the user.",
+                "code": "def supportive_message_generator(state: AgentState) -> AgentState:\n    support = 'I am here for you, and you are not alone.'\n    state['final_message'] = support\n    state['messages'].append({'role': 'supporter', 'content': support})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "empathy_detector",
+                "to": "resource_recommender"
+            },
+            {
+                "from": "resource_recommender",
+                "to": "supportive_message_generator"
+            },
+            {
+                "from": "supportive_message_generator",
+                "to": "END"
+            }
+        ],
+        "entry_point": "empathy_detector"
+    },
+    {
+        "agent_name": "TravelChatAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "destination_recommender",
+                "description": "Suggests travel destinations based on user preferences.",
+                "code": "def destination_recommender(state: AgentState) -> AgentState:\n    recommendation = 'How about visiting the beaches of Thailand?'\n    state['destination'] = recommendation\n    state['messages'].append({'role': 'recommender', 'content': recommendation})\n    return state"
+            },
+            {
+                "name": "itinerary_builder",
+                "description": "Builds a tentative travel itinerary.",
+                "code": "def itinerary_builder(state: AgentState) -> AgentState:\n    itinerary = 'Day 1: Beach relaxation, Day 2: Local sightseeing.'\n    state['itinerary'] = itinerary\n    state['messages'].append({'role': 'builder', 'content': itinerary})\n    return state"
+            },
+            {
+                "name": "booking_advisor",
+                "description": "Provides booking advice and next steps.",
+                "code": "def booking_advisor(state: AgentState) -> AgentState:\n    advice = 'Consider booking your stay in advance to secure a good deal.'\n    state['final_advice'] = advice\n    state['messages'].append({'role': 'advisor', 'content': advice})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "destination_recommender",
+                "to": "itinerary_builder"
+            },
+            {
+                "from": "itinerary_builder",
+                "to": "booking_advisor"
+            },
+            {
+                "from": "booking_advisor",
+                "to": "END"
+            }
+        ],
+        "entry_point": "destination_recommender"
+    },
+    {
+        "agent_name": "CookingChatAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "recipe_suggester",
+                "description": "Suggests recipes based on user inputs.",
+                "code": "def recipe_suggester(state: AgentState) -> AgentState:\n    recipe = 'How about trying a classic spaghetti carbonara?'\n    state['recipe'] = recipe\n    state['messages'].append({'role': 'suggester', 'content': recipe})\n    return state"
+            },
+            {
+                "name": "ingredient_checker",
+                "description": "Checks for available ingredients and offers substitutions.",
+                "code": "def ingredient_checker(state: AgentState) -> AgentState:\n    check = 'Do you have eggs and pancetta?'\n    state['ingredient_check'] = check\n    state['messages'].append({'role': 'checker', 'content': check})\n    return state"
+            },
+            {
+                "name": "cooking_advice_provider",
+                "description": "Provides step-by-step cooking advice.",
+                "code": "def cooking_advice_provider(state: AgentState) -> AgentState:\n    advice = 'Start by boiling the pasta and frying the pancetta.'\n    state['final_advice'] = advice\n    state['messages'].append({'role': 'advisor', 'content': advice})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "recipe_suggester",
+                "to": "ingredient_checker"
+            },
+            {
+                "from": "ingredient_checker",
+                "to": "cooking_advice_provider"
+            },
+            {
+                "from": "cooking_advice_provider",
+                "to": "END"
+            }
+        ],
+        "entry_point": "recipe_suggester"
+    },
+    {
+        "agent_name": "LanguageLearningChatAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "language_question_collector",
+                "description": "Collects language-related questions from the user.",
+                "code": "def language_question_collector(state: AgentState) -> AgentState:\n    question = state.get('question', 'No question provided')\n    state['language_question'] = question\n    state['messages'].append({'role': 'collector', 'content': f'Question: {question}'})\n    return state"
+            },
+            {
+                "name": "explanation_provider",
+                "description": "Provides a detailed explanation for the language question.",
+                "code": "def explanation_provider(state: AgentState) -> AgentState:\n    explanation = 'Here is a detailed explanation of that grammar rule.'\n    state['explanation'] = explanation\n    state['messages'].append({'role': 'explainer', 'content': explanation})\n    return state"
+            },
+            {
+                "name": "practice_generator",
+                "description": "Generates practice exercises for reinforcement.",
+                "code": "def practice_generator(state: AgentState) -> AgentState:\n    practice = 'Try translating these sentences into your target language.'\n    state['final_exercise'] = practice\n    state['messages'].append({'role': 'practicer', 'content': practice})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "language_question_collector",
+                "to": "explanation_provider"
+            },
+            {
+                "from": "explanation_provider",
+                "to": "practice_generator"
+            },
+            {
+                "from": "practice_generator",
+                "to": "END"
+            }
+        ],
+        "entry_point": "language_question_collector"
+    },
+    {
+        "agent_name": "EntertainmentChatAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "movie_recommender",
+                "description": "Recommends movies or TV shows based on user preferences.",
+                "code": "def movie_recommender(state: AgentState) -> AgentState:\n    recommendation = 'You might enjoy the latest sci-fi thriller.'\n    state['recommendation'] = recommendation\n    state['messages'].append({'role': 'recommender', 'content': recommendation})\n    return state"
+            },
+            {
+                "name": "show_discussion_handler",
+                "description": "Handles discussion about the recommended content.",
+                "code": "def show_discussion_handler(state: AgentState) -> AgentState:\n    discussion = 'What did you think of the plot twists?'\n    state['discussion'] = discussion\n    state['messages'].append({'role': 'discussant', 'content': discussion})\n    return state"
+            },
+            {
+                "name": "suggestion_maker",
+                "description": "Provides further entertainment suggestions.",
+                "code": "def suggestion_maker(state: AgentState) -> AgentState:\n    suggestion = 'Maybe check out this new series next!'\n    state['final_suggestion'] = suggestion\n    state['messages'].append({'role': 'suggestor', 'content': suggestion})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "movie_recommender",
+                "to": "show_discussion_handler"
+            },
+            {
+                "from": "show_discussion_handler",
+                "to": "suggestion_maker"
+            },
+            {
+                "from": "suggestion_maker",
+                "to": "END"
+            }
+        ],
+        "entry_point": "movie_recommender"
+    },
+    {
+        "agent_name": "TechSupportChatAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "issue_diagnoser",
+                "description": "Diagnoses technical issues reported by the user.",
+                "code": "def issue_diagnoser(state: AgentState) -> AgentState:\n    issue = state.get('question', 'Technical issue not specified')\n    diagnosis = f'Diagnosed issue based on: {issue}'\n    state['diagnosis'] = diagnosis\n    state['messages'].append({'role': 'diagnoser', 'content': diagnosis})\n    return state"
+            },
+            {
+                "name": "troubleshooting_guide",
+                "description": "Provides a troubleshooting guide based on the diagnosis.",
+                "code": "def troubleshooting_guide(state: AgentState) -> AgentState:\n    guide = 'Please try restarting your device and checking your connections.'\n    state['guide'] = guide\n    state['messages'].append({'role': 'troubleshooter', 'content': guide})\n    return state"
+            },
+            {
+                "name": "solution_validator",
+                "description": "Validates the solution and asks if further help is needed.",
+                "code": "def solution_validator(state: AgentState) -> AgentState:\n    validation = 'Did this solution resolve your issue?'\n    state['final_validation'] = validation\n    state['messages'].append({'role': 'validator', 'content': validation})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "issue_diagnoser",
+                "to": "troubleshooting_guide"
+            },
+            {
+                "from": "troubleshooting_guide",
+                "to": "solution_validator"
+            },
+            {
+                "from": "solution_validator",
+                "to": "END"
+            }
+        ],
+        "entry_point": "issue_diagnoser"
+    },
+    {
+        "agent_name": "FinanceChatAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "market_info_fetcher",
+                "description": "Fetches the latest market and financial information.",
+                "code": "def market_info_fetcher(state: AgentState) -> AgentState:\n    info = 'The stock market is trending upwards today.'\n    state['market_info'] = info\n    state['messages'].append({'role': 'fetcher', 'content': info})\n    return state"
+            },
+            {
+                "name": "risk_explainer",
+                "description": "Explains associated risks with current market trends.",
+                "code": "def risk_explainer(state: AgentState) -> AgentState:\n    risk = 'Investing always carries risks, consider diversifying your portfolio.'\n    state['risk_info'] = risk\n    state['messages'].append({'role': 'explainer', 'content': risk})\n    return state"
+            },
+            {
+                "name": "investment_advisor",
+                "description": "Advises on potential investment strategies.",
+                "code": "def investment_advisor(state: AgentState) -> AgentState:\n    advice = 'A balanced approach with both stocks and bonds might work well for you.'\n    state['final_advice'] = advice\n    state['messages'].append({'role': 'advisor', 'content': advice})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "market_info_fetcher",
+                "to": "risk_explainer"
+            },
+            {
+                "from": "risk_explainer",
+                "to": "investment_advisor"
+            },
+            {
+                "from": "investment_advisor",
+                "to": "END"
+            }
+        ],
+        "entry_point": "market_info_fetcher"
+    },
+    {
+        "agent_name": "EcommerceChatAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "product_inquirer",
+                "description": "Inquires about product details and preferences.",
+                "code": "def product_inquirer(state: AgentState) -> AgentState:\n    inquiry = 'What type of product are you interested in?'\n    state['inquiry'] = inquiry\n    state['messages'].append({'role': 'inquirer', 'content': inquiry})\n    return state"
+            },
+            {
+                "name": "recommendation_generator",
+                "description": "Generates product recommendations based on the inquiry.",
+                "code": "def recommendation_generator(state: AgentState) -> AgentState:\n    recommendation = 'Based on your interest, we recommend checking out our new gadgets.'\n    state['recommendation'] = recommendation\n    state['messages'].append({'role': 'recommender', 'content': recommendation})\n    return state"
+            },
+            {
+                "name": "checkout_helper",
+                "description": "Assists the user with the checkout process.",
+                "code": "def checkout_helper(state: AgentState) -> AgentState:\n    checkout = 'Would you like help completing your purchase?'\n    state['final_help'] = checkout\n    state['messages'].append({'role': 'helper', 'content': checkout})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "product_inquirer",
+                "to": "recommendation_generator"
+            },
+            {
+                "from": "recommendation_generator",
+                "to": "checkout_helper"
+            },
+            {
+                "from": "checkout_helper",
+                "to": "END"
+            }
+        ],
+        "entry_point": "product_inquirer"
+    },
+    {
+        "agent_name": "SportsChatAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "score_fetcher",
+                "description": "Fetches live scores and sports updates.",
+                "code": "def score_fetcher(state: AgentState) -> AgentState:\n    score = 'The latest score is Team A 3 - 2 Team B.'\n    state['score'] = score\n    state['messages'].append({'role': 'fetcher', 'content': score})\n    return state"
+            },
+            {
+                "name": "game_highlight_summarizer",
+                "description": "Summarizes key highlights from the game.",
+                "code": "def game_highlight_summarizer(state: AgentState) -> AgentState:\n    highlights = 'Key moments include a stunning goal in the second half.'\n    state['highlights'] = highlights\n    state['messages'].append({'role': 'summarizer', 'content': highlights})\n    return state"
+            },
+            {
+                "name": "fan_discussion_facilitator",
+                "description": "Encourages further discussion among fans.",
+                "code": "def fan_discussion_facilitator(state: AgentState) -> AgentState:\n    discussion = 'What was your favorite moment of the game?'\n    state['final_prompt'] = discussion\n    state['messages'].append({'role': 'facilitator', 'content': discussion})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "score_fetcher",
+                "to": "game_highlight_summarizer"
+            },
+            {
+                "from": "game_highlight_summarizer",
+                "to": "fan_discussion_facilitator"
+            },
+            {
+                "from": "fan_discussion_facilitator",
+                "to": "END"
+            }
+        ],
+        "entry_point": "score_fetcher"
+    },
+    {
+        "agent_name": "BookChatAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "book_recommender",
+                "description": "Recommends books based on user interests.",
+                "code": "def book_recommender(state: AgentState) -> AgentState:\n    recommendation = 'You might enjoy this mystery novel.'\n    state['recommendation'] = recommendation\n    state['messages'].append({'role': 'recommender', 'content': recommendation})\n    return state"
+            },
+            {
+                "name": "summary_discussion",
+                "description": "Engages the user in a discussion about the book summary.",
+                "code": "def summary_discussion(state: AgentState) -> AgentState:\n    discussion = 'What do you think about the book’s plot?'\n    state['discussion'] = discussion\n    state['messages'].append({'role': 'discussant', 'content': discussion})\n    return state"
+            },
+            {
+                "name": "review_collector",
+                "description": "Collects user reviews and ratings.",
+                "code": "def review_collector(state: AgentState) -> AgentState:\n    review = 'Please share your review of the book.'\n    state['final_review'] = review\n    state['messages'].append({'role': 'collector', 'content': review})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "book_recommender",
+                "to": "summary_discussion"
+            },
+            {
+                "from": "summary_discussion",
+                "to": "review_collector"
+            },
+            {
+                "from": "review_collector",
+                "to": "END"
+            }
+        ],
+        "entry_point": "book_recommender"
+    },
+    {
+        "agent_name": "HealthAdviceChatAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "symptom_checker",
+                "description": "Collects and checks symptoms described by the user.",
+                "code": "def symptom_checker(state: AgentState) -> AgentState:\n    symptoms = state.get('question', 'No symptoms provided')\n    check = f'You mentioned these symptoms: {symptoms}'\n    state['symptom_check'] = check\n    state['messages'].append({'role': 'checker', 'content': check})\n    return state"
+            },
+            {
+                "name": "advice_recommender",
+                "description": "Recommends general advice based on the symptoms.",
+                "code": "def advice_recommender(state: AgentState) -> AgentState:\n    advice = 'It is advisable to rest and stay hydrated.'\n    state['advice'] = advice\n    state['messages'].append({'role': 'recommender', 'content': advice})\n    return state"
+            },
+            {
+                "name": "disclaimer_includer",
+                "description": "Includes a disclaimer to consult a professional if needed.",
+                "code": "def disclaimer_includer(state: AgentState) -> AgentState:\n    disclaimer = 'Note: This advice is not a substitute for professional medical consultation.'\n    state['final_disclaimer'] = disclaimer\n    state['messages'].append({'role': 'disclaimer', 'content': disclaimer})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "symptom_checker",
+                "to": "advice_recommender"
+            },
+            {
+                "from": "advice_recommender",
+                "to": "disclaimer_includer"
+            },
+            {
+                "from": "disclaimer_includer",
+                "to": "END"
+            }
+        ],
+        "entry_point": "symptom_checker"
+    },
+    {
+        "agent_name": "EventChatAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "event_finder",
+                "description": "Finds upcoming local events based on user location.",
+                "code": "def event_finder(state: AgentState) -> AgentState:\n    events = 'Upcoming event: Local music festival this weekend.'\n    state['events'] = events\n    state['messages'].append({'role': 'finder', 'content': events})\n    return state"
+            },
+            {
+                "name": "schedule_builder",
+                "description": "Builds a tentative schedule for attending events.",
+                "code": "def schedule_builder(state: AgentState) -> AgentState:\n    schedule = 'Suggested schedule: Arrive early to catch all performances.'\n    state['schedule'] = schedule\n    state['messages'].append({'role': 'builder', 'content': schedule})\n    return state"
+            },
+            {
+                "name": "reminder_setter",
+                "description": "Sets a reminder for the user about the event.",
+                "code": "def reminder_setter(state: AgentState) -> AgentState:\n    reminder = 'Don’t forget to mark your calendar for the event!'\n    state['final_reminder'] = reminder\n    state['messages'].append({'role': 'reminder', 'content': reminder})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "event_finder",
+                "to": "schedule_builder"
+            },
+            {
+                "from": "schedule_builder",
+                "to": "reminder_setter"
+            },
+            {
+                "from": "reminder_setter",
+                "to": "END"
+            }
+        ],
+        "entry_point": "event_finder"
+    },
+    {
+        "agent_name": "MusicChatAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "genre_recommender",
+                "description": "Recommends music genres based on user mood.",
+                "code": "def genre_recommender(state: AgentState) -> AgentState:\n    genre = 'Based on your mood, try some upbeat pop music.'\n    state['genre'] = genre\n    state['messages'].append({'role': 'recommender', 'content': genre})\n    return state"
+            },
+            {
+                "name": "playlist_creator",
+                "description": "Creates a playlist suggestion based on the chosen genre.",
+                "code": "def playlist_creator(state: AgentState) -> AgentState:\n    playlist = 'Here is a playlist of top pop hits for you.'\n    state['playlist'] = playlist\n    state['messages'].append({'role': 'creator', 'content': playlist})\n    return state"
+            },
+            {
+                "name": "lyric_discussion",
+                "description": "Engages the user in a discussion about their favorite lyrics.",
+                "code": "def lyric_discussion(state: AgentState) -> AgentState:\n    discussion = 'What are some of your favorite song lyrics?'\n    state['final_prompt'] = discussion\n    state['messages'].append({'role': 'discussant', 'content': discussion})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "genre_recommender",
+                "to": "playlist_creator"
+            },
+            {
+                "from": "playlist_creator",
+                "to": "lyric_discussion"
+            },
+            {
+                "from": "lyric_discussion",
+                "to": "END"
+            }
+        ],
+        "entry_point": "genre_recommender"
+    },
+    {
+        "agent_name": "GamingChatAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "game_recommender",
+                "description": "Recommends video games based on user preferences.",
+                "code": "def game_recommender(state: AgentState) -> AgentState:\n    recommendation = 'You might enjoy this new action-adventure game.'\n    state['game_recommendation'] = recommendation\n    state['messages'].append({'role': 'recommender', 'content': recommendation})\n    return state"
+            },
+            {
+                "name": "strategy_advisor",
+                "description": "Provides gameplay tips or strategies.",
+                "code": "def strategy_advisor(state: AgentState) -> AgentState:\n    strategy = 'Tip: Explore every corner to find hidden treasures.'\n    state['strategy'] = strategy\n    state['messages'].append({'role': 'advisor', 'content': strategy})\n    return state"
+            },
+            {
+                "name": "community_engager",
+                "description": "Encourages the user to join gaming communities.",
+                "code": "def community_engager(state: AgentState) -> AgentState:\n    engagement = 'Join our gaming forum to share your experiences.'\n    state['final_engagement'] = engagement\n    state['messages'].append({'role': 'engager', 'content': engagement})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "game_recommender",
+                "to": "strategy_advisor"
+            },
+            {
+                "from": "strategy_advisor",
+                "to": "community_engager"
+            },
+            {
+                "from": "community_engager",
+                "to": "END"
+            }
+        ],
+        "entry_point": "game_recommender"
+    },
+    {
+        "agent_name": "EducationalChatAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "topic_explainer",
+                "description": "Explains educational topics based on user inquiries.",
+                "code": "def topic_explainer(state: AgentState) -> AgentState:\n    topic = state.get('question', 'No topic provided')\n    explanation = f'An explanation of {topic} is as follows: ...'\n    state['explanation'] = explanation\n    state['messages'].append({'role': 'explainer', 'content': explanation})\n    return state"
+            },
+            {
+                "name": "quiz_generator",
+                "description": "Generates quiz questions related to the topic.",
+                "code": "def quiz_generator(state: AgentState) -> AgentState:\n    quiz = 'Here is a quiz question to test your understanding.'\n    state['quiz'] = quiz\n    state['messages'].append({'role': 'quiz', 'content': quiz})\n    return state"
+            },
+            {
+                "name": "feedback_collector",
+                "description": "Collects feedback from the user about the explanation and quiz.",
+                "code": "def feedback_collector(state: AgentState) -> AgentState:\n    feedback = 'Please let me know if you need further clarification.'\n    state['final_feedback'] = feedback\n    state['messages'].append({'role': 'collector', 'content': feedback})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "topic_explainer",
+                "to": "quiz_generator"
+            },
+            {
+                "from": "quiz_generator",
+                "to": "feedback_collector"
+            },
+            {
+                "from": "feedback_collector",
+                "to": "END"
+            }
+        ],
+        "entry_point": "topic_explainer"
+    },
+    {
+        "agent_name": "DeepDataMiningAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "data_fetcher",
+                "description": "Fetches raw data from various sources.",
+                "code": "def data_fetcher(state: AgentState) -> AgentState:\n    raw_data = 'Raw data from multiple sources'\n    state['raw_data'] = raw_data\n    state['messages'].append({'role': 'fetcher', 'content': raw_data})\n    return state"
+            },
+            {
+                "name": "data_cleaner",
+                "description": "Cleans and preprocesses the fetched data.",
+                "code": "def data_cleaner(state: AgentState) -> AgentState:\n    cleaned = state.get('raw_data', '').replace('raw', 'clean')\n    state['clean_data'] = cleaned\n    state['messages'].append({'role': 'cleaner', 'content': cleaned})\n    return state"
+            },
+            {
+                "name": "feature_engineer",
+                "description": "Extracts and engineers features from the cleaned data.",
+                "code": "def feature_engineer(state: AgentState) -> AgentState:\n    features = 'engineered features from ' + state.get('clean_data', '')\n    state['features'] = features\n    state['messages'].append({'role': 'engineer', 'content': features})\n    return state"
+            },
+            {
+                "name": "model_trainer",
+                "description": "Trains a model based on the engineered features.",
+                "code": "def model_trainer(state: AgentState) -> AgentState:\n    model = 'trained model using ' + state.get('features', '')\n    state['model'] = model\n    state['messages'].append({'role': 'trainer', 'content': model})\n    return state"
+            },
+            {
+                "name": "result_evaluator",
+                "description": "Evaluates the model and extracts key insights.",
+                "code": "def result_evaluator(state: AgentState) -> AgentState:\n    evaluation = 'evaluation metrics of ' + state.get('model', '')\n    state['evaluation'] = evaluation\n    state['messages'].append({'role': 'evaluator', 'content': evaluation})\n    return state"
+            },
+            {
+                "name": "final_reporter",
+                "description": "Generates a comprehensive final report.",
+                "code": "def final_reporter(state: AgentState) -> AgentState:\n    report = 'Final report: ' + state.get('evaluation', '')\n    state['final_report'] = report\n    state['messages'].append({'role': 'reporter', 'content': report})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "data_fetcher",
+                "to": "data_cleaner"
+            },
+            {
+                "from": "data_cleaner",
+                "to": "feature_engineer"
+            },
+            {
+                "from": "feature_engineer",
+                "to": "model_trainer"
+            },
+            {
+                "from": "model_trainer",
+                "to": "result_evaluator"
+            },
+            {
+                "from": "result_evaluator",
+                "to": "final_reporter"
+            },
+            {
+                "from": "final_reporter",
+                "to": "END"
+            }
+        ],
+        "entry_point": "data_fetcher"
+    },
+    {
+        "agent_name": "FinancialForecastingAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "market_data_fetcher",
+                "description": "Fetches current and historical market data.",
+                "code": "def market_data_fetcher(state: AgentState) -> AgentState:\n    market_data = 'Fetched market data'\n    state['market_data'] = market_data\n    state['messages'].append({'role': 'fetcher', 'content': market_data})\n    return state"
+            },
+            {
+                "name": "trend_analyzer",
+                "description": "Analyzes trends in the market data.",
+                "code": "def trend_analyzer(state: AgentState) -> AgentState:\n    trends = 'Identified trends in ' + state.get('market_data', '')\n    state['trends'] = trends\n    state['messages'].append({'role': 'analyzer', 'content': trends})\n    return state"
+            },
+            {
+                "name": "risk_evaluator",
+                "description": "Evaluates market risks based on trend analysis.",
+                "code": "def risk_evaluator(state: AgentState) -> AgentState:\n    risk = 'Risk factors identified from ' + state.get('trends', '')\n    state['risk'] = risk\n    state['messages'].append({'role': 'risk_evaluator', 'content': risk})\n    return state"
+            },
+            {
+                "name": "model_simulator",
+                "description": "Simulates forecasting models using market data.",
+                "code": "def model_simulator(state: AgentState) -> AgentState:\n    simulation = 'Simulated model using ' + state.get('market_data', '')\n    state['simulation'] = simulation\n    state['messages'].append({'role': 'simulator', 'content': simulation})\n    return state"
+            },
+            {
+                "name": "forecast_generator",
+                "description": "Generates financial forecasts from simulations.",
+                "code": "def forecast_generator(state: AgentState) -> AgentState:\n    forecast = 'Forecast based on simulation: ' + state.get('simulation', '')\n    state['forecast'] = forecast\n    state['messages'].append({'role': 'forecaster', 'content': forecast})\n    return state"
+            },
+            {
+                "name": "summary_reporter",
+                "description": "Reports a summary of the financial forecast and risk analysis.",
+                "code": "def summary_reporter(state: AgentState) -> AgentState:\n    summary = 'Financial forecast summary: ' + state.get('forecast', '') + '; Risks: ' + state.get('risk', '')\n    state['final_summary'] = summary\n    state['messages'].append({'role': 'reporter', 'content': summary})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "market_data_fetcher",
+                "to": "trend_analyzer"
+            },
+            {
+                "from": "trend_analyzer",
+                "to": "risk_evaluator"
+            },
+            {
+                "from": "risk_evaluator",
+                "to": "model_simulator"
+            },
+            {
+                "from": "model_simulator",
+                "to": "forecast_generator"
+            },
+            {
+                "from": "forecast_generator",
+                "to": "summary_reporter"
+            },
+            {
+                "from": "summary_reporter",
+                "to": "END"
+            }
+        ],
+        "entry_point": "market_data_fetcher"
+    },
+    {
+        "agent_name": "NovelIdeaGeneratorAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "theme_extractor",
+                "description": "Extracts potential themes from user inputs and external sources.",
+                "code": "def theme_extractor(state: AgentState) -> AgentState:\n    theme = 'Potential themes extracted'\n    state['theme'] = theme\n    state['messages'].append({'role': 'extractor', 'content': theme})\n    return state"
+            },
+            {
+                "name": "plot_brainstormer",
+                "description": "Brainstorms plot ideas based on extracted themes.",
+                "code": "def plot_brainstormer(state: AgentState) -> AgentState:\n    plot_ideas = 'Brainstormed plots using theme: ' + state.get('theme', '')\n    state['plot_ideas'] = plot_ideas\n    state['messages'].append({'role': 'brainstormer', 'content': plot_ideas})\n    return state"
+            },
+            {
+                "name": "character_creator",
+                "description": "Develops character outlines relevant to the plot.",
+                "code": "def character_creator(state: AgentState) -> AgentState:\n    characters = 'Character outlines for plot: ' + state.get('plot_ideas', '')\n    state['characters'] = characters\n    state['messages'].append({'role': 'creator', 'content': characters})\n    return state"
+            },
+            {
+                "name": "conflict_builder",
+                "description": "Builds central conflicts that drive the narrative.",
+                "code": "def conflict_builder(state: AgentState) -> AgentState:\n    conflict = 'Conflict constructed around characters: ' + state.get('characters', '')\n    state['conflict'] = conflict\n    state['messages'].append({'role': 'builder', 'content': conflict})\n    return state"
+            },
+            {
+                "name": "climax_designer",
+                "description": "Designs a narrative climax based on the built conflict.",
+                "code": "def climax_designer(state: AgentState) -> AgentState:\n    climax = 'Climactic sequence based on conflict: ' + state.get('conflict', '')\n    state['climax'] = climax\n    state['messages'].append({'role': 'designer', 'content': climax})\n    return state"
+            },
+            {
+                "name": "novel_outline",
+                "description": "Compiles an outline for the novel using all generated elements.",
+                "code": "def novel_outline(state: AgentState) -> AgentState:\n    outline = 'Novel outline: Theme: ' + state.get('theme', '') + ', Plot: ' + state.get('plot_ideas', '') + ', Climax: ' + state.get('climax', '')\n    state['outline'] = outline\n    state['messages'].append({'role': 'compiler', 'content': outline})\n    return state"
+            },
+            {
+                "name": "final_storyteller",
+                "description": "Produces a final narrative based on the outline.",
+                "code": "def final_storyteller(state: AgentState) -> AgentState:\n    story = 'Final narrative based on outline: ' + state.get('outline', '')\n    state['final_story'] = story\n    state['messages'].append({'role': 'storyteller', 'content': story})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "theme_extractor",
+                "to": "plot_brainstormer"
+            },
+            {
+                "from": "plot_brainstormer",
+                "to": "character_creator"
+            },
+            {
+                "from": "character_creator",
+                "to": "conflict_builder"
+            },
+            {
+                "from": "conflict_builder",
+                "to": "climax_designer"
+            },
+            {
+                "from": "climax_designer",
+                "to": "novel_outline"
+            },
+            {
+                "from": "novel_outline",
+                "to": "final_storyteller"
+            },
+            {
+                "from": "final_storyteller",
+                "to": "END"
+            }
+        ],
+        "entry_point": "theme_extractor"
+    },
+    {
+        "agent_name": "DataMiningPredictiveAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "raw_data_collector",
+                "description": "Collects raw data for predictive analysis.",
+                "code": "def raw_data_collector(state: AgentState) -> AgentState:\n    data = 'Collected raw predictive data'\n    state['raw_data'] = data\n    state['messages'].append({'role': 'collector', 'content': data})\n    return state"
+            },
+            {
+                "name": "data_normalizer",
+                "description": "Normalizes and scales the raw data.",
+                "code": "def data_normalizer(state: AgentState) -> AgentState:\n    normalized = 'Normalized ' + state.get('raw_data', '')\n    state['normalized_data'] = normalized\n    state['messages'].append({'role': 'normalizer', 'content': normalized})\n    return state"
+            },
+            {
+                "name": "pattern_miner",
+                "description": "Extracts patterns and correlations from the data.",
+                "code": "def pattern_miner(state: AgentState) -> AgentState:\n    patterns = 'Patterns extracted from ' + state.get('normalized_data', '')\n    state['patterns'] = patterns\n    state['messages'].append({'role': 'miner', 'content': patterns})\n    return state"
+            },
+            {
+                "name": "predictive_modeler",
+                "description": "Builds and trains predictive models using the patterns.",
+                "code": "def predictive_modeler(state: AgentState) -> AgentState:\n    model = 'Predictive model trained on ' + state.get('patterns', '')\n    state['predictive_model'] = model\n    state['messages'].append({'role': 'modeler', 'content': model})\n    return state"
+            },
+            {
+                "name": "validation_checker",
+                "description": "Validates model performance using cross-validation.",
+                "code": "def validation_checker(state: AgentState) -> AgentState:\n    validation = 'Model validated with cross-validation metrics'\n    state['validation'] = validation\n    state['messages'].append({'role': 'validator', 'content': validation})\n    return state"
+            },
+            {
+                "name": "insight_summarizer",
+                "description": "Summarizes the predictive insights from the model.",
+                "code": "def insight_summarizer(state: AgentState) -> AgentState:\n    insights = 'Insights: ' + state.get('predictive_model', '') + ' validated by ' + state.get('validation', '')\n    state['insights'] = insights\n    state['messages'].append({'role': 'summarizer', 'content': insights})\n    return state"
+            },
+            {
+                "name": "final_reporter",
+                "description": "Generates a detailed final report on predictive analysis.",
+                "code": "def final_reporter(state: AgentState) -> AgentState:\n    report = 'Final predictive report: ' + state.get('insights', '')\n    state['final_report'] = report\n    state['messages'].append({'role': 'reporter', 'content': report})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "raw_data_collector",
+                "to": "data_normalizer"
+            },
+            {
+                "from": "data_normalizer",
+                "to": "pattern_miner"
+            },
+            {
+                "from": "pattern_miner",
+                "to": "predictive_modeler"
+            },
+            {
+                "from": "predictive_modeler",
+                "to": "validation_checker"
+            },
+            {
+                "from": "validation_checker",
+                "to": "insight_summarizer"
+            },
+            {
+                "from": "insight_summarizer",
+                "to": "final_reporter"
+            },
+            {
+                "from": "final_reporter",
+                "to": "END"
+            }
+        ],
+        "entry_point": "raw_data_collector"
+    },
+    {
+        "agent_name": "AdvancedFinancialForecastingAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "economic_indicator_fetcher",
+                "description": "Fetches key economic indicators from trusted sources.",
+                "code": "def economic_indicator_fetcher(state: AgentState) -> AgentState:\n    indicators = 'Economic indicators fetched'\n    state['indicators'] = indicators\n    state['messages'].append({'role': 'fetcher', 'content': indicators})\n    return state"
+            },
+            {
+                "name": "historical_data_analyzer",
+                "description": "Analyzes historical financial data trends.",
+                "code": "def historical_data_analyzer(state: AgentState) -> AgentState:\n    history = 'Historical trends analyzed using ' + state.get('indicators', '')\n    state['history'] = history\n    state['messages'].append({'role': 'analyzer', 'content': history})\n    return state"
+            },
+            {
+                "name": "volatility_estimator",
+                "description": "Estimates market volatility from historical data.",
+                "code": "def volatility_estimator(state: AgentState) -> AgentState:\n    volatility = 'Estimated volatility from historical trends'\n    state['volatility'] = volatility\n    state['messages'].append({'role': 'estimator', 'content': volatility})\n    return state"
+            },
+            {
+                "name": "forecast_model_builder",
+                "description": "Builds forecasting models using historical and volatility data.",
+                "code": "def forecast_model_builder(state: AgentState) -> AgentState:\n    model = 'Forecast model built using ' + state.get('history', '') + ' and volatility ' + state.get('volatility', '')\n    state['forecast_model'] = model\n    state['messages'].append({'role': 'builder', 'content': model})\n    return state"
+            },
+            {
+                "name": "simulation_runner",
+                "description": "Runs simulations to test the forecasting model.",
+                "code": "def simulation_runner(state: AgentState) -> AgentState:\n    simulation = 'Simulations run for model: ' + state.get('forecast_model', '')\n    state['simulation'] = simulation\n    state['messages'].append({'role': 'simulator', 'content': simulation})\n    return state"
+            },
+            {
+                "name": "sensitivity_analyzer",
+                "description": "Analyzes sensitivity of the model to various factors.",
+                "code": "def sensitivity_analyzer(state: AgentState) -> AgentState:\n    sensitivity = 'Sensitivity analysis performed on ' + state.get('simulation', '')\n    state['sensitivity'] = sensitivity\n    state['messages'].append({'role': 'analyzer', 'content': sensitivity})\n    return state"
+            },
+            {
+                "name": "detailed_forecast_reporter",
+                "description": "Generates a detailed report including forecasts and risk insights.",
+                "code": "def detailed_forecast_reporter(state: AgentState) -> AgentState:\n    report = 'Detailed forecast: ' + state.get('sensitivity', '')\n    state['final_report'] = report\n    state['messages'].append({'role': 'reporter', 'content': report})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "economic_indicator_fetcher",
+                "to": "historical_data_analyzer"
+            },
+            {
+                "from": "historical_data_analyzer",
+                "to": "volatility_estimator"
+            },
+            {
+                "from": "volatility_estimator",
+                "to": "forecast_model_builder"
+            },
+            {
+                "from": "forecast_model_builder",
+                "to": "simulation_runner"
+            },
+            {
+                "from": "simulation_runner",
+                "to": "sensitivity_analyzer"
+            },
+            {
+                "from": "sensitivity_analyzer",
+                "to": "detailed_forecast_reporter"
+            },
+            {
+                "from": "detailed_forecast_reporter",
+                "to": "END"
+            }
+        ],
+        "entry_point": "economic_indicator_fetcher"
+    },
+    {
+        "agent_name": "NovelWritingPlotDevelopmentAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "plot_inspiration_collector",
+                "description": "Collects diverse sources of plot inspiration.",
+                "code": "def plot_inspiration_collector(state: AgentState) -> AgentState:\n    inspiration = 'Collected plot inspirations from various media'\n    state['inspiration'] = inspiration\n    state['messages'].append({'role': 'collector', 'content': inspiration})\n    return state"
+            },
+            {
+                "name": "theme_developer",
+                "description": "Develops central themes based on inspiration.",
+                "code": "def theme_developer(state: AgentState) -> AgentState:\n    theme = 'Developed themes from ' + state.get('inspiration', '')\n    state['theme'] = theme\n    state['messages'].append({'role': 'developer', 'content': theme})\n    return state"
+            },
+            {
+                "name": "character_arc_planner",
+                "description": "Plans character arcs that align with the theme.",
+                "code": "def character_arc_planner(state: AgentState) -> AgentState:\n    arc = 'Planned character arcs for theme: ' + state.get('theme', '')\n    state['arc'] = arc\n    state['messages'].append({'role': 'planner', 'content': arc})\n    return state"
+            },
+            {
+                "name": "conflict_scenario_builder",
+                "description": "Builds conflict scenarios to drive the plot.",
+                "code": "def conflict_scenario_builder(state: AgentState) -> AgentState:\n    conflict = 'Conflict scenarios based on ' + state.get('arc', '')\n    state['conflict'] = conflict\n    state['messages'].append({'role': 'builder', 'content': conflict})\n    return state"
+            },
+            {
+                "name": "plot_twist_innovator",
+                "description": "Innovates unexpected plot twists.",
+                "code": "def plot_twist_innovator(state: AgentState) -> AgentState:\n    twist = 'Plot twist designed from conflict: ' + state.get('conflict', '')\n    state['twist'] = twist\n    state['messages'].append({'role': 'innovator', 'content': twist})\n    return state"
+            },
+            {
+                "name": "narrative_flow_optimizer",
+                "description": "Optimizes the flow and pacing of the narrative.",
+                "code": "def narrative_flow_optimizer(state: AgentState) -> AgentState:\n    flow = 'Optimized narrative flow with twist: ' + state.get('twist', '')\n    state['flow'] = flow\n    state['messages'].append({'role': 'optimizer', 'content': flow})\n    return state"
+            },
+            {
+                "name": "detailed_plot_outline",
+                "description": "Compiles a detailed outline of the plot.",
+                "code": "def detailed_plot_outline(state: AgentState) -> AgentState:\n    outline = 'Detailed plot outline: ' + state.get('flow', '')\n    state['outline'] = outline\n    state['messages'].append({'role': 'compiler', 'content': outline})\n    return state"
+            },
+            {
+                "name": "final_story_writer",
+                "description": "Writes the final narrative based on the plot outline.",
+                "code": "def final_story_writer(state: AgentState) -> AgentState:\n    story = 'Final narrative written based on outline: ' + state.get('outline', '')\n    state['final_story'] = story\n    state['messages'].append({'role': 'writer', 'content': story})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "plot_inspiration_collector",
+                "to": "theme_developer"
+            },
+            {
+                "from": "theme_developer",
+                "to": "character_arc_planner"
+            },
+            {
+                "from": "character_arc_planner",
+                "to": "conflict_scenario_builder"
+            },
+            {
+                "from": "conflict_scenario_builder",
+                "to": "plot_twist_innovator"
+            },
+            {
+                "from": "plot_twist_innovator",
+                "to": "narrative_flow_optimizer"
+            },
+            {
+                "from": "narrative_flow_optimizer",
+                "to": "detailed_plot_outline"
+            },
+            {
+                "from": "detailed_plot_outline",
+                "to": "final_story_writer"
+            },
+            {
+                "from": "final_story_writer",
+                "to": "END"
+            }
+        ],
+        "entry_point": "plot_inspiration_collector"
+    },
+    {
+        "agent_name": "DeepDataMiningInsightsAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "data_ingestor",
+                "description": "Ingests large datasets from multiple sources.",
+                "code": "def data_ingestor(state: AgentState) -> AgentState:\n    data = 'Ingested large dataset'\n    state['ingested_data'] = data\n    state['messages'].append({'role': 'ingestor', 'content': data})\n    return state"
+            },
+            {
+                "name": "data_preprocessor",
+                "description": "Preprocesses the ingested data for analysis.",
+                "code": "def data_preprocessor(state: AgentState) -> AgentState:\n    preprocessed = 'Preprocessed ' + state.get('ingested_data', '')\n    state['preprocessed'] = preprocessed\n    state['messages'].append({'role': 'preprocessor', 'content': preprocessed})\n    return state"
+            },
+            {
+                "name": "feature_selector",
+                "description": "Selects key features from the preprocessed data.",
+                "code": "def feature_selector(state: AgentState) -> AgentState:\n    features = 'Selected features from ' + state.get('preprocessed', '')\n    state['features'] = features\n    state['messages'].append({'role': 'selector', 'content': features})\n    return state"
+            },
+            {
+                "name": "cluster_analyzer",
+                "description": "Performs unsupervised clustering to detect patterns.",
+                "code": "def cluster_analyzer(state: AgentState) -> AgentState:\n    clusters = 'Clusters identified from ' + state.get('features', '')\n    state['clusters'] = clusters\n    state['messages'].append({'role': 'analyzer', 'content': clusters})\n    return state"
+            },
+            {
+                "name": "anomaly_detector",
+                "description": "Detects anomalies within the clusters.",
+                "code": "def anomaly_detector(state: AgentState) -> AgentState:\n    anomalies = 'Anomalies detected in ' + state.get('clusters', '')\n    state['anomalies'] = anomalies\n    state['messages'].append({'role': 'detector', 'content': anomalies})\n    return state"
+            },
+            {
+                "name": "model_explainer",
+                "description": "Explains the underlying models and their results.",
+                "code": "def model_explainer(state: AgentState) -> AgentState:\n    explanation = 'Model explanation based on anomalies: ' + state.get('anomalies', '')\n    state['explanation'] = explanation\n    state['messages'].append({'role': 'explainer', 'content': explanation})\n    return state"
+            },
+            {
+                "name": "deep_insight_reporter",
+                "description": "Compiles deep insights from the entire analysis.",
+                "code": "def deep_insight_reporter(state: AgentState) -> AgentState:\n    insights = 'Deep insights: ' + state.get('explanation', '')\n    state['insights'] = insights\n    state['messages'].append({'role': 'reporter', 'content': insights})\n    return state"
+            },
+            {
+                "name": "final_analyst",
+                "description": "Generates the final analytical report.",
+                "code": "def final_analyst(state: AgentState) -> AgentState:\n    final_report = 'Final analysis report: ' + state.get('insights', '')\n    state['final_report'] = final_report\n    state['messages'].append({'role': 'analyst', 'content': final_report})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "data_ingestor",
+                "to": "data_preprocessor"
+            },
+            {
+                "from": "data_preprocessor",
+                "to": "feature_selector"
+            },
+            {
+                "from": "feature_selector",
+                "to": "cluster_analyzer"
+            },
+            {
+                "from": "cluster_analyzer",
+                "to": "anomaly_detector"
+            },
+            {
+                "from": "anomaly_detector",
+                "to": "model_explainer"
+            },
+            {
+                "from": "model_explainer",
+                "to": "deep_insight_reporter"
+            },
+            {
+                "from": "deep_insight_reporter",
+                "to": "final_analyst"
+            },
+            {
+                "from": "final_analyst",
+                "to": "END"
+            }
+        ],
+        "entry_point": "data_ingestor"
+    },
+    {
+        "agent_name": "FinancialForecastingRiskAnalysisAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "stock_data_fetcher",
+                "description": "Fetches stock data and related financial metrics.",
+                "code": "def stock_data_fetcher(state: AgentState) -> AgentState:\n    stock_data = 'Fetched stock data and metrics'\n    state['stock_data'] = stock_data\n    state['messages'].append({'role': 'fetcher', 'content': stock_data})\n    return state"
+            },
+            {
+                "name": "macro_trend_analyzer",
+                "description": "Analyzes broader macroeconomic trends.",
+                "code": "def macro_trend_analyzer(state: AgentState) -> AgentState:\n    macro = 'Macroeconomic trends identified'\n    state['macro'] = macro\n    state['messages'].append({'role': 'analyzer', 'content': macro})\n    return state"
+            },
+            {
+                "name": "volatility_calculator",
+                "description": "Calculates market volatility based on stock data.",
+                "code": "def volatility_calculator(state: AgentState) -> AgentState:\n    volatility = 'Calculated volatility from ' + state.get('stock_data', '')\n    state['volatility'] = volatility\n    state['messages'].append({'role': 'calculator', 'content': volatility})\n    return state"
+            },
+            {
+                "name": "risk_model_developer",
+                "description": "Develops a risk model using market and volatility data.",
+                "code": "def risk_model_developer(state: AgentState) -> AgentState:\n    risk_model = 'Risk model developed using ' + state.get('macro', '') + ' and ' + state.get('volatility', '')\n    state['risk_model'] = risk_model\n    state['messages'].append({'role': 'developer', 'content': risk_model})\n    return state"
+            },
+            {
+                "name": "stress_test_simulator",
+                "description": "Simulates stress tests on the risk model.",
+                "code": "def stress_test_simulator(state: AgentState) -> AgentState:\n    stress = 'Stress test simulation completed for ' + state.get('risk_model', '')\n    state['stress_test'] = stress\n    state['messages'].append({'role': 'simulator', 'content': stress})\n    return state"
+            },
+            {
+                "name": "risk_metric_summarizer",
+                "description": "Summarizes key risk metrics from the simulation.",
+                "code": "def risk_metric_summarizer(state: AgentState) -> AgentState:\n    metrics = 'Risk metrics summarized from ' + state.get('stress_test', '')\n    state['risk_metrics'] = metrics\n    state['messages'].append({'role': 'summarizer', 'content': metrics})\n    return state"
+            },
+            {
+                "name": "final_recommendation_generator",
+                "description": "Generates final investment recommendations based on risk analysis.",
+                "code": "def final_recommendation_generator(state: AgentState) -> AgentState:\n    recommendation = 'Final recommendations based on risk: ' + state.get('risk_metrics', '')\n    state['final_recommendation'] = recommendation\n    state['messages'].append({'role': 'recommender', 'content': recommendation})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "stock_data_fetcher",
+                "to": "macro_trend_analyzer"
+            },
+            {
+                "from": "macro_trend_analyzer",
+                "to": "volatility_calculator"
+            },
+            {
+                "from": "volatility_calculator",
+                "to": "risk_model_developer"
+            },
+            {
+                "from": "risk_model_developer",
+                "to": "stress_test_simulator"
+            },
+            {
+                "from": "stress_test_simulator",
+                "to": "risk_metric_summarizer"
+            },
+            {
+                "from": "risk_metric_summarizer",
+                "to": "final_recommendation_generator"
+            },
+            {
+                "from": "final_recommendation_generator",
+                "to": "END"
+            }
+        ],
+        "entry_point": "stock_data_fetcher"
+    },
+    {
+        "agent_name": "NovelWritingCharacterDevelopmentAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "character_idea_generator",
+                "description": "Generates initial character ideas.",
+                "code": "def character_idea_generator(state: AgentState) -> AgentState:\n    ideas = 'Initial character ideas generated'\n    state['ideas'] = ideas\n    state['messages'].append({'role': 'generator', 'content': ideas})\n    return state"
+            },
+            {
+                "name": "backstory_creator",
+                "description": "Creates detailed backstories for the characters.",
+                "code": "def backstory_creator(state: AgentState) -> AgentState:\n    backstory = 'Backstory created based on ' + state.get('ideas', '')\n    state['backstory'] = backstory\n    state['messages'].append({'role': 'creator', 'content': backstory})\n    return state"
+            },
+            {
+                "name": "personality_traits_analyzer",
+                "description": "Analyzes and defines personality traits for characters.",
+                "code": "def personality_traits_analyzer(state: AgentState) -> AgentState:\n    traits = 'Personality traits derived from backstory: ' + state.get('backstory', '')\n    state['traits'] = traits\n    state['messages'].append({'role': 'analyzer', 'content': traits})\n    return state"
+            },
+            {
+                "name": "conflict_resolution_planner",
+                "description": "Plans conflicts and resolutions for character development.",
+                "code": "def conflict_resolution_planner(state: AgentState) -> AgentState:\n    conflict = 'Conflict and resolution planned for ' + state.get('traits', '')\n    state['conflict'] = conflict\n    state['messages'].append({'role': 'planner', 'content': conflict})\n    return state"
+            },
+            {
+                "name": "relationship_builder",
+                "description": "Builds relationships among characters.",
+                "code": "def relationship_builder(state: AgentState) -> AgentState:\n    relationships = 'Relationships built around ' + state.get('conflict', '')\n    state['relationships'] = relationships\n    state['messages'].append({'role': 'builder', 'content': relationships})\n    return state"
+            },
+            {
+                "name": "character_arc_refiner",
+                "description": "Refines the character arcs based on relationships and conflicts.",
+                "code": "def character_arc_refiner(state: AgentState) -> AgentState:\n    arc = 'Character arc refined using ' + state.get('relationships', '')\n    state['arc'] = arc\n    state['messages'].append({'role': 'refiner', 'content': arc})\n    return state"
+            },
+            {
+                "name": "final_character_sketcher",
+                "description": "Generates final character sketches and profiles.",
+                "code": "def final_character_sketcher(state: AgentState) -> AgentState:\n    sketch = 'Final character sketch: ' + state.get('arc', '')\n    state['final_sketch'] = sketch\n    state['messages'].append({'role': 'sketcher', 'content': sketch})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "character_idea_generator",
+                "to": "backstory_creator"
+            },
+            {
+                "from": "backstory_creator",
+                "to": "personality_traits_analyzer"
+            },
+            {
+                "from": "personality_traits_analyzer",
+                "to": "conflict_resolution_planner"
+            },
+            {
+                "from": "conflict_resolution_planner",
+                "to": "relationship_builder"
+            },
+            {
+                "from": "relationship_builder",
+                "to": "character_arc_refiner"
+            },
+            {
+                "from": "character_arc_refiner",
+                "to": "final_character_sketcher"
+            },
+            {
+                "from": "final_character_sketcher",
+                "to": "END"
+            }
+        ],
+        "entry_point": "character_idea_generator"
+    },
+    {
+        "agent_name": "NovelWritingWorldBuildingAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "world_concept_explorer",
+                "description": "Explores broad concepts for the fictional world.",
+                "code": "def world_concept_explorer(state: AgentState) -> AgentState:\n    concept = 'Explored initial world concepts'\n    state['concept'] = concept\n    state['messages'].append({'role': 'explorer', 'content': concept})\n    return state"
+            },
+            {
+                "name": "geography_designer",
+                "description": "Designs the geography and physical features of the world.",
+                "code": "def geography_designer(state: AgentState) -> AgentState:\n    geography = 'Designed geography based on ' + state.get('concept', '')\n    state['geography'] = geography\n    state['messages'].append({'role': 'designer', 'content': geography})\n    return state"
+            },
+            {
+                "name": "culture_creator",
+                "description": "Creates the cultural aspects and societal norms.",
+                "code": "def culture_creator(state: AgentState) -> AgentState:\n    culture = 'Cultural elements created using ' + state.get('geography', '')\n    state['culture'] = culture\n    state['messages'].append({'role': 'creator', 'content': culture})\n    return state"
+            },
+            {
+                "name": "political_structure_planner",
+                "description": "Plans the political and economic structures of the world.",
+                "code": "def political_structure_planner(state: AgentState) -> AgentState:\n    politics = 'Political structure planned for ' + state.get('culture', '')\n    state['politics'] = politics\n    state['messages'].append({'role': 'planner', 'content': politics})\n    return state"
+            },
+            {
+                "name": "historical_context_establisher",
+                "description": "Establishes a historical timeline and context.",
+                "code": "def historical_context_establisher(state: AgentState) -> AgentState:\n    history = 'Historical context established around ' + state.get('politics', '')\n    state['history'] = history\n    state['messages'].append({'role': 'establisher', 'content': history})\n    return state"
+            },
+            {
+                "name": "societal_conflict_analyzer",
+                "description": "Analyzes potential conflicts within the world’s society.",
+                "code": "def societal_conflict_analyzer(state: AgentState) -> AgentState:\n    conflict = 'Societal conflicts analyzed from ' + state.get('history', '')\n    state['conflict'] = conflict\n    state['messages'].append({'role': 'analyzer', 'content': conflict})\n    return state"
+            },
+            {
+                "name": "detailed_world_outline",
+                "description": "Compiles a detailed outline of the fictional world.",
+                "code": "def detailed_world_outline(state: AgentState) -> AgentState:\n    outline = 'World outline: ' + state.get('conflict', '')\n    state['outline'] = outline\n    state['messages'].append({'role': 'compiler', 'content': outline})\n    return state"
+            },
+            {
+                "name": "final_world_description",
+                "description": "Generates the final descriptive narrative of the world.",
+                "code": "def final_world_description(state: AgentState) -> AgentState:\n    description = 'Final world description: ' + state.get('outline', '')\n    state['final_description'] = description\n    state['messages'].append({'role': 'describer', 'content': description})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "world_concept_explorer",
+                "to": "geography_designer"
+            },
+            {
+                "from": "geography_designer",
+                "to": "culture_creator"
+            },
+            {
+                "from": "culture_creator",
+                "to": "political_structure_planner"
+            },
+            {
+                "from": "political_structure_planner",
+                "to": "historical_context_establisher"
+            },
+            {
+                "from": "historical_context_establisher",
+                "to": "societal_conflict_analyzer"
+            },
+            {
+                "from": "societal_conflict_analyzer",
+                "to": "detailed_world_outline"
+            },
+            {
+                "from": "detailed_world_outline",
+                "to": "final_world_description"
+            },
+            {
+                "from": "final_world_description",
+                "to": "END"
+            }
+        ],
+        "entry_point": "world_concept_explorer"
+    },
+    {
+        "agent_name": "BiotechnologyResearchAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "literature_reviewer",
+                "description": "Reviews recent biotech literature and publications.",
+                "code": "def literature_reviewer(state: AgentState) -> AgentState:\n    review = 'Reviewed latest biotech publications.'\n    state['review'] = review\n    state['messages'].append({'role': 'reviewer', 'content': review})\n    return state"
+            },
+            {
+                "name": "data_analyzer",
+                "description": "Analyzes experimental data from biotech studies.",
+                "code": "def data_analyzer(state: AgentState) -> AgentState:\n    analysis = 'Analyzed experimental biotech data.'\n    state['analysis'] = analysis\n    state['messages'].append({'role': 'analyzer', 'content': analysis})\n    return state"
+            },
+            {
+                "name": "gene_sequence_evaluator",
+                "description": "Evaluates gene sequences and molecular structures.",
+                "code": "def gene_sequence_evaluator(state: AgentState) -> AgentState:\n    evaluation = 'Evaluated gene sequences and structures.'\n    state['evaluation'] = evaluation\n    state['messages'].append({'role': 'evaluator', 'content': evaluation})\n    return state"
+            },
+            {
+                "name": "experimental_proposal_creator",
+                "description": "Proposes new experiments based on insights.",
+                "code": "def experimental_proposal_creator(state: AgentState) -> AgentState:\n    proposal = 'Proposed new biotech experiments.'\n    state['proposal'] = proposal\n    state['messages'].append({'role': 'proposer', 'content': proposal})\n    return state"
+            },
+            {
+                "name": "final_reporter",
+                "description": "Generates a comprehensive research report.",
+                "code": "def final_reporter(state: AgentState) -> AgentState:\n    report = 'Final biotech research report generated.'\n    state['final_report'] = report\n    state['messages'].append({'role': 'reporter', 'content': report})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "literature_reviewer",
+                "to": "data_analyzer"
+            },
+            {
+                "from": "data_analyzer",
+                "to": "gene_sequence_evaluator"
+            },
+            {
+                "from": "gene_sequence_evaluator",
+                "to": "experimental_proposal_creator"
+            },
+            {
+                "from": "experimental_proposal_creator",
+                "to": "final_reporter"
+            },
+            {
+                "from": "final_reporter",
+                "to": "END"
+            }
+        ],
+        "entry_point": "literature_reviewer"
+    },
+    {
+        "agent_name": "QuantumPhysicsAnalysisAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "theory_collector",
+                "description": "Collects advanced quantum theories and papers.",
+                "code": "def theory_collector(state: AgentState) -> AgentState:\n    theories = 'Collected cutting-edge quantum theories.'\n    state['theories'] = theories\n    state['messages'].append({'role': 'collector', 'content': theories})\n    return state"
+            },
+            {
+                "name": "experiment_data_fetcher",
+                "description": "Fetches experimental data from quantum labs.",
+                "code": "def experiment_data_fetcher(state: AgentState) -> AgentState:\n    data = 'Fetched experimental quantum data.'\n    state['data'] = data\n    state['messages'].append({'role': 'fetcher', 'content': data})\n    return state"
+            },
+            {
+                "name": "model_simulator",
+                "description": "Simulates quantum models using collected data.",
+                "code": "def model_simulator(state: AgentState) -> AgentState:\n    simulation = 'Simulated quantum models based on data.'\n    state['simulation'] = simulation\n    state['messages'].append({'role': 'simulator', 'content': simulation})\n    return state"
+            },
+            {
+                "name": "quantum_effects_analyzer",
+                "description": "Analyzes subtle quantum effects and discrepancies.",
+                "code": "def quantum_effects_analyzer(state: AgentState) -> AgentState:\n    analysis = 'Analyzed quantum effects and anomalies.'\n    state['analysis'] = analysis\n    state['messages'].append({'role': 'analyzer', 'content': analysis})\n    return state"
+            },
+            {
+                "name": "conclusion_drawer",
+                "description": "Draws conclusions and suggests further research directions.",
+                "code": "def conclusion_drawer(state: AgentState) -> AgentState:\n    conclusion = 'Conclusions drawn from quantum analysis.'\n    state['conclusion'] = conclusion\n    state['messages'].append({'role': 'concluder', 'content': conclusion})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "theory_collector",
+                "to": "experiment_data_fetcher"
+            },
+            {
+                "from": "experiment_data_fetcher",
+                "to": "model_simulator"
+            },
+            {
+                "from": "model_simulator",
+                "to": "quantum_effects_analyzer"
+            },
+            {
+                "from": "quantum_effects_analyzer",
+                "to": "conclusion_drawer"
+            },
+            {
+                "from": "conclusion_drawer",
+                "to": "END"
+            }
+        ],
+        "entry_point": "theory_collector"
+    },
+    {
+        "agent_name": "AerospaceEngineeringAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "design_specification_collector",
+                "description": "Collects design requirements and specifications.",
+                "code": "def design_specification_collector(state: AgentState) -> AgentState:\n    specs = 'Collected aerospace design specifications.'\n    state['specs'] = specs\n    state['messages'].append({'role': 'collector', 'content': specs})\n    return state"
+            },
+            {
+                "name": "aerodynamic_simulator",
+                "description": "Simulates aerodynamic performance of designs.",
+                "code": "def aerodynamic_simulator(state: AgentState) -> AgentState:\n    simulation = 'Aerodynamic simulation completed.'\n    state['simulation'] = simulation\n    state['messages'].append({'role': 'simulator', 'content': simulation})\n    return state"
+            },
+            {
+                "name": "stress_test_evaluator",
+                "description": "Evaluates structural stress and load capacities.",
+                "code": "def stress_test_evaluator(state: AgentState) -> AgentState:\n    stress = 'Stress tests evaluated successfully.'\n    state['stress'] = stress\n    state['messages'].append({'role': 'evaluator', 'content': stress})\n    return state"
+            },
+            {
+                "name": "materials_selector",
+                "description": "Selects optimal materials for aerospace design.",
+                "code": "def materials_selector(state: AgentState) -> AgentState:\n    materials = 'Optimal aerospace materials selected.'\n    state['materials'] = materials\n    state['messages'].append({'role': 'selector', 'content': materials})\n    return state"
+            },
+            {
+                "name": "final_design_proposal",
+                "description": "Generates the final design proposal document.",
+                "code": "def final_design_proposal(state: AgentState) -> AgentState:\n    proposal = 'Final aerospace design proposal generated.'\n    state['proposal'] = proposal\n    state['messages'].append({'role': 'proposer', 'content': proposal})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "design_specification_collector",
+                "to": "aerodynamic_simulator"
+            },
+            {
+                "from": "aerodynamic_simulator",
+                "to": "stress_test_evaluator"
+            },
+            {
+                "from": "stress_test_evaluator",
+                "to": "materials_selector"
+            },
+            {
+                "from": "materials_selector",
+                "to": "final_design_proposal"
+            },
+            {
+                "from": "final_design_proposal",
+                "to": "END"
+            }
+        ],
+        "entry_point": "design_specification_collector"
+    },
+    {
+        "agent_name": "CybersecurityThreatAnalysisAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "threat_intelligence_fetcher",
+                "description": "Fetches latest cybersecurity threat intelligence.",
+                "code": "def threat_intelligence_fetcher(state: AgentState) -> AgentState:\n    intelligence = 'Latest threat intelligence fetched.'\n    state['intelligence'] = intelligence\n    state['messages'].append({'role': 'fetcher', 'content': intelligence})\n    return state"
+            },
+            {
+                "name": "vulnerability_scanner",
+                "description": "Scans systems for vulnerabilities.",
+                "code": "def vulnerability_scanner(state: AgentState) -> AgentState:\n    scan = 'Vulnerability scan completed.'\n    state['scan'] = scan\n    state['messages'].append({'role': 'scanner', 'content': scan})\n    return state"
+            },
+            {
+                "name": "risk_assessor",
+                "description": "Assesses risk based on identified vulnerabilities.",
+                "code": "def risk_assessor(state: AgentState) -> AgentState:\n    risk = 'Risk levels assessed from scan data.'\n    state['risk'] = risk\n    state['messages'].append({'role': 'assessor', 'content': risk})\n    return state"
+            },
+            {
+                "name": "mitigation_planner",
+                "description": "Plans mitigation and defense strategies.",
+                "code": "def mitigation_planner(state: AgentState) -> AgentState:\n    plan = 'Mitigation strategies planned.'\n    state['plan'] = plan\n    state['messages'].append({'role': 'planner', 'content': plan})\n    return state"
+            },
+            {
+                "name": "incident_reporter",
+                "description": "Generates a detailed incident and risk report.",
+                "code": "def incident_reporter(state: AgentState) -> AgentState:\n    report = 'Incident report generated with risk details.'\n    state['final_report'] = report\n    state['messages'].append({'role': 'reporter', 'content': report})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "threat_intelligence_fetcher",
+                "to": "vulnerability_scanner"
+            },
+            {
+                "from": "vulnerability_scanner",
+                "to": "risk_assessor"
+            },
+            {
+                "from": "risk_assessor",
+                "to": "mitigation_planner"
+            },
+            {
+                "from": "mitigation_planner",
+                "to": "incident_reporter"
+            },
+            {
+                "from": "incident_reporter",
+                "to": "END"
+            }
+        ],
+        "entry_point": "threat_intelligence_fetcher"
+    },
+    {
+        "agent_name": "EnvironmentalScienceAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "climate_data_fetcher",
+                "description": "Fetches climate and environmental data.",
+                "code": "def climate_data_fetcher(state: AgentState) -> AgentState:\n    data = 'Climate data fetched from sensors and satellites.'\n    state['data'] = data\n    state['messages'].append({'role': 'fetcher', 'content': data})\n    return state"
+            },
+            {
+                "name": "pollution_tracker",
+                "description": "Tracks pollution levels and emissions data.",
+                "code": "def pollution_tracker(state: AgentState) -> AgentState:\n    tracking = 'Pollution levels tracked successfully.'\n    state['tracking'] = tracking\n    state['messages'].append({'role': 'tracker', 'content': tracking})\n    return state"
+            },
+            {
+                "name": "ecosystem_modeler",
+                "description": "Models ecosystem impacts based on data.",
+                "code": "def ecosystem_modeler(state: AgentState) -> AgentState:\n    model = 'Ecosystem impact model built.'\n    state['model'] = model\n    state['messages'].append({'role': 'modeler', 'content': model})\n    return state"
+            },
+            {
+                "name": "impact_analyzer",
+                "description": "Analyzes environmental impact and trends.",
+                "code": "def impact_analyzer(state: AgentState) -> AgentState:\n    impact = 'Environmental impact analyzed.'\n    state['impact'] = impact\n    state['messages'].append({'role': 'analyzer', 'content': impact})\n    return state"
+            },
+            {
+                "name": "policy_recommendation_generator",
+                "description": "Generates policy recommendations based on findings.",
+                "code": "def policy_recommendation_generator(state: AgentState) -> AgentState:\n    recommendations = 'Policy recommendations generated based on analysis.'\n    state['final_recommendations'] = recommendations\n    state['messages'].append({'role': 'recommender', 'content': recommendations})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "climate_data_fetcher",
+                "to": "pollution_tracker"
+            },
+            {
+                "from": "pollution_tracker",
+                "to": "ecosystem_modeler"
+            },
+            {
+                "from": "ecosystem_modeler",
+                "to": "impact_analyzer"
+            },
+            {
+                "from": "impact_analyzer",
+                "to": "policy_recommendation_generator"
+            },
+            {
+                "from": "policy_recommendation_generator",
+                "to": "END"
+            }
+        ],
+        "entry_point": "climate_data_fetcher"
+    },
+    {
+        "agent_name": "NeuroscienceResearchAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "neural_data_collector",
+                "description": "Collects neural imaging and electrophysiological data.",
+                "code": "def neural_data_collector(state: AgentState) -> AgentState:\n    data = 'Neural data collected from studies.'\n    state['data'] = data\n    state['messages'].append({'role': 'collector', 'content': data})\n    return state"
+            },
+            {
+                "name": "brain_activity_analyzer",
+                "description": "Analyzes patterns in brain activity data.",
+                "code": "def brain_activity_analyzer(state: AgentState) -> AgentState:\n    analysis = 'Brain activity patterns analyzed.'\n    state['analysis'] = analysis\n    state['messages'].append({'role': 'analyzer', 'content': analysis})\n    return state"
+            },
+            {
+                "name": "cognitive_modeler",
+                "description": "Builds models to simulate cognitive processes.",
+                "code": "def cognitive_modeler(state: AgentState) -> AgentState:\n    model = 'Cognitive model built based on data.'\n    state['model'] = model\n    state['messages'].append({'role': 'modeler', 'content': model})\n    return state"
+            },
+            {
+                "name": "hypothesis_evaluator",
+                "description": "Evaluates neuroscience hypotheses using models.",
+                "code": "def hypothesis_evaluator(state: AgentState) -> AgentState:\n    evaluation = 'Hypotheses evaluated using cognitive models.'\n    state['evaluation'] = evaluation\n    state['messages'].append({'role': 'evaluator', 'content': evaluation})\n    return state"
+            },
+            {
+                "name": "research_summary_generator",
+                "description": "Generates a final research summary report.",
+                "code": "def research_summary_generator(state: AgentState) -> AgentState:\n    summary = 'Neuroscience research summary generated.'\n    state['final_summary'] = summary\n    state['messages'].append({'role': 'reporter', 'content': summary})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "neural_data_collector",
+                "to": "brain_activity_analyzer"
+            },
+            {
+                "from": "brain_activity_analyzer",
+                "to": "cognitive_modeler"
+            },
+            {
+                "from": "cognitive_modeler",
+                "to": "hypothesis_evaluator"
+            },
+            {
+                "from": "hypothesis_evaluator",
+                "to": "research_summary_generator"
+            },
+            {
+                "from": "research_summary_generator",
+                "to": "END"
+            }
+        ],
+        "entry_point": "neural_data_collector"
+    },
+    {
+        "agent_name": "AstrophysicsExplorationAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "cosmic_data_fetcher",
+                "description": "Fetches astronomical and cosmic data from observatories.",
+                "code": "def cosmic_data_fetcher(state: AgentState) -> AgentState:\n    data = 'Cosmic data fetched from observatories.'\n    state['data'] = data\n    state['messages'].append({'role': 'fetcher', 'content': data})\n    return state"
+            },
+            {
+                "name": "simulation_modeler",
+                "description": "Simulates astrophysical phenomena based on data.",
+                "code": "def simulation_modeler(state: AgentState) -> AgentState:\n    simulation = 'Astrophysical simulation model built.'\n    state['simulation'] = simulation\n    state['messages'].append({'role': 'modeler', 'content': simulation})\n    return state"
+            },
+            {
+                "name": "gravitational_wave_analyzer",
+                "description": "Analyzes gravitational wave data for anomalies.",
+                "code": "def gravitational_wave_analyzer(state: AgentState) -> AgentState:\n    analysis = 'Gravitational wave data analyzed.'\n    state['analysis'] = analysis\n    state['messages'].append({'role': 'analyzer', 'content': analysis})\n    return state"
+            },
+            {
+                "name": "astrophysical_event_interpreter",
+                "description": "Interprets key astrophysical events and phenomena.",
+                "code": "def astrophysical_event_interpreter(state: AgentState) -> AgentState:\n    interpretation = 'Astrophysical events interpreted.'\n    state['interpretation'] = interpretation\n    state['messages'].append({'role': 'interpreter', 'content': interpretation})\n    return state"
+            },
+            {
+                "name": "research_concluder",
+                "description": "Draws final conclusions and compiles the research findings.",
+                "code": "def research_concluder(state: AgentState) -> AgentState:\n    conclusion = 'Astrophysics exploration concluded with insights.'\n    state['final_report'] = conclusion\n    state['messages'].append({'role': 'concluder', 'content': conclusion})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "cosmic_data_fetcher",
+                "to": "simulation_modeler"
+            },
+            {
+                "from": "simulation_modeler",
+                "to": "gravitational_wave_analyzer"
+            },
+            {
+                "from": "gravitational_wave_analyzer",
+                "to": "astrophysical_event_interpreter"
+            },
+            {
+                "from": "astrophysical_event_interpreter",
+                "to": "research_concluder"
+            },
+            {
+                "from": "research_concluder",
+                "to": "END"
+            }
+        ],
+        "entry_point": "cosmic_data_fetcher"
+    },
+    {
+        "agent_name": "RoboticsInnovationAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "sensor_data_acquirer",
+                "description": "Acquires sensor data from robotic prototypes.",
+                "code": "def sensor_data_acquirer(state: AgentState) -> AgentState:\n    data = 'Sensor data acquired from prototype tests.'\n    state['data'] = data\n    state['messages'].append({'role': 'acquirer', 'content': data})\n    return state"
+            },
+            {
+                "name": "motion_planning_simulator",
+                "description": "Simulates motion planning and path optimization.",
+                "code": "def motion_planning_simulator(state: AgentState) -> AgentState:\n    simulation = 'Motion planning simulation completed.'\n    state['simulation'] = simulation\n    state['messages'].append({'role': 'simulator', 'content': simulation})\n    return state"
+            },
+            {
+                "name": "control_algorithm_developer",
+                "description": "Develops and refines control algorithms for robotics.",
+                "code": "def control_algorithm_developer(state: AgentState) -> AgentState:\n    algorithm = 'Control algorithm developed and refined.'\n    state['algorithm'] = algorithm\n    state['messages'].append({'role': 'developer', 'content': algorithm})\n    return state"
+            },
+            {
+                "name": "prototype_evaluator",
+                "description": "Evaluates prototype performance under simulated conditions.",
+                "code": "def prototype_evaluator(state: AgentState) -> AgentState:\n    evaluation = 'Prototype evaluated under simulated conditions.'\n    state['evaluation'] = evaluation\n    state['messages'].append({'role': 'evaluator', 'content': evaluation})\n    return state"
+            },
+            {
+                "name": "final_solution_documenter",
+                "description": "Documents the final innovative robotics solution.",
+                "code": "def final_solution_documenter(state: AgentState) -> AgentState:\n    document = 'Final robotics innovation documented.'\n    state['final_document'] = document\n    state['messages'].append({'role': 'documenter', 'content': document})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "sensor_data_acquirer",
+                "to": "motion_planning_simulator"
+            },
+            {
+                "from": "motion_planning_simulator",
+                "to": "control_algorithm_developer"
+            },
+            {
+                "from": "control_algorithm_developer",
+                "to": "prototype_evaluator"
+            },
+            {
+                "from": "prototype_evaluator",
+                "to": "final_solution_documenter"
+            },
+            {
+                "from": "final_solution_documenter",
+                "to": "END"
+            }
+        ],
+        "entry_point": "sensor_data_acquirer"
+    },
+    {
+        "agent_name": "NanotechnologyAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "nanoscale_material_fetcher",
+                "description": "Fetches data on nanoscale materials and properties.",
+                "code": "def nanoscale_material_fetcher(state: AgentState) -> AgentState:\n    materials = 'Nanoscale material data fetched.'\n    state['materials'] = materials\n    state['messages'].append({'role': 'fetcher', 'content': materials})\n    return state"
+            },
+            {
+                "name": "structure_analyzer",
+                "description": "Analyzes the molecular and structural properties.",
+                "code": "def structure_analyzer(state: AgentState) -> AgentState:\n    analysis = 'Structural properties analyzed.'\n    state['analysis'] = analysis\n    state['messages'].append({'role': 'analyzer', 'content': analysis})\n    return state"
+            },
+            {
+                "name": "simulation_environment_builder",
+                "description": "Builds simulation environments at the nanoscale.",
+                "code": "def simulation_environment_builder(state: AgentState) -> AgentState:\n    environment = 'Nanoscale simulation environment built.'\n    state['environment'] = environment\n    state['messages'].append({'role': 'builder', 'content': environment})\n    return state"
+            },
+            {
+                "name": "risk_assessment_module",
+                "description": "Assesses risks and uncertainties in nanoscale applications.",
+                "code": "def risk_assessment_module(state: AgentState) -> AgentState:\n    risk = 'Risk assessment completed for nanoscale materials.'\n    state['risk'] = risk\n    state['messages'].append({'role': 'assessor', 'content': risk})\n    return state"
+            },
+            {
+                "name": "final_report_generator",
+                "description": "Generates the final report on nanotechnology research.",
+                "code": "def final_report_generator(state: AgentState) -> AgentState:\n    report = 'Final nanotechnology research report generated.'\n    state['final_report'] = report\n    state['messages'].append({'role': 'reporter', 'content': report})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "nanoscale_material_fetcher",
+                "to": "structure_analyzer"
+            },
+            {
+                "from": "structure_analyzer",
+                "to": "simulation_environment_builder"
+            },
+            {
+                "from": "simulation_environment_builder",
+                "to": "risk_assessment_module"
+            },
+            {
+                "from": "risk_assessment_module",
+                "to": "final_report_generator"
+            },
+            {
+                "from": "final_report_generator",
+                "to": "END"
+            }
+        ],
+        "entry_point": "nanoscale_material_fetcher"
+    },
+    {
+        "agent_name": "MaterialsScienceAgent",
+        "state_type": "AgentState",
+        "nodes": [
+            {
+                "name": "compound_literature_reviewer",
+                "description": "Reviews literature on advanced compounds and materials.",
+                "code": "def compound_literature_reviewer(state: AgentState) -> AgentState:\n    review = 'Literature on advanced compounds reviewed.'\n    state['review'] = review\n    state['messages'].append({'role': 'reviewer', 'content': review})\n    return state"
+            },
+            {
+                "name": "mechanical_property_simulator",
+                "description": "Simulates mechanical properties of materials.",
+                "code": "def mechanical_property_simulator(state: AgentState) -> AgentState:\n    simulation = 'Mechanical properties simulated.'\n    state['simulation'] = simulation\n    state['messages'].append({'role': 'simulator', 'content': simulation})\n    return state"
+            },
+            {
+                "name": "microstructure_analyzer",
+                "description": "Analyzes the microstructure and composition.",
+                "code": "def microstructure_analyzer(state: AgentState) -> AgentState:\n    analysis = 'Microstructure analysis completed.'\n    state['analysis'] = analysis\n    state['messages'].append({'role': 'analyzer', 'content': analysis})\n    return state"
+            },
+            {
+                "name": "failure_mode_assessor",
+                "description": "Assesses potential failure modes in materials.",
+                "code": "def failure_mode_assessor(state: AgentState) -> AgentState:\n    assessment = 'Failure modes assessed.'\n    state['assessment'] = assessment\n    state['messages'].append({'role': 'assessor', 'content': assessment})\n    return state"
+            },
+            {
+                "name": "innovation_suggester",
+                "description": "Suggests innovative improvements or new material formulations.",
+                "code": "def innovation_suggester(state: AgentState) -> AgentState:\n    suggestion = 'Innovative material improvements suggested.'\n    state['suggestion'] = suggestion\n    state['messages'].append({'role': 'suggester', 'content': suggestion})\n    return state"
+            },
+            {
+                "name": "final_researcher",
+                "description": "Compiles the final research findings and proposals.",
+                "code": "def final_researcher(state: AgentState) -> AgentState:\n    final = 'Final materials science research report compiled.'\n    state['final_report'] = final\n    state['messages'].append({'role': 'reporter', 'content': final})\n    return state"
+            }
+        ],
+        "edges": [
+            {
+                "from": "compound_literature_reviewer",
+                "to": "mechanical_property_simulator"
+            },
+            {
+                "from": "mechanical_property_simulator",
+                "to": "microstructure_analyzer"
+            },
+            {
+                "from": "microstructure_analyzer",
+                "to": "failure_mode_assessor"
+            },
+            {
+                "from": "failure_mode_assessor",
+                "to": "innovation_suggester"
+            },
+            {
+                "from": "innovation_suggester",
+                "to": "final_researcher"
+            },
+            {
+                "from": "final_researcher",
+                "to": "END"
+            }
+        ],
+        "entry_point": "compound_literature_reviewer"
+    }
+]
