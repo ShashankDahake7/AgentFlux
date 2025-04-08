@@ -1,11 +1,14 @@
-// pages/CustomPlaygroundPage.tsx
 "use client";
 
 import React, { useEffect, useState, MouseEvent } from "react";
+import Image from "next/image";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "@/app/firebase/firebaseConfig";
 import { useRouter } from "next/navigation";
 import { ChevronUp, ChevronDown } from "lucide-react";
+import { auth } from "@/app/firebase/firebaseConfig";
+import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
+import Editor from "@monaco-editor/react";
 
 interface Playground {
   _id: string;
@@ -36,33 +39,164 @@ interface Sheet {
   associatedModels?: string[];
   createdAt: string;
   updatedAt: string;
+  playgroundId?: string;
 }
 
-const MIN_VISIBLE_TERMINAL_HEIGHT = 100;
-const TERMINAL_HEADER_HEIGHT = 40;
+interface RefineHistory {
+  _id: string;
+  sheetId: string;
+  diffReport: { [filename: string]: string };
+  mergedFiles: { [filename: string]: string };
+  timestamp: string;
+}
 
-const CustomPlaygroundPage: React.FC = () => {
-  // Authentication state and token
+interface EnhancedSidebarProps {
+  playgrounds: Playground[];
+  sheets: Sheet[];
+  refineHistories: { [sheetId: string]: RefineHistory[] };
+  onPlaygroundSelect: (pg: Playground) => void;
+  onRefineHistorySelect: (sheet: Sheet, history: RefineHistory) => void;
+  fetchRefineHistories: (sheetId: string) => void;
+}
+
+const EnhancedSidebar: React.FC<EnhancedSidebarProps> = ({
+  playgrounds,
+  sheets,
+  refineHistories,
+  onPlaygroundSelect,
+  onRefineHistorySelect,
+  fetchRefineHistories,
+}) => {
+  const [expandedPlaygrounds, setExpandedPlaygrounds] = useState<{
+    [pgId: string]: boolean;
+  }>({});
+  const [expandedSheets, setExpandedSheets] = useState<{
+    [sheetId: string]: boolean;
+  }>({});
+
+  const handlePlaygroundToggle = (pg: Playground) => {
+    setExpandedPlaygrounds((prev) => ({ ...prev, [pg._id]: !prev[pg._id] }));
+    onPlaygroundSelect(pg);
+  };
+
+  const handleSheetToggle = (sheet: Sheet) => {
+    if (!expandedSheets[sheet._id]) {
+      fetchRefineHistories(sheet._id);
+    }
+    setExpandedSheets((prev) => ({ ...prev, [sheet._id]: !prev[sheet._id] }));
+  };
+
+  return (
+    <div className="bg-black border-r border-gray-300 py-4 px-2 overflow-y-auto">
+      <h2 className="text-2xl font-cinzel mb-4 text-white border-b border-gray-400">Playgrounds</h2>
+      <ul>
+        {playgrounds.map((pg) => (
+          <li key={pg._id} className="mb-2">
+            <div
+              onClick={() => handlePlaygroundToggle(pg)}
+              className="cursor-pointer flex items-center justify-between bg-neutral-600 p-2 rounded border border-gray-300 hover:bg-zinc-800 transition-colors"
+            >
+              <div className="flex items-center">
+                <Image
+                  src="/obs2.png" // Path to your logo
+                  alt="Logo"
+                  width={20}
+                  height={20}
+                  className="mr-2" // Adds some spacing between the logo and playground name
+                  priority
+                />
+                <span className="text-white">{pg.name}</span>
+              </div>
+              {expandedPlaygrounds[pg._id] ? (
+                <ChevronUp size={16} className="ml-1 text-white" />
+              ) : (
+                <ChevronDown size={16} className="ml-1 text-white" />
+              )}
+            </div>
+            <AnimatePresence>
+              {expandedPlaygrounds[pg._id] && (
+                <motion.ul
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="ml-4 mt-2 border-l border-gray-400 pl-2 overflow-hidden"
+                >
+                  {sheets
+                    .filter((sheet) => sheet.playgroundId === pg._id)
+                    .map((sheet) => (
+                      <li key={sheet._id} className="mb-1">
+                        <div
+                          onClick={() => handleSheetToggle(sheet)}
+                          className="cursor-pointer flex items-center justify-between text-sm bg-zinc-700 p-1 rounded border border-gray-300 hover:bg-zinc-600 transition-colors"
+                        >
+                          <span className="text-white">{sheet.title}</span>
+                          {expandedSheets[sheet._id] ? (
+                            <ChevronUp size={14} className="ml-1 text-white" />
+                          ) : (
+                            <ChevronDown size={14} className="ml-1 text-white" />
+                          )}
+                        </div>
+                        <AnimatePresence>
+                          {expandedSheets[sheet._id] && (
+                            <motion.ul
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: "auto" }}
+                              exit={{ opacity: 0, height: 0 }}
+                              transition={{ duration: 0.3 }}
+                              className="ml-4 mt-1 border-l border-gray-400 pl-2 overflow-hidden"
+                            >
+                              {(refineHistories[sheet._id] || []).map((history) => (
+                                <li
+                                  key={history._id}
+                                  onClick={() =>
+                                    onRefineHistorySelect(sheet, history)
+                                  }
+                                  className="cursor-pointer text-xs border border-gray-400 rounded px-2 py-1 my-1 hover:bg-gray-700 transition-colors text-white"
+                                >
+                                  {new Date(history.timestamp).toLocaleString()}
+                                </li>
+                              ))}
+                            </motion.ul>
+                          )}
+                        </AnimatePresence>
+                      </li>
+                    ))}
+                </motion.ul>
+              )}
+            </AnimatePresence>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+const CustomObservePage: React.FC = () => {
+  // Authentication and routing
   const [user, setUser] = useState<any>(null);
   const [token, setToken] = useState<string>("");
   const router = useRouter();
 
-  // Layout state (using vh for rows and percentage for horizontal splits)
-  const [topSectionHeight, setTopSectionHeight] = useState<number>(33);
+  // Layout percentages
+  const [topSectionHeight, setTopSectionHeight] = useState<number>(35);
   const bottomSectionHeight = 100 - topSectionHeight;
-  const [topLeftWidth, setTopLeftWidth] = useState<number>(33);
-  const [bottomRightWidth, setBottomRightWidth] = useState<number>(33);
+  const [sideBarWidth, setSideBarWidth] = useState<number>(20);
+  const [bottomRightWidth, setBottomRightWidth] = useState<number>(50);
 
   // Data states
   const [playgrounds, setPlaygrounds] = useState<Playground[]>([]);
-  const [selectedPlayground, setSelectedPlayground] = useState<Playground | null>(null);
   const [sheets, setSheets] = useState<Sheet[]>([]);
+  const [selectedPlayground, setSelectedPlayground] =
+    useState<Playground | null>(null);
   const [selectedSheet, setSelectedSheet] = useState<Sheet | null>(null);
   const [selectedFile, setSelectedFile] = useState<string>("");
   const [codeContent, setCodeContent] = useState<string>("");
-  const [modelOutput, setModelOutput] = useState<string>("");
+  const [diffReport, setDiffReport] = useState<string>("");
   const [graphData, setGraphData] = useState<any>(null);
-  const [graphLoading, setGraphLoading] = useState<boolean>(false);
+  const [refineHistories, setRefineHistories] = useState<{
+    [sheetId: string]: RefineHistory[];
+  }>({});
 
   // ------------------------- AUTHENTICATION -------------------------
   useEffect(() => {
@@ -90,14 +224,15 @@ const CustomPlaygroundPage: React.FC = () => {
         const data = await res.json();
         if (data.playgrounds && data.playgrounds.length > 0) {
           setPlaygrounds(data.playgrounds);
-          setSelectedPlayground(data.playgrounds[0]);
+          if (!selectedPlayground)
+            setSelectedPlayground(data.playgrounds[0]);
         }
-      } catch (err) {
-        console.error("Error fetching playgrounds:", err);
+      } catch (error) {
+        console.error("Error fetching playgrounds:", error);
       }
     };
     fetchPlaygrounds();
-  }, [token]);
+  }, [token, selectedPlayground]);
 
   // ------------------------- FETCH SHEETS -------------------------
   useEffect(() => {
@@ -106,91 +241,126 @@ const CustomPlaygroundPage: React.FC = () => {
       try {
         const res = await fetch(
           `/api/playgrounds/${selectedPlayground._id}/sheets`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
         );
         const data = await res.json();
         if (data.sheets && data.sheets.length > 0) {
           setSheets(data.sheets);
-          setSelectedSheet(data.sheets[0]);
-          const fileKeys =
-            data.sheets[0].mergedFiles && Object.keys(data.sheets[0].mergedFiles).length > 0
-              ? Object.keys(data.sheets[0].mergedFiles)
-              : data.sheets[0].files
-              ? data.sheets[0].files.map((f: FileType) => f.filename)
-              : [];
-          if (fileKeys.length > 0) {
-            setSelectedFile(fileKeys[0]);
-            setCodeContent(
-              data.sheets[0].mergedFiles && data.sheets[0].mergedFiles[fileKeys[0]]
-                ? data.sheets[0].mergedFiles[fileKeys[0]]
+          if (!selectedSheet) {
+            setSelectedSheet(data.sheets[0]);
+            const fileKeys =
+              data.sheets[0].mergedFiles &&
+                Object.keys(data.sheets[0].mergedFiles).length > 0
+                ? Object.keys(data.sheets[0].mergedFiles)
                 : data.sheets[0].files
-                ? data.sheets[0].files.find((f: FileType) => f.filename === fileKeys[0])?.code || ""
-                : ""
-            );
+                  ? data.sheets[0].files.map((f: FileType) => f.filename)
+                  : [];
+            if (fileKeys.length > 0) {
+              setSelectedFile(fileKeys[0]);
+              setCodeContent(
+                data.sheets[0].mergedFiles &&
+                  data.sheets[0].mergedFiles[fileKeys[0]]
+                  ? data.sheets[0].mergedFiles[fileKeys[0]]
+                  : data.sheets[0].files
+                    ? data.sheets[0].files.find(
+                      (f: FileType) => f.filename === fileKeys[0]
+                    )?.code || ""
+                    : ""
+              );
+            }
           }
         } else {
           setSheets([]);
           setSelectedSheet(null);
         }
-      } catch (err) {
-        console.error("Error fetching sheets:", err);
+      } catch (error) {
+        console.error("Error fetching sheets:", error);
       }
     };
     fetchSheets();
   }, [selectedPlayground, token]);
 
-  // ------------------------- UPDATE CODE CONTENT -------------------------
+  // ------------------------- FETCH REFINE HISTORIES -------------------------
+  const fetchRefineHistories = async (sheetId: string) => {
+    if (!token) return;
+    try {
+      const res = await fetch(`/api/refines?sheetId=${sheetId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.runs) {
+        setRefineHistories((prev) => ({ ...prev, [sheetId]: data.runs }));
+      }
+    } catch (error) {
+      console.error("Error fetching refine histories:", error);
+    }
+  };
+
+  // ------------------------- UPDATE CODE AND DIFF CONTENT -------------------------
   useEffect(() => {
     if (selectedSheet && selectedFile) {
       const fileKeys =
-        selectedSheet.mergedFiles && Object.keys(selectedSheet.mergedFiles).length > 0
+        selectedSheet.mergedFiles &&
+          Object.keys(selectedSheet.mergedFiles).length > 0
           ? Object.keys(selectedSheet.mergedFiles)
           : selectedSheet.files
-          ? selectedSheet.files.map((f: FileType) => f.filename)
-          : [];
+            ? selectedSheet.files.map((f: FileType) => f.filename)
+            : [];
       if (fileKeys.includes(selectedFile)) {
         const newCode =
-          selectedSheet.mergedFiles && selectedSheet.mergedFiles[selectedFile]
+          selectedSheet.mergedFiles &&
+            selectedSheet.mergedFiles[selectedFile]
             ? selectedSheet.mergedFiles[selectedFile]
             : selectedSheet.files
-            ? selectedSheet.files.find((f: FileType) => f.filename === selectedFile)?.code || ""
-            : "";
+              ? selectedSheet.files.find(
+                (f: FileType) => f.filename === selectedFile
+              )?.code || ""
+              : "";
         setCodeContent(newCode);
+        const newDiff =
+          selectedSheet.diffReport &&
+            selectedSheet.diffReport[selectedFile]
+            ? selectedSheet.diffReport[selectedFile]
+            : "";
+        setDiffReport(newDiff);
       }
     }
   }, [selectedSheet, selectedFile]);
 
-  // ------------------------- FETCH FRESH SHEET DATA -------------------------
+  // ------------------------- FETCH SHEET BY ID -------------------------
   const fetchSheetById = async (sheetId: string) => {
     if (!selectedPlayground || !token) return;
     try {
       const res = await fetch(
         `/api/playgrounds/${selectedPlayground._id}/sheets/${sheetId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
       const data = await res.json();
       if (data.sheet) {
         setSelectedSheet(data.sheet);
         const fileKeys =
-          data.sheet.mergedFiles && Object.keys(data.sheet.mergedFiles).length > 0
+          data.sheet.mergedFiles &&
+            Object.keys(data.sheet.mergedFiles).length > 0
             ? Object.keys(data.sheet.mergedFiles)
             : data.sheet.files
-            ? data.sheet.files.map((f: FileType) => f.filename)
-            : [];
+              ? data.sheet.files.map((f: FileType) => f.filename)
+              : [];
         if (fileKeys.length > 0) {
           setSelectedFile(fileKeys[0]);
           setCodeContent(
-            data.sheet.mergedFiles && data.sheet.mergedFiles[fileKeys[0]]
+            data.sheet.mergedFiles &&
+              data.sheet.mergedFiles[fileKeys[0]]
               ? data.sheet.mergedFiles[fileKeys[0]]
               : data.sheet.files
-              ? data.sheet.files.find((f: FileType) => f.filename === fileKeys[0])?.code || ""
-              : ""
+                ? data.sheet.files.find(
+                  (f: FileType) => f.filename === fileKeys[0]
+                )?.code || ""
+                : ""
           );
-          fetchModelOutputForFile(fileKeys[0]);
-        } else {
-          setSelectedFile("");
-          setCodeContent("");
-          setModelOutput("");
         }
       }
     } catch (error) {
@@ -198,28 +368,8 @@ const CustomPlaygroundPage: React.FC = () => {
     }
   };
 
-  // ------------------------- FETCH MODEL OUTPUT -------------------------
-  const fetchModelOutputForFile = async (fname: string) => {
-    if (!selectedPlayground || !selectedSheet || !token) return;
-    if (selectedSheet.diffReport && selectedSheet.diffReport[fname]) {
-      setModelOutput(selectedSheet.diffReport[fname]);
-      return;
-    }
-    try {
-      const res = await fetch(
-        `/api/playgrounds/${selectedPlayground._id}/sheets/${selectedSheet._id}/model-output?file=${encodeURIComponent(fname)}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const outputText = await res.text();
-      setModelOutput(outputText);
-    } catch (error) {
-      console.error("Error fetching model output:", error);
-      setModelOutput("No model output available.");
-    }
-  };
-
   // ------------------------- RESIZER HANDLERS -------------------------
-  const handleVerticalResize = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+  const handleVerticalResize = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     const startY = e.clientY;
     const startTop = topSectionHeight;
@@ -236,14 +386,14 @@ const CustomPlaygroundPage: React.FC = () => {
     window.addEventListener("mouseup", onMouseUp);
   };
 
-  const handleTopHorizontalResize = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+  const handleTopHorizontalResize = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     const startX = e.clientX;
-    const startLeft = topLeftWidth;
+    const startWidth = sideBarWidth;
     const onMouseMove = (event: MouseEvent) => {
       const delta = ((event.clientX - startX) / window.innerWidth) * 100;
-      const newLeft = startLeft + delta;
-      if (newLeft >= 20 && newLeft <= 80) setTopLeftWidth(newLeft);
+      const newWidth = startWidth + delta;
+      if (newWidth >= 20 && newWidth <= 50) setSideBarWidth(newWidth);
     };
     const onMouseUp = () => {
       window.removeEventListener("mousemove", onMouseMove);
@@ -253,14 +403,16 @@ const CustomPlaygroundPage: React.FC = () => {
     window.addEventListener("mouseup", onMouseUp);
   };
 
-  const handleBottomHorizontalResize = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+  const handleBottomHorizontalResize = (
+    e: React.MouseEvent<HTMLDivElement>
+  ) => {
     e.preventDefault();
     const startX = e.clientX;
     const startRight = bottomRightWidth;
     const onMouseMove = (event: MouseEvent) => {
       const delta = ((startX - event.clientX) / window.innerWidth) * 100;
       const newRight = startRight + delta;
-      if (newRight >= 20 && newRight <= 80) setBottomRightWidth(newRight);
+      if (newRight >= 20 && newRight <= 50) setBottomRightWidth(newRight);
     };
     const onMouseUp = () => {
       window.removeEventListener("mousemove", onMouseMove);
@@ -270,105 +422,116 @@ const CustomPlaygroundPage: React.FC = () => {
     window.addEventListener("mouseup", onMouseUp);
   };
 
-  // ------------------------- LAYOUT RENDERING -------------------------
+  // ------------------------- SIDEBAR ACTIONS -------------------------
+  const handlePlaygroundSelect = (pg: Playground) => {
+    if (selectedPlayground && selectedPlayground._id === pg._id) return;
+    setSelectedPlayground(pg);
+    setSheets([]);
+    setSelectedSheet(null);
+    setGraphData(null);
+  };
+
+  const selectRefineHistory = (sheet: Sheet, history: RefineHistory) => {
+    const updatedSheet = {
+      ...sheet,
+      mergedFiles: history.mergedFiles,
+      diffReport: history.diffReport,
+    };
+    setSelectedSheet(updatedSheet);
+    const fileKeys =
+      updatedSheet.mergedFiles &&
+        Object.keys(updatedSheet.mergedFiles).length > 0
+        ? Object.keys(updatedSheet.mergedFiles)
+        : updatedSheet.files
+          ? updatedSheet.files.map((f: FileType) => f.filename)
+          : [];
+    if (fileKeys.length > 0) {
+      setSelectedFile(fileKeys[0]);
+      setCodeContent(
+        updatedSheet.mergedFiles && updatedSheet.mergedFiles[fileKeys[0]]
+          ? updatedSheet.mergedFiles[fileKeys[0]]
+          : updatedSheet.files
+            ? updatedSheet.files.find((f: FileType) => f.filename === fileKeys[0])
+              ?.code || ""
+            : ""
+      );
+    }
+  };
+
+  // ------------------------- FILE TABS FOR BOTTOM PANES -------------------------
+  const getFileKeys = (): string[] => {
+    if (!selectedSheet) return [];
+    if (
+      selectedSheet.mergedFiles &&
+      Object.keys(selectedSheet.mergedFiles).length > 0
+    ) {
+      return Object.keys(selectedSheet.mergedFiles);
+    } else if (selectedSheet.files) {
+      return selectedSheet.files.map((f: FileType) => f.filename);
+    }
+    return [];
+  };
+
   return (
-    <div className="flex flex-col h-screen bg-black text-white overflow-hidden">
-      {/* Header with gradient and cinzel font */}
-      <header className="h-12 bg-gradient-to-r from-gray-900 via-gray-800 to-black border-b border-gray-600 flex items-center px-4 font-cinzel text-lg">
-        <div className="px-3 py-1 border border-gray-500 rounded animated-border transition-colors duration-200">
+    <div className="flex flex-col h-screen bg-black text-white overflow-hidden font-cinzel">
+      {/* Header */}
+      <header className="h-12 bg-zinc-800 border-b border-gray-300 flex items-center px-4 justify-between py-4">
+        <div className="px-3 py-1 border border-purple-400 rounded text-sm">
           {user?.email || "Not Signed In"}
+        </div>
+        <div>
+          <button className="text-white px-3 py-1 border border-purple-400 rounded text-sm font-cinzel hover:bg-gray-500 transition mx-4">
+            <Link href="/">Home</Link>
+          </button>
+          <button className="text-white px-3 py-1 border border-purple-400 rounded text-sm font-cinzel hover:bg-gray-500 transition">
+            <Link href="/playground">Playground</Link>
+          </button>
         </div>
       </header>
 
-      {/* Main Content: Two Rows */}
       <div className="flex flex-col flex-1 relative">
-        {/* TOP ROW – Playground & Graph Visualization */}
+        {/* TOP ROW – Enhanced Sidebar & Graph Visualization */}
         <div className="flex relative" style={{ height: `${topSectionHeight}vh` }}>
-          {/* Left Panel: Playground and Sheet Selection */}
-          <div
-            className="bg-gray-900 border-r border-gray-700 p-4 overflow-y-auto"
-            style={{ width: `${topLeftWidth}%` }}
-          >
-            <h2 className="text-xl font-bold mb-4 font-cinzel">Playgrounds</h2>
-            {/* Playground Dropdown */}
-            <div className="mb-2">
-              <label htmlFor="pg-select" className="block mb-1 text-sm">
-                Select Playground:
-              </label>
-              <select
-                id="pg-select"
-                value={selectedPlayground ? selectedPlayground._id : ""}
-                onChange={(e) => {
-                  const pg = playgrounds.find((p) => p._id === e.target.value);
-                  if (pg) setSelectedPlayground(pg);
-                }}
-                className="p-2 bg-gray-800 border border-gray-600 rounded w-full text-sm"
-              >
-                {playgrounds.map((pg) => (
-                  <option key={pg._id} value={pg._id}>
-                    {pg.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {/* Sheet Dropdown */}
-            {selectedPlayground && sheets.length > 0 && (
-              <div className="mb-4">
-                <label htmlFor="sheet-select" className="block mb-1 text-sm">
-                  Select Sheet:
-                </label>
-                <select
-                  id="sheet-select"
-                  value={selectedSheet ? selectedSheet._id : ""}
-                  onChange={(e) => {
-                    const sheet = sheets.find((s) => s._id === e.target.value);
-                    if (sheet) fetchSheetById(sheet._id);
-                  }}
-                  className="p-2 bg-gray-800 border border-gray-600 rounded w-full text-sm"
-                >
-                  {sheets.map((sheet) => (
-                    <option key={sheet._id} value={sheet._id}>
-                      {sheet.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-            {/* List of All Sheets */}
-            {/* {selectedPlayground && (
-              <div>
-                <h3 className="text-lg font-semibold mb-2 font-cinzel">All Sheets</h3>
-                <ul className="space-y-2 text-sm">
-                  {sheets.map((sheet) => (
-                    <li
-                      key={sheet._id}
-                      onClick={() => fetchSheetById(sheet._id)}
-                      className={`p-2 rounded cursor-pointer ${
-                        selectedSheet && selectedSheet._id === sheet._id
-                          ? "bg-gray-700"
-                          : "hover:bg-gray-800"
-                      }`}
-                    >
-                      {sheet.title}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )} */}
+          {/* Left Panel: Enhanced Sidebar */}
+          <div style={{ width: `${sideBarWidth}%` }}>
+            <EnhancedSidebar
+              playgrounds={playgrounds}
+              sheets={sheets}
+              refineHistories={refineHistories}
+              onPlaygroundSelect={handlePlaygroundSelect}
+              onRefineHistorySelect={selectRefineHistory}
+              fetchRefineHistories={fetchRefineHistories}
+            />
           </div>
 
           {/* TOP HORIZONTAL RESIZER */}
           <div
             onMouseDown={handleTopHorizontalResize}
-            className="cursor-ew-resize bg-gray-700"
+            className="cursor-ew-resize bg-gray-400"
             style={{ width: "4px" }}
           ></div>
 
           {/* Right Panel: Graph Visualization */}
-          <div className="flex-1 bg-gray-800 p-4 overflow-hidden">
-            <h3 className="text-lg font-bold mb-2 font-cinzel">Graph Visualization</h3>
-            <div className="h-full flex items-center justify-center text-gray-400 text-sm">
-              Graph output goes here...
+          <div className="flex-1 bg-black p-4 overflow-hidden">
+            {/* Heading and Button Section */}
+            <div className="flex items-center justify-between border-b border-gray-400 pb-2 mb-4">
+              <h3 className="text-lg font-cinzel">Log Graphs</h3>
+              <button className="px-4 py-1 bg-fuchsia-300 text-gray-900 rounded hover:bg-gray-600 transition">
+                Revert State
+              </button>
+            </div>
+
+            {/* Graph Area */}
+            <div className="flex gap-4 h-full">
+              <div className="flex-1 bg-stone-900 border border-gray-300 rounded flex items-center justify-center">
+                <p className="text-sm">Line Chart: Agent Runtime (Before/After)</p>
+              </div>
+              <div className="flex-1 bg-stone-900 border border-gray-300 rounded flex items-center justify-center">
+                <p className="text-sm">Pie Chart: Agent Run Distribution</p>
+              </div>
+              <div className="flex-1 bg-stone-900 border border-gray-300 rounded flex items-center justify-center">
+                <p className="text-sm">Placeholder: Refined Model Output</p>
+              </div>
             </div>
           </div>
         </div>
@@ -376,85 +539,97 @@ const CustomPlaygroundPage: React.FC = () => {
         {/* VERTICAL RESIZER */}
         <div
           onMouseDown={handleVerticalResize}
-          className="cursor-ns-resize bg-gray-700"
+          className="cursor-ns-resize bg-gray-400"
           style={{ height: "4px" }}
         ></div>
 
-{/* BOTTOM ROW – Code Panel & Model Output */}
-<div className="flex relative" style={{ height: `${bottomSectionHeight}vh` }}>
-  {/* Left Panel: Code Panel with Sticky Header for file-tabs */}
-  <div
-    className="bg-gray-800 overflow-y-auto"
-    style={{ width: `${100 - bottomRightWidth}%` }}
-  >
-    {/* Sticky header for Code Panel */}
-    <div className="sticky top-0 z-10 bg-gray-800 px-4 py-2 border-b border-gray-600 flex justify-between items-center">
-      <h3 className="text-lg font-bold font-cinzel">Code Panel</h3>
-      <div className="flex space-x-2">
-        {selectedSheet &&
-          (selectedSheet.mergedFiles && Object.keys(selectedSheet.mergedFiles).length > 0
-            ? Object.keys(selectedSheet.mergedFiles)
-            : selectedSheet.files
-            ? selectedSheet.files.map((f) => f.filename)
-            : []
-          ).map((fname) => (
-            <button
-              key={fname}
-              onClick={() => {
-                setSelectedFile(fname);
-                if (selectedSheet.mergedFiles && selectedSheet.mergedFiles[fname]) {
-                  setCodeContent(selectedSheet.mergedFiles[fname]);
-                } else if (selectedSheet.files) {
-                  const fileObj = selectedSheet.files.find((f) => f.filename === fname);
-                  setCodeContent(fileObj ? fileObj.code : "");
-                }
-                fetchModelOutputForFile(fname);
-              }}
-              className={`animated-border px-2 py-1 border rounded text-xs transition-colors duration-200 ${
-                selectedFile === fname ? "bg-gray-700" : "bg-gray-600 hover:bg-gray-700"
-              }`}
-            >
-              {fname}
-            </button>
-          ))}
+        {/* BOTTOM ROW – Diff Pane & Code Pane */}
+        <div className="flex relative" style={{ height: `${bottomSectionHeight}vh` }}>
+          {/* Left Panel: Diff Report Pane with File Tabs */}
+          <div className="bg-black overflow-y-auto" style={{ width: "60%" }}>
+            <div className="sticky top-0 z-10 bg-black px-4 py-2 border-b border-gray-300 flex justify-between items-center">
+              <h3 className="text-lg font-cinzel">Diff Report</h3>
+              <div className="flex space-x-2">
+                {getFileKeys().map((fname) => (
+                  <button
+                    key={fname}
+                    onClick={() => setSelectedFile(fname)}
+                    className={`px-2 py-1 border rounded text-xs transition-colors duration-200 border-gray-400 ${selectedFile === fname
+                      ? "bg-gray-700"
+                      : "bg-black hover:bg-gray-600"
+                      }`}
+                  >
+                    {fname}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="px-3 py-4 pb-32">
+              {selectedSheet &&
+                selectedSheet.diffReport &&
+                selectedSheet.diffReport[selectedFile] ? (
+                <div
+                  className="bg-zinc-800 border border-gray-300 rounded p-2 text-sm font-mono whitespace-pre-wrap"
+                  dangerouslySetInnerHTML={{
+                    __html: selectedSheet.diffReport[selectedFile],
+                  }}
+                ></div>
+              ) : (
+                <p>No diff report available.</p>
+              )}
+            </div>
+          </div>
+
+          {/* BOTTOM VERTICAL RESIZER */}
+          <div
+            onMouseDown={handleBottomHorizontalResize}
+            className="cursor-ew-resize bg-gray-400"
+            style={{ width: "4px" }}
+          ></div>
+
+          {/* Right Panel: Code Pane with Monaco Editor */}
+          <div className="bg-black overflow-y-auto" style={{ width: "46%" }}>
+            <div className="sticky top-0 z-10 bg-black px-4 py-2 border-b border-gray-300 flex justify-between items-center">
+              <h3 className="text-lg font-bold">Code</h3>
+              <div className="flex space-x-2">
+                {getFileKeys().map((fname) => (
+                  <button
+                    key={fname}
+                    onClick={() => setSelectedFile(fname)}
+                    className={`px-2 py-1 border rounded text-xs transition-colors duration-200 border-gray-400 ${selectedFile === fname
+                      ? "bg-gray-800"
+                      : "bg-black hover:bg-gray-800"
+                      }`}
+                  >
+                    {fname}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="h-full p-4">
+              <Editor
+                height="100%"
+                defaultLanguage="python"
+                theme="vs-dark"
+                value={codeContent}
+                onChange={(value) => {
+                  if (value) setCodeContent(value);
+                }}
+                options={{
+                  minimap: { enabled: false },
+                  automaticLayout: true,
+                }}
+              />
+            </div>
+          </div>
+
+        </div>
       </div>
-    </div>
-    {/* Code content scrollable area */}
-    <div className="px-4 py-2">
-      <pre className="bg-black border border-gray-600 rounded p-2 text-sm font-mono whitespace-pre-wrap">
-        {codeContent}
-      </pre>
-    </div>
-  </div>
-
-  {/* BOTTOM HORIZONTAL RESIZER */}
-  <div
-    onMouseDown={handleBottomHorizontalResize}
-    className="cursor-ew-resize bg-gray-700"
-    style={{ width: "4px" }}
-  ></div>
-
-  {/* Right Panel: Model Output */}
-  <div
-    className="bg-gray-900 p-4 overflow-y-auto"
-    style={{ width: `${bottomRightWidth}%` }}
-  >
-    <h3 className="text-lg font-bold mb-4 font-cinzel">Model Output</h3>
-    {modelOutput ? (
-      <pre className="bg-black border border-gray-600 rounded p-2 text-sm font-mono whitespace-pre-wrap">
-        {modelOutput}
-      </pre>
-    ) : (
-      <p className="text-gray-400 text-sm">
-        Model output will be rendered here...
-      </p>
-    )}
-  </div>
-</div>
-
+      <div className="absolute bottom-0 left-0 right-0 bg-black border-t border-gray-400 p-2 flex items-center justify-between z-[999]">
+        <p className="text-gray-400 text-sm">© 2025 AgentOps</p>
       </div>
     </div>
   );
 };
 
-export default CustomPlaygroundPage;
+export default CustomObservePage;

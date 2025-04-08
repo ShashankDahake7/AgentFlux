@@ -21,6 +21,7 @@ import dynamic from "next/dynamic";
 import Draggable from "react-draggable";
 import Image from "next/image";
 import "xterm/css/xterm.css";
+import Link from 'next/link'
 
 // Dynamically import MonacoEditor (SSR disabled)
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
@@ -813,9 +814,9 @@ const TerminalPanel = forwardRef(
           style={{
             width: "100%",
             height: `calc(100% - ${TERMINAL_HEADER_HEIGHT}px)`,
-            overflowY: "auto",       
-            position: "relative",    
-            zIndex: 60,             
+            overflowY: "auto",
+            position: "relative",
+            zIndex: 60,
             opacity: terminalHeight < MIN_VISIBLE_TERMINAL_HEIGHT ? 0 : 1,
             pointerEvents: terminalHeight < MIN_VISIBLE_TERMINAL_HEIGHT ? "none" : "auto",
             transition: "opacity 0.3s",
@@ -1426,9 +1427,17 @@ export default function PlaygroundsPage() {
   return (
     <div className="flex flex-col h-screen bg-black text-white relative overflow-hidden">
       {/* Header */}
-      <header className="h-12 bg-black border-b border-gray-500 flex items-center px-4">
+      <header className="h-12 bg-zinc-900 border-b border-gray-300 flex items-center px-4 flex justify-between">
         <div className="px-3 py-1 border border-purple-400 rounded text-sm">
           {user?.email || "Not Signed In"}
+        </div>
+        <div>
+          <button className="text-white-600 px-3 py-1 border border-purple-400 rounded text-sm font-cinzel hover:text-violet-300 transition mx-4">
+            <Link href="/">Home</Link>
+          </button>
+          <button className="text-white-600 px-3 py-1 border border-purple-400 rounded text-sm font-cinzel hover:text-violet-300 transition">
+            <Link href="/observe">Observe</Link>
+          </button>
         </div>
       </header>
       {/* Main Layout */}
