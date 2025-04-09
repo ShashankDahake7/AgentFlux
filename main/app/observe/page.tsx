@@ -516,7 +516,8 @@ const CustomObservePage: React.FC = () => {
             {/* Heading and Button Section */}
             <div className="flex items-center justify-between border-b border-gray-400 pb-2 mb-4">
               <h3 className="text-lg font-cinzel">Log Graphs</h3>
-              <button className="px-4 py-1 bg-fuchsia-300 text-gray-900 rounded hover:bg-gray-600 transition">
+              <button className="px-4 py-1 bg-fuchsia-300 text-gray-900 rounded hover:bg-purple-700 hover:text-white
+ transition">
                 Revert State
               </button>
             </div>
