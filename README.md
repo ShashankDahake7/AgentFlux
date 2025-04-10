@@ -54,3 +54,15 @@
     - Historical tracking of agent refinements and changes
     Detailed diff reports with visual highlighting
     Performance metrics and comparison across agent versions
+
+<br/>
+<div align="center">
+    <img src="main\public\vid1.gif" alt="AgentOps video1" width="800"/>
+</div>
+<br/>
+
+**AgentOps Studios**
+
+- Make studios with integrated EC2 configured containers to run your code.<br/>
+- Visualize your agent graphs wihtout changing a single of code.
+- Integrate with custom models from hugging face in a totally no-code environment.
