@@ -30,30 +30,30 @@
 - AgentOps is an advanced agent engineering platform that enables developers to build, test, visualize, and refine AI agent systems with unprecedented control and visibility. With an intuitive UI and powerful backend capabilities, AgentOps streamlines the process of creating reliable, dynamic agent graphs while providing comprehensive monitoring and optimization tools.
 
 2. Key Features:
-   - Interactive Playground Environment
-    Create and manage multiple playgrounds for different agent projects
-    Collaborative code editing with syntax highlighting and IntelliSense
-    Built-in terminal for real-time code execution and feedback
-    Agent Graph Visualization
+   - Interactive Playground Environment<br/>
+    Create and manage multiple playgrounds for different agent projects<br/>
+    Collaborative code editing with syntax highlighting and IntelliSense<br/>
+    Built-in terminal for real-time code execution and feedback<br/>
+
+    - Agent Graph visualization<br/>
+    Automatically extract and visualize agent relationships from code<br/>
+    Interactive node-based graph representation of agent structures<br/>
+    Visual indicators for model types and communication flows<br/>
     
-    - Automatically extract and visualize agent relationships from code
-    Interactive node-based graph representation of agent structures
-    Visual indicators for model types and communication flows
-    Intelligent Agent Refinement
+    - Intelligent Agent Refinement<br/>
+    Automated agent graph improvement suggestions<br/>
+    Advanced diff comparison between original and refined code<br/>
+    Selective merging of recommended changes<br/>
     
-    - Automated agent graph improvement suggestions
-    Advanced diff comparison between original and refined code
-    Selective merging of recommended changes
-    Model Management
+    - Model Management<br/>
+    Associate specific models with agent sheets<br/>
+    Control which LLMs are available for different agent components<br/>
+    Track model performance and resource utilization<br/>
     
-    - Associate specific models with agent sheets
-    Control which LLMs are available for different agent components
-    Track model performance and resource utilization
-    Comprehensive Observation Tools
-    
-    - Historical tracking of agent refinements and changes
-    Detailed diff reports with visual highlighting
-    Performance metrics and comparison across agent versions
+    - Comprehensive Observation Tools<br/>
+    Historical tracking of agent refinements and changes<br/>
+    Detailed diff reports with visual highlighting<br/>
+    Performance metrics and comparison across agent versions<br/>
 
 <br/>
 <div align="center">
@@ -70,7 +70,7 @@
 
 <div>
 <h3>Options for Agent Graphs Refinement</h3>
-  <table border="3" cellspacing="0" cellpadding="0">
+  <table border="2" cellspacing="0" cellpadding="0">
     <tr>
       <td style="padding-right: 30px;">
       Refine Prompts
