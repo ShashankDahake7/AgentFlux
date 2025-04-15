@@ -111,7 +111,7 @@ const CustomOutputNode = ({ data }: { data: { label: string; docstring: string }
             {data.label || "Output Node"}
         </div>
         <div style={{ padding: "8px", fontSize: "12px", lineHeight: "1.4" }}>
-            {data.docstring || "This node collects output from unknown destinations."}
+            {data.docstring || "This node collects output."}
         </div>
         {/* Source handle for outgoing connections (optional, remove if not needed) */}
         <Handle type="source" position={Position.Bottom} style={{ background: "#8e44ad" }} />
