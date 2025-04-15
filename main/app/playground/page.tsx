@@ -578,7 +578,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 title="Advanced settings"
                 className="text-gray-400 hover:text-gray-200 focus:outline-none"
               >
-                <span className="text-2xl leading-none">{'\u22EE'}</span>
+                <span className="text-2xl leading-none text-white hover:text-gray-800">{'\u22EE'}</span>
               </button>
             </div>
           </li>
