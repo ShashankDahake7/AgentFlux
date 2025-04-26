@@ -4,7 +4,7 @@
   <table border="0" cellspacing="0" cellpadding="0">
     <tr>
       <td style="padding-right: 30px;">
-        <img src="main\public\agentops-logo.gif" alt="AgentOps Logo" width="250"/>
+        <img src="main\public\agentops-logo.gif" alt="AgentOps Logo" width="280"/>
       </td>
       <td style="vertical-align: middle; font-size: 24px; font-weight: bold;">
         Agent Engineering for reliable & dynamic AI agents
