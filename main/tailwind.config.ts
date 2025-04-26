@@ -20,6 +20,7 @@ const config: Config = {
         merriweather: ["Merriweather", "serif"],
         quintessential: ["Quintessential", "cursive"],
         cookie: ["Cookie", "cursive"],
+        times: ['"Times New Roman"', 'serif'],
       },
     },
   },
