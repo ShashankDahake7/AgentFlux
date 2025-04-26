@@ -77,12 +77,17 @@ const Modal: React.FC<{ isOpen: boolean; onClose: () => void; children: React.Re
   isOpen,
   onClose,
   children,
+  style = "max-w-md",
 }) => (
   <div
     className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 transition-opacity duration-300 ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
       }`}
   >
-    <div className="bg-black border-2 border-gray-300 p-6 rounded-lg shadow-xl max-w-md w-full relative transform transition-transform duration-300">
+    <div className={`
+        bg-black border-2 border-gray-300 p-6 rounded-lg shadow-xl
+        w-full relative transform transition-transform duration-300
+        ${style}
+      `}>
       <button
         onClick={onClose}
         className="absolute top-2 right-2 text-gray-400 hover:text-gray-200 text-2xl"
@@ -458,18 +463,72 @@ export const AssociateModelsModal: React.FC<{
   sheets: Sheet[];
   onSubmit: (selectedSheetIds: string[], selectedModels: string[]) => void;
 }> = ({ isOpen, onClose, sheets, onSubmit }) => {
-  const availableModels = ["deepseek-r1", "gemini-1.5-pro", "gemini-1.5-flash", "gemini-2.0-flash", "openai-gpt-3.5-turbo", "openai-gpt-4", "mistralai/Mistral-7B-Instruct-v0.3"];
+  const availableModels = [
+    "deepseek-r1",
+    "gemini-1.5-pro",
+    "gemini-1.5-flash",
+    "gemini-2.0-flash",
+    "openai-gpt-3.5-turbo",
+    "openai-gpt-4",
+    "mistralai/Mistral-7B-Instruct-v0.3"
+  ];
+
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
   const [selectedSheetIds, setSelectedSheetIds] = useState<string[]>([]);
 
-  const handleModelSelect = (value: string) => {
-    setSelectedModels([...selectedModels, value]);
+  // Define explicit gradients for each model.
+  const modelGradients: { [key: string]: { default: string; selected: string } } = {
+    "deepseek-r1": {
+      selected: "bg-gradient-to-r from-red-400 to-yellow-500",
+      default: "bg-gradient-to-r from-red-600 to-yellow-700"
+    },
+    "gemini-1.5-pro": {
+      selected: "bg-gradient-to-r from-green-400 to-blue-500",
+      default: "bg-gradient-to-r from-green-600 to-blue-700"
+    },
+    "gemini-1.5-flash": {
+      selected: "bg-gradient-to-r from-green-400 to-blue-500",
+      default: "bg-gradient-to-r from-green-600 to-blue-700"
+    },
+    "gemini-2.0-flash": {
+      selected: "bg-gradient-to-r from-green-400 to-blue-500",
+      default: "bg-gradient-to-r from-green-600 to-blue-700"
+    },
+    "openai-gpt-3.5-turbo": {
+      selected: "bg-gradient-to-r from-purple-400 to-pink-500",
+      default: "bg-gradient-to-r from-purple-600 to-pink-700"
+    },
+    "openai-gpt-4": {
+      selected: "bg-gradient-to-r from-purple-400 to-pink-500",
+      default: "bg-gradient-to-r from-purple-600 to-pink-700"
+    },
+    "mistralai/Mistral-7B-Instruct-v0.3": {
+      selected: "bg-gradient-to-r from-indigo-400 to-purple-500",
+      default: "bg-gradient-to-r from-indigo-600 to-purple-700"
+    }
   };
 
-  const handleModelDeselect = (value: string) => {
-    setSelectedModels(selectedModels.filter((m) => m !== value));
+  // Dummy logos – replace the URLs with your actual assets.
+  const modelLogos: { [key: string]: string } = {
+    "deepseek-r1": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYpzFp7T95S6gDEFYMor4BT_eRZpVYx43HjacHa6Uc6Jmsond15fa32s0XzKEpBqSwUcU&usqp=CAU",
+    "gemini-1.5-pro": "https://cloudonair.withgoogle.com/api/assets?path=/gs/gweb-gc-gather-production.appspot.com/files/AFiumC5HS17acVQUTkwzerfEucSVvRMinXGOqC97Dtg5fREwhUful4BC97FFW2yEBLn9NPSd-7o.k0guz5CS4xZQu6H2",
+    "gemini-1.5-flash": "https://cloudonair.withgoogle.com/api/assets?path=/gs/gweb-gc-gather-production.appspot.com/files/AFiumC5HS17acVQUTkwzerfEucSVvRMinXGOqC97Dtg5fREwhUful4BC97FFW2yEBLn9NPSd-7o.k0guz5CS4xZQu6H2",
+    "gemini-2.0-flash": "https://cloudonair.withgoogle.com/api/assets?path=/gs/gweb-gc-gather-production.appspot.com/files/AFiumC5HS17acVQUTkwzerfEucSVvRMinXGOqC97Dtg5fREwhUful4BC97FFW2yEBLn9NPSd-7o.k0guz5CS4xZQu6H2",
+    "openai-gpt-3.5-turbo": "https://mir-s3-cdn-cf.behance.net/project_modules/fs/e50214173218977.648c4882a75d6.gif",
+    "openai-gpt-4": "https://mir-s3-cdn-cf.behance.net/project_modules/fs/e50214173218977.648c4882a75d6.gif",
+    "mistralai/Mistral-7B-Instruct-v0.3": "https://logosandtypes.com/wp-content/uploads/2025/02/mistral-ai.svg"
   };
 
+  // Toggle the selection of a model.
+  const handleModelToggle = (model: string) => {
+    if (selectedModels.includes(model)) {
+      setSelectedModels(selectedModels.filter((m) => m !== model));
+    } else {
+      setSelectedModels([...selectedModels, model]);
+    }
+  };
+
+  // Sheet selection handlers.
   const handleSheetSelect = (sheetId: string) => {
     setSelectedSheetIds([...selectedSheetIds, sheetId]);
   };
@@ -478,9 +537,12 @@ export const AssociateModelsModal: React.FC<{
     setSelectedSheetIds(selectedSheetIds.filter((id) => id !== sheetId));
   };
 
+  // On submit validation.
   const handleSubmit = () => {
-    if (selectedModels.length === 0) return alert("Please select at least one model.");
-    if (selectedSheetIds.length === 0) return alert("Please select at least one sheet.");
+    if (selectedModels.length === 0)
+      return alert("Please select at least one model.");
+    if (selectedSheetIds.length === 0)
+      return alert("Please select at least one sheet.");
     onSubmit(selectedSheetIds, selectedModels);
     setSelectedModels([]);
     setSelectedSheetIds([]);
@@ -488,34 +550,95 @@ export const AssociateModelsModal: React.FC<{
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <h2 className="text-xl font-bold text-gray-200 mb-4">Associate Models</h2>
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-200 mb-2">Select Models</h3>
-        <MultiSelectDropdown
-          options={availableModels}
-          selected={selectedModels}
-          onSelect={handleModelSelect}
-          onDeselect={handleModelDeselect}
-          placeholder="Select models..."
-        />
+    <Modal isOpen={isOpen} onClose={onClose} style="w-[900px]">
+      <div className="p-2 space-y-6">
+        <h2 className="text-xl font-cinzel text-gray-200">Associate Models</h2>
+
+        {/* Models Grid Section */}
+        <div>
+          <h3 className="text-lg font-times text-gray-200 mb-2">
+            Select Models
+          </h3>
+          <div className="grid grid-cols-3 gap-4">
+            {availableModels.map((model) => {
+              const isSelected = selectedModels.includes(model);
+              const gradientClass = isSelected
+                ? modelGradients[model].selected
+                : modelGradients[model].default;
+              return (
+                <button
+                  key={model}
+                  onClick={() => handleModelToggle(model)}
+                  className={`flex items-center font-times space-x-2 rounded-md px-3 py-2 border transition-all duration-300 ${gradientClass} hover:brightness-125`}
+                >
+                  <img
+                    src={modelLogos[model]}
+                    alt={`${model} logo`}
+                    className="w-[35px] h-[28px]"
+                  />
+                  <span className="text-white">{model}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Selected Models List */}
+        {selectedModels.length > 0 && (
+          <div>
+            <h3 className="text-lg font-times text-gray-200 mb-2">
+              Selected Models
+            </h3>
+            <ul className="space-y-2">
+              {selectedModels.map((model) => (
+                <li
+                  key={model}
+                  className="flex items-center font-times justify-between bg-stone-800 border border-gray-200 rounded px-3 py-2"
+                >
+                  <div className="flex items-center space-x-2">
+                    <img
+                      src={modelLogos[model]}
+                      alt={`${model} logo`}
+                      className="w-[28px] h-[25px]"
+                    />
+                    <span className="text-white">{model}</span>
+                  </div>
+                  <button
+                    onClick={() => handleModelToggle(model)}
+                    className="text-red-400 hover:text-red-600"
+                  >
+                    Remove
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Sheets Selection Section */}
+        <div>
+          <h3 className="text-lg font-times text-gray-200 mb-2">
+            Select Sheets
+          </h3>
+          <MultiSelectDropdownForSheets
+            options={sheets.map((sheet) => ({
+              id: sheet._id,
+              label: sheet.title
+            }))}
+            selected={selectedSheetIds}
+            onSelect={handleSheetSelect}
+            onDeselect={handleSheetDeselect}
+            placeholder="Select sheets..."
+          />
+        </div>
+
+        {/* Submit Button */}
+        <button onClick={handleSubmit}
+          className="relative w-full py-2 font-cinzel rounded border border-gray-200 text-gray-100 transition-all duration-500 overflow-hidden group bg-neutral-700">
+          <span className="absolute inset-0 bg-gradient-to-r from-rose-500 to-purple-500 opacity-0 transition-opacity duration-500 group-hover:opacity-100"></span>
+          <span className="relative">Associate</span>
+        </button>
       </div>
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-200 mb-2">Select Sheets</h3>
-        <MultiSelectDropdownForSheets
-          options={sheets.map((sheet) => ({ id: sheet._id, label: sheet.title }))}
-          selected={selectedSheetIds}
-          onSelect={handleSheetSelect}
-          onDeselect={handleSheetDeselect}
-          placeholder="Select sheets..."
-        />
-      </div>
-      <button
-        onClick={handleSubmit}
-        className="w-full py-2 bg-gray-700 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300"
-      >
-        Associate
-      </button>
     </Modal>
   );
 };
@@ -548,9 +671,9 @@ const Sidebar: React.FC<SidebarProps> = ({
   return (
     <div className="h-full flex flex-col">
       <div className="flex justify-between items-center mb-4 border-b border-gray-500 pb-2">
-        <h2 className="text-xl font-cinzel text-gray-200">Playgrounds</h2>
+        <h2 className="text-xl font-times text-gray-200">Playgrounds</h2>
       </div>
-      <ul className="flex-1 overflow-y-auto font-cinzel text-sm text-gray-200">
+      <ul className="flex-1 overflow-y-auto font-times text-sm text-gray-200">
         {playgrounds.map((pg) => (
           <li
             key={pg._id}
@@ -602,7 +725,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         />
         <a
           href="#"
-          className="text-sm font-cinzel transition-colors duration-200"
+          className="text-sm font-times transition-colors duration-200"
           style={{ color: "#c4b5fd" }}
           onMouseEnter={(e) => (e.currentTarget.style.color = "#f5deb3")}
           onMouseLeave={(e) => (e.currentTarget.style.color = "#c4b5fd")}
@@ -621,7 +744,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         {/* Button (3/4th width) */}
         <button
           onClick={onOpenAssociateModels}
-          className="flex-1 py-1 font-cinzel bg-gray-500 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300 ml-2"
+          className="flex-1 py-1 font-times bg-gray-500 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300 ml-2"
         >
           Associate Models
         </button>
@@ -629,7 +752,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       <button
         onClick={onAdd}
-        className="mt-2 py-2 font-cinzel bg-gray-500 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300"
+        className="mt-2 py-2 font-times bg-gray-500 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300"
       >
         Add Playground
       </button>
