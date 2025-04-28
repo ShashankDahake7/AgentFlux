@@ -84,7 +84,7 @@ const Modal: React.FC<{ isOpen: boolean; onClose: () => void; children: React.Re
       }`}
   >
     <div className={`
-        bg-black border-2 border-gray-300 p-6 rounded-lg shadow-xl
+        bg-black animated-border-nohover p-6 rounded-lg shadow-xl
         w-full relative transform transition-transform duration-300
         ${style}
       `}>
@@ -470,13 +470,13 @@ export const AssociateModelsModal: React.FC<{
     "gemini-2.0-flash",
     "openai-gpt-3.5-turbo",
     "openai-gpt-4",
-    "mistralai/Mistral-7B-Instruct-v0.3"
+    "mistralai/Mistral-7B-Instruct-v0.3",
+    "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
   ];
 
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
   const [selectedSheetIds, setSelectedSheetIds] = useState<string[]>([]);
 
-  // Define explicit gradients for each model.
   const modelGradients: { [key: string]: { default: string; selected: string } } = {
     "deepseek-r1": {
       selected: "bg-gradient-to-r from-red-400 to-yellow-500",
@@ -505,10 +505,13 @@ export const AssociateModelsModal: React.FC<{
     "mistralai/Mistral-7B-Instruct-v0.3": {
       selected: "bg-gradient-to-r from-indigo-400 to-purple-500",
       default: "bg-gradient-to-r from-indigo-600 to-purple-700"
+    },
+    "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B": {
+      selected: "bg-gradient-to-r from-red-400 to-yellow-500",
+      default: "bg-gradient-to-r from-red-600 to-yellow-700"
     }
   };
 
-  // Dummy logos – replace the URLs with your actual assets.
   const modelLogos: { [key: string]: string } = {
     "deepseek-r1": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYpzFp7T95S6gDEFYMor4BT_eRZpVYx43HjacHa6Uc6Jmsond15fa32s0XzKEpBqSwUcU&usqp=CAU",
     "gemini-1.5-pro": "https://cloudonair.withgoogle.com/api/assets?path=/gs/gweb-gc-gather-production.appspot.com/files/AFiumC5HS17acVQUTkwzerfEucSVvRMinXGOqC97Dtg5fREwhUful4BC97FFW2yEBLn9NPSd-7o.k0guz5CS4xZQu6H2",
@@ -516,7 +519,8 @@ export const AssociateModelsModal: React.FC<{
     "gemini-2.0-flash": "https://cloudonair.withgoogle.com/api/assets?path=/gs/gweb-gc-gather-production.appspot.com/files/AFiumC5HS17acVQUTkwzerfEucSVvRMinXGOqC97Dtg5fREwhUful4BC97FFW2yEBLn9NPSd-7o.k0guz5CS4xZQu6H2",
     "openai-gpt-3.5-turbo": "https://mir-s3-cdn-cf.behance.net/project_modules/fs/e50214173218977.648c4882a75d6.gif",
     "openai-gpt-4": "https://mir-s3-cdn-cf.behance.net/project_modules/fs/e50214173218977.648c4882a75d6.gif",
-    "mistralai/Mistral-7B-Instruct-v0.3": "https://logosandtypes.com/wp-content/uploads/2025/02/mistral-ai.svg"
+    "mistralai/Mistral-7B-Instruct-v0.3": "https://logosandtypes.com/wp-content/uploads/2025/02/mistral-ai.svg",
+    "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYpzFp7T95S6gDEFYMor4BT_eRZpVYx43HjacHa6Uc6Jmsond15fa32s0XzKEpBqSwUcU&usqp=CAU"
   };
 
   // Toggle the selection of a model.
@@ -550,7 +554,7 @@ export const AssociateModelsModal: React.FC<{
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} style="w-[900px]">
+    <Modal isOpen={isOpen} onClose={onClose} style="max-w-[75vw]">
       <div className="p-2 space-y-6">
         <h2 className="text-xl font-cinzel text-gray-200">Associate Models</h2>
 
@@ -1618,7 +1622,7 @@ export default function PlaygroundsPage() {
                   />
                   <button
                     onClick={handleRunCode}
-                    className="animated-border absolute bottom-[50px] right-4 z-10 px-4 py-2 text-white bg-black rounded-md shadow-md border-[3px] border-solid"
+                    className="animated-border absolute bottom-[50px] right-4 z-10 px-5 py-3 text-white bg-black rounded-md shadow-md hover:bg-gray-400"
                   >
                     Run Code
                   </button>
