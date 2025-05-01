@@ -3,54 +3,107 @@
 @tailwind utilities;
 
 @layer base {
-  .font-montserrat {
-    font-family: "Montserrat", sans-serif;
-  }
-}
-
-@keyframes borderMove {
-  0% {
-    border-image: linear-gradient(0deg, #fd0866, #8d3cff) 1;
+  :root {
+    --border-radius: 8px;
+    --border-width: 2px;
+    --button-bg: #1b1a1a;
   }
 
-  50% {
-    border-image: linear-gradient(180deg, #fd0866, #8d3cff) 1;
+  .animated-border {
+    position: relative;
+    display: inline-block;
+    border-radius: var(--border-radius);
+    z-index: 0;
   }
 
-  100% {
-    border-image: linear-gradient(360deg, #fd0866, #8d3cff) 1;
+  .animated-border::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(45deg,
+        /* #ff595e,
+        #ffca3a,
+        #8ac926, */
+        #6a00ff,
+        #c490ff,
+        #fd0866);
+    background-size: 500%;
+    animation: glow 20s linear infinite;
+    z-index: -2;
   }
-}
 
-@keyframes borderMoveHover {
-  0% {
-    border-image: linear-gradient(0deg, #00ffcc, #ffcc00) 1;
+  .animated-border::after {
+    content: "";
+    position: absolute;
+    top: var(--border-width);
+    left: var(--border-width);
+    right: var(--border-width);
+    bottom: var(--border-width);
+    background: var(--button-bg);
+    border-radius: calc(var(--border-radius) - var(--border-width));
+    z-index: -1;
+    transition: background-color 0.3s ease;
   }
 
-  50% {
-    border-image: linear-gradient(180deg, #00ffcc, #ffcc00) 1;
+  .animated-border:hover::after {
+    background-color: #393a3b;
   }
 
-  100% {
-    border-image: linear-gradient(360deg, #00ffcc, #ffcc00) 1;
+
+  /* New class without hover effect */
+  .animated-border-nohover {
+    position: relative;
+    display: inline-block;
+    border-radius: var(--border-radius);
+    z-index: 0;
   }
-}
 
-.animated-border {
-  border-width: 3px;
-  border-style: solid;
-  border-image-slice: 1;
-  animation: borderMove 3s linear infinite;
-  transition: all 1s ease-in-out;
-}
+  .animated-border-nohover::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(45deg,
+        #1982c4,
+        #bc81f8,
+        #ff7d7d);
+    background-size: 400%;
+    animation: glow 20s linear infinite;
+    z-index: -2;
+  }
 
-.animated-border:hover {
-  animation: borderMoveHover 3s linear infinite;
+  .animated-border-nohover::after {
+    content: "";
+    position: absolute;
+    top: var(--border-width);
+    left: var(--border-width);
+    right: var(--border-width);
+    bottom: var(--border-width);
+    background: var(--button-bg);
+    border-radius: calc(var(--border-radius) - var(--border-width));
+    z-index: -1;
+  }
+
+  @keyframes glow {
+    0% {
+      background-position: 0 0;
+    }
+
+    50% {
+      background-position: 100% 0;
+    }
+
+    100% {
+      background-position: 0 0;
+    }
+  }
 }
 
 .xterm .xterm-rows {
   transform: translateY(-20px);
 }
+
 .xterm {
   position: absolute;
   z-index: -1;
