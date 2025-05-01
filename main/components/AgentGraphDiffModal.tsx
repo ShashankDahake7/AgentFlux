@@ -41,7 +41,7 @@ const AgentGraphDiffModal: React.FC<AgentGraphDiffModalProps> = ({
             className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 transition-opacity duration-300 ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
                 }`}
         >
-            <div className="bg-black border-2 border-gray-400 p-6 rounded-lg shadow-xl w-[95vw] h-[90vh] relative flex flex-col transform transition-transform duration-300">
+            <div className="bg-black animated-border-nohover p-6 rounded-lg shadow-xl w-[95vw] h-[90vh] relative flex flex-col transform transition-transform duration-300">
                 {/* Close Button */}
                 <button
                     onClick={onClose}

@@ -77,14 +77,14 @@ const Modal: React.FC<{ isOpen: boolean; onClose: () => void; children: React.Re
   isOpen,
   onClose,
   children,
-  style = "max-w-md",
+  style = "max-w-lg",
 }) => (
   <div
     className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 transition-opacity duration-300 ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
       }`}
   >
     <div className={`
-        bg-black animated-border-nohover p-6 rounded-lg shadow-xl
+        bg-black animated-border-nohover p-10 rounded-lg shadow-xl
         w-full relative transform transition-transform duration-300
         ${style}
       `}>
