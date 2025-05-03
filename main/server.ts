@@ -8,7 +8,6 @@ import fs from "fs";
 import path from "path";
 import admin, { ServiceAccount } from "firebase-admin";
 import dbConnect from "./lib/mongodb";
-// Import the graph injection function
 import { injectGraphVisualization } from "./injectGraphVisualization";
 
 /* ====================
@@ -149,6 +148,28 @@ function extractGraphFromOutput(output: string): any | null {
     return null;
   } catch (error) {
     console.error("Error parsing graph JSON from output:", error);
+    return null;
+  }
+}
+
+/**
+ * Extracts the timings dictionary from the output string.
+ * Expects the JSON to be printed between:
+ * ---TIMINGS_JSON_BEGIN--- and ---TIMINGS_JSON_END---
+ */
+function extractTimingsFromOutput(output: string): any | null {
+  try {
+    const regex = /---TIMINGS_JSON_BEGIN---\s*([\s\S]+?)\s*---TIMINGS_JSON_END---/;
+    const match = output.match(regex);
+    if (match && match[1]) {
+      const jsonStr = match[1].trim();
+      const timings = JSON.parse(jsonStr);
+      console.log("Timings extracted from output markers:", timings);
+      return timings;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error parsing timings JSON from output:", error);
     return null;
   }
 }
@@ -326,6 +347,35 @@ io.on("connection", (socket: Socket) => {
 
                 stream.on("close", (code: number, signal: string) => {
                   socket.emit("message", `\r\nBackend: Process exited with code ${code}.\r\n`);
+
+                  // NEW: If the process exits with code 0, record the run details.
+                  if (code == 0) {
+                    // Remove the injected graph data from the output.
+                    const cleanedOutput = outputBuffer.replace(/---GRAPH_STRUCTURE_BEGIN---[\s\S]*?---GRAPH_STRUCTURE_END---/g, "").trim();
+                    // Extract timings using the new markers.
+                    const timings = extractTimingsFromOutput(outputBuffer) || {};
+
+                    // Save the run record to MongoDB.
+                    dbConnect()
+                      .then(async () => {
+                        const RunModel = (await import("./models/Runs")).default;
+                        const newRun = new RunModel({
+                          sheetId: sheet._id,
+                          output: cleanedOutput,
+                          timings: timings,
+                        });
+                        newRun.save()
+                          .then(() => {
+                            console.log("Run record saved successfully.");
+                          })
+                          .catch((err: any) => {
+                            console.error("Error saving run record:", err);
+                          });
+                      })
+                      .catch((err) => {
+                        console.error("Error connecting to MongoDB for run record:", err);
+                      });
+                  }
                   conn.end();
                 });
               });
