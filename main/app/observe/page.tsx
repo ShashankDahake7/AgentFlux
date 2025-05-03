@@ -9,18 +9,20 @@ import { auth } from "@/app/firebase/firebaseConfig";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import Editor from "@monaco-editor/react";
-import { Bar } from "react-chartjs-2";
+import { Bar, Pie } from "react-chartjs-2";
 import {
   Chart,
   CategoryScale,
   LinearScale,
   BarElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend,
 } from "chart.js";
 
-Chart.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+// Register necessary chart components
+Chart.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 
 /* ===== Interface Definitions ===== */
 interface Playground {
@@ -191,7 +193,7 @@ const EnhancedSidebar: React.FC<EnhancedSidebarProps> = ({
   );
 };
 
-/* ===== Dynamic TimingBarChart Component ===== */
+/* ===== TimingBarChart Component ===== */
 interface Timing {
   time: number;
   model: string;
@@ -213,23 +215,32 @@ const TimingBarChart: React.FC<TimingBarChartProps> = ({
 
   // Define a list of 8 colors
   const colorList = [
-    "rgba(143, 255, 223, 0.79)",
-    "rgba(255, 99, 132, 0.7)",
-    "rgba(255, 206, 86, 0.7)",
-    "rgba(75, 192, 192, 0.7)",
-    "rgba(153, 102, 255, 0.7)",
-    "rgba(255, 159, 64, 0.7)",
-    "rgba(255, 74, 125, 0.7)",
-    "rgba(83, 102, 255, 0.7)",
+    "rgba(138, 43, 226,0.75)",   // blue violet
+    "rgba(255, 20, 147,0.75)",   // deep pink
+    "rgba(60, 179, 113,0.75)",   // medium sea green
+    "rgba(199, 21, 133,0.75)",   // medium violet red
+    "rgba(0, 255, 127,0.75)",    // spring green
+    "rgba(186, 85, 211,0.75)",   // medium orchid
+    "rgba(0, 191, 255,0.75)",    // deep sky blue
+    "rgba(255, 99, 71,0.75)",    // tomato red
+    "rgba(123, 104, 238,0.75)",  // medium slate blue
+    "rgba(152, 251, 152,0.75)",  // pale green
   ];
 
-  // Randomly assign a color for each agent.
+
+
   const getRandomColors = (agents: string[]): { [agent: string]: string } => {
-    const shuffledColors = [...colorList].sort(() => 0.5 - Math.random());
     const mapping: { [agent: string]: string } = {};
+
+    // Make a copy and shuffle the color list
+    const shuffledColors = [...colorList].sort(() => 0.5 - Math.random());
+
     agents.forEach((agent, index) => {
-      mapping[agent] = shuffledColors[index % shuffledColors.length];
+      // If there are more agents than colors, wrap around or generate a fallback
+      const color = shuffledColors[index] || `hsl(${Math.random() * 360}, 100%, 70%)`;
+      mapping[agent] = color;
     });
+
     return mapping;
   };
 
@@ -253,9 +264,7 @@ const TimingBarChart: React.FC<TimingBarChartProps> = ({
     plugins: {
       legend: {
         position: "top" as const,
-        labels: {
-          color: "white",
-        },
+        labels: { color: "white" },
       },
       title: {
         display: true,
@@ -270,27 +279,103 @@ const TimingBarChart: React.FC<TimingBarChartProps> = ({
     scales: {
       x: {
         stacked: true,
-        ticks: {
-          color: "white",
-        },
-        grid: {
-          color: "rgba(255, 255, 255, 0.39)",
-        },
+        ticks: { color: "white" },
+        grid: { color: "rgba(255, 255, 255, 0.39)" },
       },
       y: {
         stacked: true,
         beginAtZero: true,
-        ticks: {
-          color: "white",
-        },
-        grid: {
-          color: "rgba(255, 255, 255, 0.1)",
-        },
+        ticks: { color: "white" },
+        grid: { color: "rgba(255, 255, 255, 0.1)" },
       },
     },
   };
 
   return <Bar data={data} options={options} />;
+};
+
+/* ===== Helper and ModelPieChart Component ===== */
+const aggregateTimings = (
+  timings: { [agent: string]: { time: number; model: string } }
+): { [model: string]: number } => {
+  const aggregated: { [model: string]: number } = {};
+  Object.values(timings).forEach(({ time, model }) => {
+    if (model) {
+      aggregated[model] = (aggregated[model] || 0) + time;
+    }
+  });
+  return aggregated;
+};
+
+interface ModelPieChartProps {
+  title: string;
+  timings: { [agent: string]: { time: number; model: string } };
+}
+
+const ModelPieChart: React.FC<ModelPieChartProps> = ({ title, timings }) => {
+  const aggregated = aggregateTimings(timings);
+  const labels = Object.keys(aggregated);
+  const dataValues = labels.map((label) => aggregated[label]);
+
+  const colorList = [
+    "rgba(255, 0, 255, 0.65)",   // magenta
+    "rgba(0, 255, 0, 0.65)",     // lime green
+    "rgba(255, 165, 0, 0.65)",   // orange
+    "rgba(0, 0, 255, 0.65)",     // blue
+    "rgba(255, 0, 0, 0.65)",     // red
+    "rgba(0, 255, 255, 0.65)",   // cyan
+    "rgba(255, 105, 180, 0.65)", // hot pink
+    "rgba(255, 255, 0, 0.65)",   // yellow
+    "rgba(138, 43, 226, 0.65)",  // blue violet
+    "rgba(255, 99, 71, 0.65)",   // tomato red
+  ];
+
+  // Pick random color for each label dynamically
+  const shuffledColors = [...colorList].sort(() => 0.5 - Math.random());
+  const backgroundColors = labels.map((_, index) => {
+    return shuffledColors[index] || `hsl(${Math.random() * 360}, 100%, 70%)`;
+  });
+
+
+  const data = {
+    labels,
+    datasets: [
+      {
+        data: dataValues,
+        backgroundColor: backgroundColors,
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    layout: {
+      padding: 5, // minimal overall padding
+    },
+    plugins: {
+      legend: {
+        position: "right" as const,
+        labels: {
+          color: "white",
+          font: { size: 12 },
+        },
+      },
+      title: {
+        display: true,
+        text: title,
+        color: "white",
+        padding: { top: 2, bottom: 2 },
+        font: { size: 14 },
+      },
+      tooltip: {
+        bodyColor: "white",
+        titleColor: "white",
+      },
+    },
+  };
+
+  return <Pie data={data} options={options} />;
 };
 
 /* ===== Main Observe Page Component ===== */
@@ -301,7 +386,7 @@ const CustomObservePage: React.FC = () => {
   const router = useRouter();
 
   // ------------------------- LAYOUT STATES -------------------------
-  const [topSectionHeight, setTopSectionHeight] = useState<number>(45);
+  const [topSectionHeight, setTopSectionHeight] = useState<number>(46);
   const bottomSectionHeight = 100 - topSectionHeight;
   const [sideBarWidth, setSideBarWidth] = useState<number>(16);
   const [bottomRightWidth, setBottomRightWidth] = useState<number>(50);
@@ -589,6 +674,88 @@ const CustomObservePage: React.FC = () => {
     return [];
   };
 
+  // ------------------------- Compute Graph Area Content -------------------------
+  // By default, show the original placeholder boxes.
+  let graphContent = (
+    <div className="flex gap-4 h-full pb-12">
+      <div className="flex-1 bg-stone-900 border border-gray-300 rounded flex items-center justify-center">
+        <p className="text-sm">Line Chart: Agent Runtime (Before/After)</p>
+      </div>
+      <div className="flex-1 bg-stone-900 border border-gray-300 rounded flex items-center justify-center">
+        <p className="text-sm">Pie Chart: Agent Run Distribution</p>
+      </div>
+      <div className="flex-1 bg-stone-900 border border-gray-300 rounded flex items-center justify-center">
+        <p className="text-sm">Placeholder: Refined Model Output</p>
+      </div>
+    </div>
+  );
+
+  if (selectedRefineHistory && selectedSheet && sheetRuns[selectedSheet._id]) {
+    const runsForSheet: Run[] = [...sheetRuns[selectedSheet._id]].sort(
+      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
+    const refineTime = new Date(selectedRefineHistory.timestamp).getTime();
+    let beforeRun: Run | null = null;
+    let afterRun: Run | null = null;
+    for (const run of runsForSheet) {
+      const runTime = new Date(run.timestamp).getTime();
+      if (runTime <= refineTime) {
+        beforeRun = run;
+      } else if (runTime > refineTime && !afterRun) {
+        afterRun = run;
+        break;
+      }
+    }
+    // Only if there is a valid beforeRun, we show actual charts.
+    if (beforeRun) {
+      const beforeTimings = beforeRun.timings;
+      const afterTimings = afterRun
+        ? afterRun.timings
+        : Object.fromEntries(
+          Object.keys(beforeTimings).map((key) => [key, { time: 0, model: "" }])
+        );
+      graphContent = (
+        <div className="flex gap-4 h-full pb-12">
+          {/* First Column: Timing Bar Chart */}
+          <div
+            className="bg-stone-900 border-2 p-2 border-gray-300 rounded flex items-center justify-center"
+            style={{ width: "30%" }}
+          >
+            <TimingBarChart beforeTimings={beforeTimings} afterTimings={afterTimings} />
+          </div>
+          {/* Second Column: Two Pie Charts */}
+          <div className="flex flex-col gap-2" style={{ width: "30%" }}>
+            <div
+              className="bg-stone-900 border-2 p-2 border-gray-300 rounded flex items-center justify-center"
+              style={{ height: "50%" }}
+            >
+              <ModelPieChart
+                title="Before Refine Model Distribution"
+                timings={beforeTimings}
+              />
+            </div>
+            <div
+              className="bg-stone-900 border-2 p-2 border-gray-300 rounded flex items-center justify-center"
+              style={{ height: "50%" }}
+            >
+              <ModelPieChart
+                title="After Refine Model Distribution"
+                timings={afterRun ? afterRun.timings : {}}
+              />
+            </div>
+          </div>
+          {/* Third Column: Refined Model Output */}
+          <div
+            className="bg-stone-900 border border-gray-300 rounded flex items-center justify-center"
+            style={{ width: "40%" }}
+          >
+            <p className="text-sm">Refined Model Output</p>
+          </div>
+        </div>
+      );
+    }
+  }
+
   return (
     <div className="flex flex-col h-screen bg-black text-white overflow-hidden font-cinzel">
       {/* Header */}
@@ -638,55 +805,8 @@ const CustomObservePage: React.FC = () => {
               </button>
             </div>
 
-            {/* Graph Area: Three columns */}
-            <div className="flex gap-4 h-full pb-12">
-              {/* First Column: Render TimingBarChart only if a refine is selected */}
-              <div className="flex-1 bg-stone-900 border border-gray-300 rounded flex items-center justify-center">
-                {selectedRefineHistory && selectedSheet && sheetRuns[selectedSheet._id] ? (
-                  (() => {
-                    const runsForSheet: Run[] = [...sheetRuns[selectedSheet._id]].sort(
-                      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-                    );
-                    const refineTime = new Date(selectedRefineHistory.timestamp).getTime();
-                    let beforeRun: Run | null = null;
-                    let afterRun: Run | null = null;
-                    for (const run of runsForSheet) {
-                      const runTime = new Date(run.timestamp).getTime();
-                      if (runTime <= refineTime) {
-                        beforeRun = run;
-                      } else if (runTime > refineTime && !afterRun) {
-                        afterRun = run;
-                        break;
-                      }
-                    }
-                    const emptyTimings = {};
-                    // If only one run exists, show before run timings and zeros for after run.
-                    const beforeTimings = beforeRun ? beforeRun.timings : emptyTimings;
-                    const afterTimings = afterRun ? afterRun.timings : Object.fromEntries(
-                      Object.keys(beforeTimings).map(key => [key, { time: 0, model: "" }])
-                    );
-                    return (
-                      <div style={{ width: "100%", height: "100%" }}>
-                        <TimingBarChart beforeTimings={beforeTimings} afterTimings={afterTimings} />
-
-                      </div>
-                    );
-                  })()
-                ) : (
-                  <p className="text-sm">Line Chart: Agent Runtime (Before/After)</p>
-                )}
-              </div>
-
-              {/* Second Column: Pie Chart Placeholder */}
-              <div className="flex-1 bg-stone-900 border border-gray-300 rounded flex items-center justify-center">
-                <p className="text-sm">Pie Chart: Agent Run Distribution</p>
-              </div>
-
-              {/* Third Column: Refined Model Output Placeholder */}
-              <div className="flex-1 bg-stone-900 border border-gray-300 rounded flex items-center justify-center">
-                <p className="text-sm">Placeholder: Refined Model Output</p>
-              </div>
-            </div>
+            {/* Graph Area */}
+            {graphContent}
           </div>
         </div>
 
