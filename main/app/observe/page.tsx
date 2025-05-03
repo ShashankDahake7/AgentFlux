@@ -9,7 +9,22 @@ import { auth } from "@/app/firebase/firebaseConfig";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import Editor from "@monaco-editor/react";
+import { Bar, Pie } from "react-chartjs-2";
+import {
+  Chart,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
 
+// Register necessary chart components
+Chart.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
+
+/* ===== Interface Definitions ===== */
 interface Playground {
   _id: string;
   userId: string;
@@ -42,12 +57,21 @@ interface Sheet {
   playgroundId?: string;
 }
 
-interface RefineHistory {
+export interface RefineHistory {
   _id: string;
   sheetId: string;
   diffReport: { [filename: string]: string };
   mergedFiles: { [filename: string]: string };
   timestamp: string;
+}
+
+interface Run {
+  _id: string;
+  sheetId: string;
+  timestamp: string;
+  output: string;
+  // The timings dictionary is now dynamic—it can have any keys.
+  timings: { [agent: string]: { time: number; model: string } };
 }
 
 interface EnhancedSidebarProps {
@@ -59,6 +83,7 @@ interface EnhancedSidebarProps {
   fetchRefineHistories: (sheetId: string) => void;
 }
 
+/* ===== Enhanced Sidebar Component ===== */
 const EnhancedSidebar: React.FC<EnhancedSidebarProps> = ({
   playgrounds,
   sheets,
@@ -67,12 +92,8 @@ const EnhancedSidebar: React.FC<EnhancedSidebarProps> = ({
   onRefineHistorySelect,
   fetchRefineHistories,
 }) => {
-  const [expandedPlaygrounds, setExpandedPlaygrounds] = useState<{
-    [pgId: string]: boolean;
-  }>({});
-  const [expandedSheets, setExpandedSheets] = useState<{
-    [sheetId: string]: boolean;
-  }>({});
+  const [expandedPlaygrounds, setExpandedPlaygrounds] = useState<{ [pgId: string]: boolean }>({});
+  const [expandedSheets, setExpandedSheets] = useState<{ [sheetId: string]: boolean }>({});
 
   const handlePlaygroundToggle = (pg: Playground) => {
     setExpandedPlaygrounds((prev) => ({ ...prev, [pg._id]: !prev[pg._id] }));
@@ -98,11 +119,11 @@ const EnhancedSidebar: React.FC<EnhancedSidebarProps> = ({
             >
               <div className="flex items-center">
                 <Image
-                  src="/obs2.png" // Path to your logo
+                  src="/obs2.png"
                   alt="Logo"
                   width={20}
                   height={20}
-                  className="mr-2" // Adds some spacing between the logo and playground name
+                  className="mr-2"
                   priority
                 />
                 <span className="text-white">{pg.name}</span>
@@ -172,33 +193,219 @@ const EnhancedSidebar: React.FC<EnhancedSidebarProps> = ({
   );
 };
 
+/* ===== TimingBarChart Component ===== */
+interface Timing {
+  time: number;
+  model: string;
+}
+
+interface TimingBarChartProps {
+  beforeTimings: { [agent: string]: Timing };
+  afterTimings: { [agent: string]: Timing };
+}
+
+const TimingBarChart: React.FC<TimingBarChartProps> = ({
+  beforeTimings,
+  afterTimings,
+}) => {
+  // Create a union of agent keys dynamically
+  const agentKeys = Array.from(
+    new Set([...Object.keys(beforeTimings), ...Object.keys(afterTimings)])
+  );
+
+  // Define a list of 8 colors
+  const colorList = [
+    "rgba(138, 43, 226,0.75)",   // blue violet
+    "rgba(255, 20, 147,0.75)",   // deep pink
+    "rgba(60, 179, 113,0.75)",   // medium sea green
+    "rgba(199, 21, 133,0.75)",   // medium violet red
+    "rgba(0, 255, 127,0.75)",    // spring green
+    "rgba(186, 85, 211,0.75)",   // medium orchid
+    "rgba(0, 191, 255,0.75)",    // deep sky blue
+    "rgba(255, 99, 71,0.75)",    // tomato red
+    "rgba(123, 104, 238,0.75)",  // medium slate blue
+    "rgba(152, 251, 152,0.75)",  // pale green
+  ];
+
+
+
+  const getRandomColors = (agents: string[]): { [agent: string]: string } => {
+    const mapping: { [agent: string]: string } = {};
+
+    // Make a copy and shuffle the color list
+    const shuffledColors = [...colorList].sort(() => 0.5 - Math.random());
+
+    agents.forEach((agent, index) => {
+      // If there are more agents than colors, wrap around or generate a fallback
+      const color = shuffledColors[index] || `hsl(${Math.random() * 360}, 100%, 70%)`;
+      mapping[agent] = color;
+    });
+
+    return mapping;
+  };
+
+  const colorMapping = getRandomColors(agentKeys);
+
+  // Build datasets dynamically for each agent.
+  const datasets = agentKeys.map((agent) => ({
+    label: agent,
+    data: [beforeTimings[agent]?.time ?? 0, afterTimings[agent]?.time ?? 0],
+    backgroundColor: colorMapping[agent],
+  }));
+
+  const data = {
+    labels: ["Before Refine", "After Refine"],
+    datasets,
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: "top" as const,
+        labels: { color: "white" },
+      },
+      title: {
+        display: true,
+        text: "Agent Execution Timings",
+        color: "white",
+      },
+      tooltip: {
+        bodyColor: "white",
+        titleColor: "white",
+      },
+    },
+    scales: {
+      x: {
+        stacked: true,
+        ticks: { color: "white" },
+        grid: { color: "rgba(255, 255, 255, 0.39)" },
+      },
+      y: {
+        stacked: true,
+        beginAtZero: true,
+        ticks: { color: "white" },
+        grid: { color: "rgba(255, 255, 255, 0.1)" },
+      },
+    },
+  };
+
+  return <Bar data={data} options={options} />;
+};
+
+/* ===== Helper and ModelPieChart Component ===== */
+const aggregateTimings = (
+  timings: { [agent: string]: { time: number; model: string } }
+): { [model: string]: number } => {
+  const aggregated: { [model: string]: number } = {};
+  Object.values(timings).forEach(({ time, model }) => {
+    if (model) {
+      aggregated[model] = (aggregated[model] || 0) + time;
+    }
+  });
+  return aggregated;
+};
+
+interface ModelPieChartProps {
+  title: string;
+  timings: { [agent: string]: { time: number; model: string } };
+}
+
+const ModelPieChart: React.FC<ModelPieChartProps> = ({ title, timings }) => {
+  const aggregated = aggregateTimings(timings);
+  const labels = Object.keys(aggregated);
+  const dataValues = labels.map((label) => aggregated[label]);
+
+  const colorList = [
+    "rgba(255, 0, 255, 0.65)",   // magenta
+    "rgba(0, 255, 0, 0.65)",     // lime green
+    "rgba(255, 165, 0, 0.65)",   // orange
+    "rgba(0, 0, 255, 0.65)",     // blue
+    "rgba(255, 0, 0, 0.65)",     // red
+    "rgba(0, 255, 255, 0.65)",   // cyan
+    "rgba(255, 105, 180, 0.65)", // hot pink
+    "rgba(255, 255, 0, 0.65)",   // yellow
+    "rgba(138, 43, 226, 0.65)",  // blue violet
+    "rgba(255, 99, 71, 0.65)",   // tomato red
+  ];
+
+  // Pick random color for each label dynamically
+  const shuffledColors = [...colorList].sort(() => 0.5 - Math.random());
+  const backgroundColors = labels.map((_, index) => {
+    return shuffledColors[index] || `hsl(${Math.random() * 360}, 100%, 70%)`;
+  });
+
+
+  const data = {
+    labels,
+    datasets: [
+      {
+        data: dataValues,
+        backgroundColor: backgroundColors,
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    layout: {
+      padding: 5, // minimal overall padding
+    },
+    plugins: {
+      legend: {
+        position: "right" as const,
+        labels: {
+          color: "white",
+          font: { size: 12 },
+        },
+      },
+      title: {
+        display: true,
+        text: title,
+        color: "white",
+        padding: { top: 2, bottom: 2 },
+        font: { size: 14 },
+      },
+      tooltip: {
+        bodyColor: "white",
+        titleColor: "white",
+      },
+    },
+  };
+
+  return <Pie data={data} options={options} />;
+};
+
+/* ===== Main Observe Page Component ===== */
 const CustomObservePage: React.FC = () => {
-  // Authentication and routing
+  // ------------------------- AUTHENTICATION -------------------------
   const [user, setUser] = useState<any>(null);
   const [token, setToken] = useState<string>("");
   const router = useRouter();
 
-  // Layout percentages
-  const [topSectionHeight, setTopSectionHeight] = useState<number>(35);
+  // ------------------------- LAYOUT STATES -------------------------
+  const [topSectionHeight, setTopSectionHeight] = useState<number>(46);
   const bottomSectionHeight = 100 - topSectionHeight;
-  const [sideBarWidth, setSideBarWidth] = useState<number>(20);
+  const [sideBarWidth, setSideBarWidth] = useState<number>(16);
   const [bottomRightWidth, setBottomRightWidth] = useState<number>(50);
 
-  // Data states
+  // ------------------------- DATA STATES -------------------------
   const [playgrounds, setPlaygrounds] = useState<Playground[]>([]);
   const [sheets, setSheets] = useState<Sheet[]>([]);
-  const [selectedPlayground, setSelectedPlayground] =
-    useState<Playground | null>(null);
+  const [selectedPlayground, setSelectedPlayground] = useState<Playground | null>(null);
   const [selectedSheet, setSelectedSheet] = useState<Sheet | null>(null);
   const [selectedFile, setSelectedFile] = useState<string>("");
   const [codeContent, setCodeContent] = useState<string>("");
   const [diffReport, setDiffReport] = useState<string>("");
   const [graphData, setGraphData] = useState<any>(null);
-  const [refineHistories, setRefineHistories] = useState<{
-    [sheetId: string]: RefineHistory[];
-  }>({});
+  const [refineHistories, setRefineHistories] = useState<{ [sheetId: string]: RefineHistory[] }>({});
+  const [sheetRuns, setSheetRuns] = useState<{ [sheetId: string]: Run[] }>({});
+  // selectedRefineHistory is set only when a refine history is clicked
+  const [selectedRefineHistory, setSelectedRefineHistory] = useState<RefineHistory | null>(null);
 
-  // ------------------------- AUTHENTICATION -------------------------
+  // ------------------------- AUTHENTICATION EFFECT -------------------------
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
@@ -224,8 +431,7 @@ const CustomObservePage: React.FC = () => {
         const data = await res.json();
         if (data.playgrounds && data.playgrounds.length > 0) {
           setPlaygrounds(data.playgrounds);
-          if (!selectedPlayground)
-            setSelectedPlayground(data.playgrounds[0]);
+          if (!selectedPlayground) setSelectedPlayground(data.playgrounds[0]);
         }
       } catch (error) {
         console.error("Error fetching playgrounds:", error);
@@ -239,20 +445,16 @@ const CustomObservePage: React.FC = () => {
     if (!selectedPlayground || !token) return;
     const fetchSheets = async () => {
       try {
-        const res = await fetch(
-          `/api/playgrounds/${selectedPlayground._id}/sheets`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const res = await fetch(`/api/playgrounds/${selectedPlayground._id}/sheets`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         const data = await res.json();
         if (data.sheets && data.sheets.length > 0) {
           setSheets(data.sheets);
           if (!selectedSheet) {
             setSelectedSheet(data.sheets[0]);
             const fileKeys =
-              data.sheets[0].mergedFiles &&
-                Object.keys(data.sheets[0].mergedFiles).length > 0
+              data.sheets[0].mergedFiles && Object.keys(data.sheets[0].mergedFiles).length > 0
                 ? Object.keys(data.sheets[0].mergedFiles)
                 : data.sheets[0].files
                   ? data.sheets[0].files.map((f: FileType) => f.filename)
@@ -260,13 +462,10 @@ const CustomObservePage: React.FC = () => {
             if (fileKeys.length > 0) {
               setSelectedFile(fileKeys[0]);
               setCodeContent(
-                data.sheets[0].mergedFiles &&
-                  data.sheets[0].mergedFiles[fileKeys[0]]
+                data.sheets[0].mergedFiles && data.sheets[0].mergedFiles[fileKeys[0]]
                   ? data.sheets[0].mergedFiles[fileKeys[0]]
                   : data.sheets[0].files
-                    ? data.sheets[0].files.find(
-                      (f: FileType) => f.filename === fileKeys[0]
-                    )?.code || ""
+                    ? data.sheets[0].files.find((f: FileType) => f.filename === fileKeys[0])?.code || ""
                     : ""
               );
             }
@@ -298,30 +497,46 @@ const CustomObservePage: React.FC = () => {
     }
   };
 
+  // ------------------------- FETCH RUNS FOR A SHEET -------------------------
+  const fetchSheetRuns = async (sheetId: string) => {
+    if (!token) return;
+    try {
+      const res = await fetch(`/api/runs?sheetId=${sheetId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.runs) {
+        setSheetRuns((prev) => ({ ...prev, [sheetId]: data.runs }));
+      }
+    } catch (error) {
+      console.error("Error fetching runs:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (!sheets || sheets.length === 0) return;
+    sheets.forEach((sheet) => fetchSheetRuns(sheet._id));
+  }, [sheets, token]);
+
   // ------------------------- UPDATE CODE AND DIFF CONTENT -------------------------
   useEffect(() => {
     if (selectedSheet && selectedFile) {
       const fileKeys =
-        selectedSheet.mergedFiles &&
-          Object.keys(selectedSheet.mergedFiles).length > 0
+        selectedSheet.mergedFiles && Object.keys(selectedSheet.mergedFiles).length > 0
           ? Object.keys(selectedSheet.mergedFiles)
           : selectedSheet.files
             ? selectedSheet.files.map((f: FileType) => f.filename)
             : [];
       if (fileKeys.includes(selectedFile)) {
         const newCode =
-          selectedSheet.mergedFiles &&
-            selectedSheet.mergedFiles[selectedFile]
+          selectedSheet.mergedFiles && selectedSheet.mergedFiles[selectedFile]
             ? selectedSheet.mergedFiles[selectedFile]
             : selectedSheet.files
-              ? selectedSheet.files.find(
-                (f: FileType) => f.filename === selectedFile
-              )?.code || ""
+              ? selectedSheet.files.find((f: FileType) => f.filename === selectedFile)?.code || ""
               : "";
         setCodeContent(newCode);
         const newDiff =
-          selectedSheet.diffReport &&
-            selectedSheet.diffReport[selectedFile]
+          selectedSheet.diffReport && selectedSheet.diffReport[selectedFile]
             ? selectedSheet.diffReport[selectedFile]
             : "";
         setDiffReport(newDiff);
@@ -333,18 +548,14 @@ const CustomObservePage: React.FC = () => {
   const fetchSheetById = async (sheetId: string) => {
     if (!selectedPlayground || !token) return;
     try {
-      const res = await fetch(
-        `/api/playgrounds/${selectedPlayground._id}/sheets/${sheetId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const res = await fetch(`/api/playgrounds/${selectedPlayground._id}/sheets/${sheetId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await res.json();
       if (data.sheet) {
         setSelectedSheet(data.sheet);
         const fileKeys =
-          data.sheet.mergedFiles &&
-            Object.keys(data.sheet.mergedFiles).length > 0
+          data.sheet.mergedFiles && Object.keys(data.sheet.mergedFiles).length > 0
             ? Object.keys(data.sheet.mergedFiles)
             : data.sheet.files
               ? data.sheet.files.map((f: FileType) => f.filename)
@@ -352,13 +563,10 @@ const CustomObservePage: React.FC = () => {
         if (fileKeys.length > 0) {
           setSelectedFile(fileKeys[0]);
           setCodeContent(
-            data.sheet.mergedFiles &&
-              data.sheet.mergedFiles[fileKeys[0]]
+            data.sheet.mergedFiles && data.sheet.mergedFiles[fileKeys[0]]
               ? data.sheet.mergedFiles[fileKeys[0]]
               : data.sheet.files
-                ? data.sheet.files.find(
-                  (f: FileType) => f.filename === fileKeys[0]
-                )?.code || ""
+                ? data.sheet.files.find((f: FileType) => f.filename === fileKeys[0])?.code || ""
                 : ""
           );
         }
@@ -403,9 +611,7 @@ const CustomObservePage: React.FC = () => {
     window.addEventListener("mouseup", onMouseUp);
   };
 
-  const handleBottomHorizontalResize = (
-    e: React.MouseEvent<HTMLDivElement>
-  ) => {
+  const handleBottomHorizontalResize = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     const startX = e.clientX;
     const startRight = bottomRightWidth;
@@ -422,7 +628,7 @@ const CustomObservePage: React.FC = () => {
     window.addEventListener("mouseup", onMouseUp);
   };
 
-  // ------------------------- SIDEBAR ACTIONS -------------------------
+  // ------------------------- PLAYGROUND & REFINE HISTORY HANDLERS -------------------------
   const handlePlaygroundSelect = (pg: Playground) => {
     if (selectedPlayground && selectedPlayground._id === pg._id) return;
     setSelectedPlayground(pg);
@@ -432,6 +638,7 @@ const CustomObservePage: React.FC = () => {
   };
 
   const selectRefineHistory = (sheet: Sheet, history: RefineHistory) => {
+    setSelectedRefineHistory(history);
     const updatedSheet = {
       ...sheet,
       mergedFiles: history.mergedFiles,
@@ -439,8 +646,7 @@ const CustomObservePage: React.FC = () => {
     };
     setSelectedSheet(updatedSheet);
     const fileKeys =
-      updatedSheet.mergedFiles &&
-        Object.keys(updatedSheet.mergedFiles).length > 0
+      updatedSheet.mergedFiles && Object.keys(updatedSheet.mergedFiles).length > 0
         ? Object.keys(updatedSheet.mergedFiles)
         : updatedSheet.files
           ? updatedSheet.files.map((f: FileType) => f.filename)
@@ -451,8 +657,7 @@ const CustomObservePage: React.FC = () => {
         updatedSheet.mergedFiles && updatedSheet.mergedFiles[fileKeys[0]]
           ? updatedSheet.mergedFiles[fileKeys[0]]
           : updatedSheet.files
-            ? updatedSheet.files.find((f: FileType) => f.filename === fileKeys[0])
-              ?.code || ""
+            ? updatedSheet.files.find((f: FileType) => f.filename === fileKeys[0])?.code || ""
             : ""
       );
     }
@@ -461,16 +666,95 @@ const CustomObservePage: React.FC = () => {
   // ------------------------- FILE TABS FOR BOTTOM PANES -------------------------
   const getFileKeys = (): string[] => {
     if (!selectedSheet) return [];
-    if (
-      selectedSheet.mergedFiles &&
-      Object.keys(selectedSheet.mergedFiles).length > 0
-    ) {
+    if (selectedSheet.mergedFiles && Object.keys(selectedSheet.mergedFiles).length > 0) {
       return Object.keys(selectedSheet.mergedFiles);
     } else if (selectedSheet.files) {
       return selectedSheet.files.map((f: FileType) => f.filename);
     }
     return [];
   };
+
+  // ------------------------- Compute Graph Area Content -------------------------
+  // By default, show the original placeholder boxes.
+  let graphContent = (
+    <div className="flex gap-4 h-full pb-12">
+      <div className="flex-1 bg-stone-900 border border-gray-300 rounded flex items-center justify-center">
+        <p className="text-sm">Line Chart: Agent Runtime (Before/After)</p>
+      </div>
+      <div className="flex-1 bg-stone-900 border border-gray-300 rounded flex items-center justify-center">
+        <p className="text-sm">Pie Chart: Agent Run Distribution</p>
+      </div>
+      <div className="flex-1 bg-stone-900 border border-gray-300 rounded flex items-center justify-center">
+        <p className="text-sm">Placeholder: Refined Model Output</p>
+      </div>
+    </div>
+  );
+
+  if (selectedRefineHistory && selectedSheet && sheetRuns[selectedSheet._id]) {
+    const runsForSheet: Run[] = [...sheetRuns[selectedSheet._id]].sort(
+      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
+    const refineTime = new Date(selectedRefineHistory.timestamp).getTime();
+    let beforeRun: Run | null = null;
+    let afterRun: Run | null = null;
+    for (const run of runsForSheet) {
+      const runTime = new Date(run.timestamp).getTime();
+      if (runTime <= refineTime) {
+        beforeRun = run;
+      } else if (runTime > refineTime && !afterRun) {
+        afterRun = run;
+        break;
+      }
+    }
+    // Only if there is a valid beforeRun, we show actual charts.
+    if (beforeRun) {
+      const beforeTimings = beforeRun.timings;
+      const afterTimings = afterRun
+        ? afterRun.timings
+        : Object.fromEntries(
+          Object.keys(beforeTimings).map((key) => [key, { time: 0, model: "" }])
+        );
+      graphContent = (
+        <div className="flex gap-4 h-full pb-12">
+          {/* First Column: Timing Bar Chart */}
+          <div
+            className="bg-stone-900 border-2 p-2 border-gray-300 rounded flex items-center justify-center"
+            style={{ width: "30%" }}
+          >
+            <TimingBarChart beforeTimings={beforeTimings} afterTimings={afterTimings} />
+          </div>
+          {/* Second Column: Two Pie Charts */}
+          <div className="flex flex-col gap-2" style={{ width: "30%" }}>
+            <div
+              className="bg-stone-900 border-2 p-2 border-gray-300 rounded flex items-center justify-center"
+              style={{ height: "50%" }}
+            >
+              <ModelPieChart
+                title="Before Refine Model Distribution"
+                timings={beforeTimings}
+              />
+            </div>
+            <div
+              className="bg-stone-900 border-2 p-2 border-gray-300 rounded flex items-center justify-center"
+              style={{ height: "50%" }}
+            >
+              <ModelPieChart
+                title="After Refine Model Distribution"
+                timings={afterRun ? afterRun.timings : {}}
+              />
+            </div>
+          </div>
+          {/* Third Column: Refined Model Output */}
+          <div
+            className="bg-stone-900 border border-gray-300 rounded flex items-center justify-center"
+            style={{ width: "40%" }}
+          >
+            <p className="text-sm">Refined Model Output</p>
+          </div>
+        </div>
+      );
+    }
+  }
 
   return (
     <div className="flex flex-col h-screen bg-black text-white overflow-hidden font-cinzel">
@@ -516,24 +800,13 @@ const CustomObservePage: React.FC = () => {
             {/* Heading and Button Section */}
             <div className="flex items-center justify-between border-b border-gray-400 pb-2 mb-4">
               <h3 className="text-lg font-cinzel">Log Graphs</h3>
-              <button className="px-4 py-1 bg-fuchsia-300 text-gray-900 rounded hover:bg-purple-700 hover:text-white
- transition">
+              <button className="px-4 py-1 bg-fuchsia-300 text-gray-900 rounded hover:bg-purple-700 hover:text-white transition">
                 Revert State
               </button>
             </div>
 
             {/* Graph Area */}
-            <div className="flex gap-4 h-full">
-              <div className="flex-1 bg-stone-900 border border-gray-300 rounded flex items-center justify-center">
-                <p className="text-sm">Line Chart: Agent Runtime (Before/After)</p>
-              </div>
-              <div className="flex-1 bg-stone-900 border border-gray-300 rounded flex items-center justify-center">
-                <p className="text-sm">Pie Chart: Agent Run Distribution</p>
-              </div>
-              <div className="flex-1 bg-stone-900 border border-gray-300 rounded flex items-center justify-center">
-                <p className="text-sm">Placeholder: Refined Model Output</p>
-              </div>
-            </div>
+            {graphContent}
           </div>
         </div>
 
@@ -555,9 +828,7 @@ const CustomObservePage: React.FC = () => {
                   <button
                     key={fname}
                     onClick={() => setSelectedFile(fname)}
-                    className={`px-2 py-1 border rounded text-xs transition-colors duration-200 border-gray-400 ${selectedFile === fname
-                      ? "bg-gray-700"
-                      : "bg-black hover:bg-gray-600"
+                    className={`px-2 py-1 border rounded text-xs transition-colors duration-200 border-gray-400 ${selectedFile === fname ? "bg-gray-700" : "bg-black hover:bg-gray-600"
                       }`}
                   >
                     {fname}
@@ -566,9 +837,7 @@ const CustomObservePage: React.FC = () => {
               </div>
             </div>
             <div className="px-3 py-4 pb-32">
-              {selectedSheet &&
-                selectedSheet.diffReport &&
-                selectedSheet.diffReport[selectedFile] ? (
+              {selectedSheet && selectedSheet.diffReport && selectedSheet.diffReport[selectedFile] ? (
                 <div
                   className="bg-zinc-800 border border-gray-300 rounded p-2 text-sm font-mono whitespace-pre-wrap"
                   dangerouslySetInnerHTML={{
@@ -597,9 +866,7 @@ const CustomObservePage: React.FC = () => {
                   <button
                     key={fname}
                     onClick={() => setSelectedFile(fname)}
-                    className={`px-2 py-1 border rounded text-xs transition-colors duration-200 border-gray-400 ${selectedFile === fname
-                      ? "bg-gray-800"
-                      : "bg-black hover:bg-gray-800"
+                    className={`px-2 py-1 border rounded text-xs transition-colors duration-200 border-gray-400 ${selectedFile === fname ? "bg-gray-800" : "bg-black hover:bg-gray-800"
                       }`}
                   >
                     {fname}
@@ -623,7 +890,6 @@ const CustomObservePage: React.FC = () => {
               />
             </div>
           </div>
-
         </div>
       </div>
       <div className="absolute bottom-0 left-0 right-0 bg-black border-t border-gray-400 p-2 flex items-center justify-between z-[999]">
