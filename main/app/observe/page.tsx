@@ -220,10 +220,10 @@ const TimingBarChart: React.FC<TimingBarChartProps> = ({
     "rgba(60, 179, 113,0.75)",   // medium sea green
     "rgba(199, 21, 133,0.75)",   // medium violet red
     "rgba(0, 255, 127,0.75)",    // spring green
-    "rgba(186, 85, 211,0.75)",   // medium orchid
+    "rgba(217, 64, 255, 0.75)",   // medium orchid
     "rgba(0, 191, 255,0.75)",    // deep sky blue
     "rgba(255, 99, 71,0.75)",    // tomato red
-    "rgba(123, 104, 238,0.75)",  // medium slate blue
+    "rgba(123, 104, 238, 0.75)",  // medium slate blue
     "rgba(152, 251, 152,0.75)",  // pale green
   ];
 
@@ -318,16 +318,16 @@ const ModelPieChart: React.FC<ModelPieChartProps> = ({ title, timings }) => {
   const dataValues = labels.map((label) => aggregated[label]);
 
   const colorList = [
-    "rgba(255, 0, 255, 0.65)",   // magenta
+    "rgba(255, 0, 123, 0.91)",   // magenta
     "rgba(0, 255, 0, 0.65)",     // lime green
-    "rgba(255, 165, 0, 0.65)",   // orange
+    "rgba(107, 255, 211, 0.85)",   // orange
     "rgba(0, 0, 255, 0.65)",     // blue
     "rgba(255, 0, 0, 0.65)",     // red
-    "rgba(0, 255, 255, 0.65)",   // cyan
-    "rgba(255, 105, 180, 0.65)", // hot pink
-    "rgba(255, 255, 0, 0.65)",   // yellow
+    "rgba(113, 255, 255, 0.88)",   // cyan
+    "rgba(255, 105, 105, 0.91)", // hot pink
+    "rgba(255, 154, 78, 0.95)",   // yellow
     "rgba(138, 43, 226, 0.65)",  // blue violet
-    "rgba(255, 99, 71, 0.65)",   // tomato red
+    "rgb(158, 129, 255)",   // tomato red
   ];
 
   // Pick random color for each label dynamically
@@ -365,7 +365,7 @@ const ModelPieChart: React.FC<ModelPieChartProps> = ({ title, timings }) => {
         display: true,
         text: title,
         color: "white",
-        padding: { top: 2, bottom: 2 },
+        padding: { top: 0, bottom: 2 },
         font: { size: 14 },
       },
       tooltip: {
@@ -800,7 +800,7 @@ const CustomObservePage: React.FC = () => {
             {/* Heading and Button Section */}
             <div className="flex items-center justify-between border-b border-gray-400 pb-2 mb-4">
               <h3 className="text-lg font-cinzel">Log Graphs</h3>
-              <button className="px-4 py-1 bg-fuchsia-300 text-gray-900 rounded hover:bg-purple-700 hover:text-white transition">
+              <button className="px-4 py-1 bg-purple-700 text-white rounded hover:bg-fuchsia-300 hover:text-gray-900 transition">
                 Revert State
               </button>
             </div>

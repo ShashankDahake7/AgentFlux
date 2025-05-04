@@ -23,7 +23,7 @@ export function injectGraphVisualization(code: string): string {
         for node in tree.body:
             if isinstance(node, ast.Assign) and isinstance(node.value, ast.Call):
                 for kw in node.value.keywords:
-                    if kw.arg == "model" and isinstance(kw.value, ast.Constant):
+                    if(kw.arg == "model" or "repo_id") and isinstance(kw.value, ast.Constant):
                         for tgt in node.targets:
                             if isinstance(tgt, ast.Name):
                                 model_defs[tgt.id] = kw.value.value
