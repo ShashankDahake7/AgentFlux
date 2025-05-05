@@ -2,156 +2,86 @@
 import React, { useState, useEffect } from "react";
 import Editor from "@monaco-editor/react";
 
-interface AgentResult {
-    diffReport: { [filename: string]: string };
-    refinedGraphCode: string;
-    refinedGraphDiagram: string;
-    brokenDownRefined: { [filename: string]: string };
-}
-
-interface CodeeditorProps {
+interface CodeditorModalProps {
     isOpen: boolean;
     onClose: () => void;
-    agentResult: AgentResult;
-    onMerge: (mergedFiles: { [filename: string]: string }) => void;
+    fileContents: { [filename: string]: string };
+    onMerge: (updatedFiles: { [filename: string]: string }) => void;
 }
 
-const Codeeditor: React.FC<CodeeditorProps> = ({
+const CodeditorModal: React.FC<CodeditorModalProps> = ({
     isOpen,
     onClose,
-    agentResult,
+    fileContents,
     onMerge,
 }) => {
-    const [activeMainTab, setActiveMainTab] = useState<"editable" | "original" | "graph">("editable");
-    const fileNames = Object.keys(agentResult.diffReport);
+    const fileNames = Object.keys(fileContents);
     const [activeFileTab, setActiveFileTab] = useState<string>(fileNames[0] || "");
-    const [editableCodes, setEditableCodes] = useState<{ [filename: string]: string }>({});
+    const [updatedFiles, setUpdatedFiles] = useState<{ [filename: string]: string }>({});
 
     useEffect(() => {
-        setEditableCodes(agentResult.brokenDownRefined);
-        if (fileNames.length > 0) setActiveFileTab(fileNames[0]);
-    }, [agentResult, fileNames]);
-
-    const handleMerge = () => {
-        onMerge(editableCodes);
-        onClose();
-    };
+        setUpdatedFiles(fileContents);
+        if (fileNames.length > 0) {
+            setActiveFileTab(fileNames[0]);
+        }
+    }, [fileContents, fileNames]);
 
     return (
         <div
             className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 transition-opacity duration-300 ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
                 }`}
         >
-            <div className="bg-black p-6 rounded-lg shadow-xl w-[95vw] h-[90vh] relative flex flex-col transform transition-transform duration-300">
-                {/* Close Button */}
-                <button
-                    onClick={onClose}
-                    className="absolute top-2 right-2 text-gray-400 hover:text-gray-200 text-2xl"
-                >
-                    &times;
-                </button>
-
-                <h2 className="text-2xl font-cinzel text-gray-200 mb-4">Agent Suggested Changes</h2>
-
-                {/* Main Tabs */}
-                <div className="flex border-b border-gray-500 mb-4">
-                    {["editable", "original", "graph"].map((tab) => (
+            <div className="bg-black p-6 rounded-lg shadow-xl w-[95vw] h-[90vh] relative flex flex-col">
+                {/* Header */}
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-2xl font-cinzel text-gray-200">Code Editor</h2>
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-200 text-2xl">
+                        &times;
+                    </button>
+                </div>
+                {/* File Tabs */}
+                <div className="flex space-x-2 mb-4 border-b border-gray-500 pb-2">
+                    {fileNames.map((filename) => (
                         <button
-                            key={tab}
-                            className={`px-4 py-2 ${activeMainTab === tab
-                                ? "border-b-2 border-purple-400 text-purple-400"
-                                : "text-gray-400"
+                            key={filename}
+                            onClick={() => setActiveFileTab(filename)}
+                            className={`px-3 py-1 rounded ${activeFileTab === filename
+                                    ? "bg-purple-400 text-white"
+                                    : "bg-gray-700 text-gray-200"
                                 }`}
-                            onClick={() => setActiveMainTab(tab as any)}
                         >
-                            {tab === "editable"
-                                ? "Editable Diff"
-                                : tab === "original"
-                                    ? "Original Code"
-                                    : "Graph Visualization"}
+                            {filename}
                         </button>
                     ))}
                 </div>
-
-                {/* Tab Content */}
-                <div className="flex-grow overflow-y-auto pr-1">
-                    {activeMainTab === "editable" && (
-                        <div>
-                            <div className="flex space-x-2 mb-2">
-                                {fileNames.map((filename) => (
-                                    <button
-                                        key={filename}
-                                        className={`px-3 py-1 rounded ${activeFileTab === filename
-                                            ? "bg-purple-400 text-white"
-                                            : "bg-gray-700 text-gray-200"
-                                            }`}
-                                        onClick={() => setActiveFileTab(filename)}
-                                    >
-                                        {filename}
-                                    </button>
-                                ))}
-                            </div>
-                            <div className="flex flex-col">
-                                <label className="mb-1 text-gray-300">
-                                    Editable Refined Code for {activeFileTab}:
-                                </label>
-                                <Editor
-                                    height="300px"
-                                    defaultLanguage="python"
-                                    theme="vs-dark"
-                                    value={editableCodes[activeFileTab] || ""}
-                                    onChange={(value) => {
-                                        if (value !== undefined)
-                                            setEditableCodes({
-                                                ...editableCodes,
-                                                [activeFileTab]: value,
-                                            });
-                                    }}
-                                    options={{
-                                        minimap: { enabled: false },
-                                        automaticLayout: true,
-                                    }}
-                                />
-                                <div className="mt-4">
-                                    <label className="mb-1 text-gray-300">Diff Report (Read-Only):</label>
-                                    <div
-                                        className="bg-gray-700 p-2 rounded max-h-64 overflow-auto text-sm text-white"
-                                        dangerouslySetInnerHTML={{
-                                            __html:
-                                                agentResult.diffReport[activeFileTab] || "<p>No diff available.</p>",
-                                        }}
-                                    ></div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {activeMainTab === "original" && (
-                        <div className="bg-gray-800 text-sm text-white p-4 rounded max-h-[70vh] overflow-auto">
-                            <pre>{agentResult.refinedGraphCode}</pre>
-                        </div>
-                    )}
-
-                    {activeMainTab === "graph" && (
-                        <div className="flex items-center justify-center h-[70vh] bg-gray-800 text-gray-400 rounded">
-                            <p>Graph Visualization (Coming Soon)</p>
-                        </div>
-                    )}
+                {/* Monaco Editor */}
+                <div className="flex-grow">
+                    <Editor
+                        height="100%"
+                        defaultLanguage="javascript"
+                        theme="vs-dark"
+                        value={updatedFiles[activeFileTab] || ""}
+                        onChange={(value) => {
+                            if (value !== undefined) {
+                                setUpdatedFiles((prev) => ({
+                                    ...prev,
+                                    [activeFileTab]: value,
+                                }));
+                            }
+                        }}
+                        options={{
+                            minimap: { enabled: false },
+                            automaticLayout: true,
+                        }}
+                    />
                 </div>
-
-                {/* Action Buttons: Merge and Revert State */}
+                {/* Merge Button */}
                 <div className="flex justify-end mt-4 pt-2 border-t border-gray-700">
                     <button
-                        onClick={handleMerge}
-                        className="px-4 py-2 bg-purple-300 hover:bg-purple-400 rounded text-black font-cinzel transition duration-200 mr-2"
+                        onClick={() => onMerge(updatedFiles)}
+                        className="px-4 py-2 bg-purple-300 hover:bg-purple-400 rounded text-black font-cinzel transition duration-200"
                     >
                         Merge
-                    </button>
-                    <button
-                        onClick={() => onClose()}
-                        className="px-4 py-2 bg-red-500 hover:bg-red-600 rounded text-white font-cinzel transition duration-200"
-                    >
-                        Revert State
                     </button>
                 </div>
             </div>
@@ -159,4 +89,4 @@ const Codeeditor: React.FC<CodeeditorProps> = ({
     );
 };
 
-export default Codeeditor;
+export default CodeditorModal;
