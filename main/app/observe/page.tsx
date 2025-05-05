@@ -5,10 +5,8 @@ import Image from "next/image";
 import { onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { ChevronUp, ChevronDown } from "lucide-react";
-import { auth } from "@/app/firebase/firebaseConfig";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import Editor from "@monaco-editor/react";
 import { Bar, Pie } from "react-chartjs-2";
 import {
   Chart,
@@ -20,6 +18,8 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import { auth } from "@/app/firebase/firebaseConfig";
+import CodeditorModal from "@/components/CodeditorModal";
 
 // Register necessary chart components
 Chart.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
@@ -70,7 +70,6 @@ interface Run {
   sheetId: string;
   timestamp: string;
   output: string;
-  // The timings dictionary is now dynamic—it can have any keys.
   timings: { [agent: string]: { time: number; model: string } };
 }
 
@@ -118,14 +117,7 @@ const EnhancedSidebar: React.FC<EnhancedSidebarProps> = ({
               className="cursor-pointer flex items-center justify-between bg-neutral-600 p-2 rounded border border-gray-300 hover:bg-zinc-800 transition-colors"
             >
               <div className="flex items-center">
-                <Image
-                  src="/obs2.png"
-                  alt="Logo"
-                  width={20}
-                  height={20}
-                  className="mr-2"
-                  priority
-                />
+                <Image src="/obs2.png" alt="Logo" width={20} height={20} className="mr-2" priority />
                 <span className="text-white">{pg.name}</span>
               </div>
               {expandedPlaygrounds[pg._id] ? (
@@ -149,7 +141,7 @@ const EnhancedSidebar: React.FC<EnhancedSidebarProps> = ({
                       <li key={sheet._id} className="mb-1">
                         <div
                           onClick={() => handleSheetToggle(sheet)}
-                          className="cursor-pointer flex items-center justify-between text-sm bg-zinc-700 p-1 rounded border border-gray-300 hover:bg-zinc-600 transition-colors"
+                          className="cursor-pointer font-quintessential flex items-center justify-between text-sm bg-zinc-700 p-1 rounded border border-gray-300 hover:bg-zinc-600 transition-colors"
                         >
                           <span className="text-white">{sheet.title}</span>
                           {expandedSheets[sheet._id] ? (
@@ -170,9 +162,7 @@ const EnhancedSidebar: React.FC<EnhancedSidebarProps> = ({
                               {(refineHistories[sheet._id] || []).map((history) => (
                                 <li
                                   key={history._id}
-                                  onClick={() =>
-                                    onRefineHistorySelect(sheet, history)
-                                  }
+                                  onClick={() => onRefineHistorySelect(sheet, history)}
                                   className="cursor-pointer text-xs border border-gray-400 rounded px-2 py-1 my-1 hover:bg-gray-700 transition-colors text-white"
                                 >
                                   {new Date(history.timestamp).toLocaleString()}
@@ -204,60 +194,41 @@ interface TimingBarChartProps {
   afterTimings: { [agent: string]: Timing };
 }
 
-const TimingBarChart: React.FC<TimingBarChartProps> = ({
-  beforeTimings,
-  afterTimings,
-}) => {
-  // Create a union of agent keys dynamically
+const TimingBarChart: React.FC<TimingBarChartProps> = ({ beforeTimings, afterTimings }) => {
   const agentKeys = Array.from(
     new Set([...Object.keys(beforeTimings), ...Object.keys(afterTimings)])
   );
-
-  // Define a list of 8 colors
   const colorList = [
-    "rgba(138, 43, 226,0.75)",   // blue violet
-    "rgba(255, 20, 147,0.75)",   // deep pink
-    "rgba(60, 179, 113,0.75)",   // medium sea green
-    "rgba(199, 21, 133,0.75)",   // medium violet red
-    "rgba(0, 255, 127,0.75)",    // spring green
-    "rgba(186, 85, 211,0.75)",   // medium orchid
-    "rgba(0, 191, 255,0.75)",    // deep sky blue
-    "rgba(255, 99, 71,0.75)",    // tomato red
-    "rgba(123, 104, 238,0.75)",  // medium slate blue
-    "rgba(152, 251, 152,0.75)",  // pale green
+    "rgba(138, 43, 226,0.85)",
+    "rgba(255, 20, 147,0.85)",
+    "rgba(60, 179, 113,0.85)",
+    "rgba(199, 21, 133,0.85)",
+    "rgba(0, 255, 127,0.85)",
+    "rgba(217, 64, 255,0.85)",
+    "rgba(0, 191, 255,0.85)",
+    "rgba(255, 99, 71,0.85)",
+    "rgba(123, 104, 238,0.85)",
+    "rgba(152, 251, 152,0.85)",
   ];
-
-
-
   const getRandomColors = (agents: string[]): { [agent: string]: string } => {
     const mapping: { [agent: string]: string } = {};
-
-    // Make a copy and shuffle the color list
     const shuffledColors = [...colorList].sort(() => 0.5 - Math.random());
-
     agents.forEach((agent, index) => {
-      // If there are more agents than colors, wrap around or generate a fallback
       const color = shuffledColors[index] || `hsl(${Math.random() * 360}, 100%, 70%)`;
       mapping[agent] = color;
     });
-
     return mapping;
   };
-
   const colorMapping = getRandomColors(agentKeys);
-
-  // Build datasets dynamically for each agent.
   const datasets = agentKeys.map((agent) => ({
     label: agent,
     data: [beforeTimings[agent]?.time ?? 0, afterTimings[agent]?.time ?? 0],
     backgroundColor: colorMapping[agent],
   }));
-
   const data = {
     labels: ["Before Refine", "After Refine"],
     datasets,
   };
-
   const options = {
     responsive: true,
     maintainAspectRatio: false,
@@ -290,11 +261,10 @@ const TimingBarChart: React.FC<TimingBarChartProps> = ({
       },
     },
   };
-
   return <Bar data={data} options={options} />;
 };
 
-/* ===== Helper and ModelPieChart Component ===== */
+/* ===== ModelPieChart Component ===== */
 const aggregateTimings = (
   timings: { [agent: string]: { time: number; model: string } }
 ): { [model: string]: number } => {
@@ -316,27 +286,22 @@ const ModelPieChart: React.FC<ModelPieChartProps> = ({ title, timings }) => {
   const aggregated = aggregateTimings(timings);
   const labels = Object.keys(aggregated);
   const dataValues = labels.map((label) => aggregated[label]);
-
   const colorList = [
-    "rgba(255, 0, 255, 0.65)",   // magenta
-    "rgba(0, 255, 0, 0.65)",     // lime green
-    "rgba(255, 165, 0, 0.65)",   // orange
-    "rgba(0, 0, 255, 0.65)",     // blue
-    "rgba(255, 0, 0, 0.65)",     // red
-    "rgba(0, 255, 255, 0.65)",   // cyan
-    "rgba(255, 105, 180, 0.65)", // hot pink
-    "rgba(255, 255, 0, 0.65)",   // yellow
-    "rgba(138, 43, 226, 0.65)",  // blue violet
-    "rgba(255, 99, 71, 0.65)",   // tomato red
+    "rgba(255, 0, 123, 0.85)",
+    "rgba(0, 255, 0, 0.65)",
+    "rgba(107, 255, 211, 0.85)",
+    "rgba(0, 0, 255, 0.65)",
+    "rgba(255, 0, 0, 0.65)",
+    "rgba(113, 255, 255, 0.85)",
+    "rgba(255, 105, 105, 0.85)",
+    "rgba(255, 154, 78, 0.85)",
+    "rgba(138, 43, 226, 0.65)",
+    "rgb(158, 129, 255)",
   ];
-
-  // Pick random color for each label dynamically
   const shuffledColors = [...colorList].sort(() => 0.5 - Math.random());
-  const backgroundColors = labels.map((_, index) => {
-    return shuffledColors[index] || `hsl(${Math.random() * 360}, 100%, 70%)`;
-  });
-
-
+  const backgroundColors = labels.map((_, index) =>
+    shuffledColors[index] || `hsl(${Math.random() * 360}, 100%, 70%)`
+  );
   const data = {
     labels,
     datasets: [
@@ -346,12 +311,11 @@ const ModelPieChart: React.FC<ModelPieChartProps> = ({ title, timings }) => {
       },
     ],
   };
-
   const options = {
     responsive: true,
     maintainAspectRatio: false,
     layout: {
-      padding: 5, // minimal overall padding
+      padding: 5,
     },
     plugins: {
       legend: {
@@ -365,7 +329,7 @@ const ModelPieChart: React.FC<ModelPieChartProps> = ({ title, timings }) => {
         display: true,
         text: title,
         color: "white",
-        padding: { top: 2, bottom: 2 },
+        padding: { top: 0, bottom: 2 },
         font: { size: 14 },
       },
       tooltip: {
@@ -374,7 +338,6 @@ const ModelPieChart: React.FC<ModelPieChartProps> = ({ title, timings }) => {
       },
     },
   };
-
   return <Pie data={data} options={options} />;
 };
 
@@ -386,7 +349,7 @@ const CustomObservePage: React.FC = () => {
   const router = useRouter();
 
   // ------------------------- LAYOUT STATES -------------------------
-  const [topSectionHeight, setTopSectionHeight] = useState<number>(46);
+  const [topSectionHeight, setTopSectionHeight] = useState<number>(50);
   const bottomSectionHeight = 100 - topSectionHeight;
   const [sideBarWidth, setSideBarWidth] = useState<number>(16);
   const [bottomRightWidth, setBottomRightWidth] = useState<number>(50);
@@ -402,8 +365,10 @@ const CustomObservePage: React.FC = () => {
   const [graphData, setGraphData] = useState<any>(null);
   const [refineHistories, setRefineHistories] = useState<{ [sheetId: string]: RefineHistory[] }>({});
   const [sheetRuns, setSheetRuns] = useState<{ [sheetId: string]: Run[] }>({});
-  // selectedRefineHistory is set only when a refine history is clicked
   const [selectedRefineHistory, setSelectedRefineHistory] = useState<RefineHistory | null>(null);
+
+  // ------------------------- CODE EDITOR MODAL STATE -------------------------
+  const [isCodeEditorModalOpen, setIsCodeEditorModalOpen] = useState<boolean>(false);
 
   // ------------------------- AUTHENTICATION EFFECT -------------------------
   useEffect(() => {
@@ -513,6 +478,7 @@ const CustomObservePage: React.FC = () => {
     }
   };
 
+  // ------------------------- FETCH RUNS EFFECT -------------------------
   useEffect(() => {
     if (!sheets || sheets.length === 0) return;
     sheets.forEach((sheet) => fetchSheetRuns(sheet._id));
@@ -635,6 +601,7 @@ const CustomObservePage: React.FC = () => {
     setSheets([]);
     setSelectedSheet(null);
     setGraphData(null);
+    setSelectedRefineHistory(null); // clear refine when switching playgrounds
   };
 
   const selectRefineHistory = (sheet: Sheet, history: RefineHistory) => {
@@ -663,7 +630,7 @@ const CustomObservePage: React.FC = () => {
     }
   };
 
-  // ------------------------- FILE TABS FOR BOTTOM PANES -------------------------
+  // ------------------------- FILE TABS FOR DIFF REPORT -------------------------
   const getFileKeys = (): string[] => {
     if (!selectedSheet) return [];
     if (selectedSheet.mergedFiles && Object.keys(selectedSheet.mergedFiles).length > 0) {
@@ -674,9 +641,9 @@ const CustomObservePage: React.FC = () => {
     return [];
   };
 
-  // ------------------------- Compute Graph Area Content -------------------------
-  // By default, show the original placeholder boxes.
-  let graphContent = (
+  // ------------------------- COMPUTED CONTENTS -------------------------
+  // Graph area (top row right), diff report (left bottom), and model outputs (right bottom)
+  let currentGraphContent = (
     <div className="flex gap-4 h-full pb-12">
       <div className="flex-1 bg-stone-900 border border-gray-300 rounded flex items-center justify-center">
         <p className="text-sm">Line Chart: Agent Runtime (Before/After)</p>
@@ -690,8 +657,25 @@ const CustomObservePage: React.FC = () => {
     </div>
   );
 
+  let currentDiffContent = (
+    <div className="px-3 py-4 pb-32">
+      <p className="text-sm">Select a refine to view diff report.</p>
+    </div>
+  );
+
+  let currentModelOutputsContent = (
+    <div className="flex flex-col gap-4 h-full pt-4 px-3 pb-12">
+      <div className="flex-1 bg-stone-900 border border-gray-300 rounded flex items-center justify-center">
+        <p className="text-sm">Before Refine Output</p>
+      </div>
+      <div className="flex-1 bg-stone-900 border border-gray-300 rounded flex items-center justify-center">
+        <p className="text-sm">After Refine Output</p>
+      </div>
+    </div>
+  );
+
   if (selectedRefineHistory && selectedSheet && sheetRuns[selectedSheet._id]) {
-    const runsForSheet: Run[] = [...sheetRuns[selectedSheet._id]].sort(
+    const runsForSheet = [...sheetRuns[selectedSheet._id]].sort(
       (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
     const refineTime = new Date(selectedRefineHistory.timestamp).getTime();
@@ -706,7 +690,6 @@ const CustomObservePage: React.FC = () => {
         break;
       }
     }
-    // Only if there is a valid beforeRun, we show actual charts.
     if (beforeRun) {
       const beforeTimings = beforeRun.timings;
       const afterTimings = afterRun
@@ -714,16 +697,14 @@ const CustomObservePage: React.FC = () => {
         : Object.fromEntries(
           Object.keys(beforeTimings).map((key) => [key, { time: 0, model: "" }])
         );
-      graphContent = (
+      currentGraphContent = (
         <div className="flex gap-4 h-full pb-12">
-          {/* First Column: Timing Bar Chart */}
           <div
-            className="bg-stone-900 border-2 p-2 border-gray-300 rounded flex items-center justify-center"
+            className="flex-1 bg-stone-900 border-2 p-2 border-gray-300 rounded flex items-center justify-center"
             style={{ width: "30%" }}
           >
             <TimingBarChart beforeTimings={beforeTimings} afterTimings={afterTimings} />
           </div>
-          {/* Second Column: Two Pie Charts */}
           <div className="flex flex-col gap-2" style={{ width: "30%" }}>
             <div
               className="bg-stone-900 border-2 p-2 border-gray-300 rounded flex items-center justify-center"
@@ -744,7 +725,6 @@ const CustomObservePage: React.FC = () => {
               />
             </div>
           </div>
-          {/* Third Column: Refined Model Output */}
           <div
             className="bg-stone-900 border border-gray-300 rounded flex items-center justify-center"
             style={{ width: "40%" }}
@@ -753,14 +733,45 @@ const CustomObservePage: React.FC = () => {
           </div>
         </div>
       );
+      currentDiffContent = (
+        <div className="px-3 py-4 pb-32">
+          {selectedSheet.diffReport && selectedSheet.diffReport[selectedFile] ? (
+            <div
+              className="bg-zinc-800 border border-gray-300 rounded p-2 text-sm font-mono whitespace-pre-wrap"
+              dangerouslySetInnerHTML={{
+                __html: selectedSheet.diffReport[selectedFile],
+              }}
+            ></div>
+          ) : (
+            <p className="text-sm">No diff report available.</p>
+          )}
+        </div>
+      );
+      currentModelOutputsContent = (
+        <div className="h-full p-4 flex flex-col gap-4 overflow-y-auto">
+          <div className="flex-1 bg-stone-900 border border-gray-300 rounded p-2 overflow-auto">
+            <h4 className="text-sm font-cinzel mb-2">Before Refine Output</h4>
+            <pre className="text-xs whitespace-pre-wrap">
+              {beforeRun ? beforeRun.output : "No output available."}
+            </pre>
+          </div>
+          <div className="flex-1 bg-stone-900 border border-gray-300 rounded p-2 overflow-auto">
+            <h4 className="text-sm font-cinzel mb-2">After Refine Output</h4>
+            <pre className="text-xs whitespace-pre-wrap">
+              {afterRun ? afterRun.output : "No output available."}
+            </pre>
+          </div>
+        </div>
+      );
     }
   }
 
+  // ------------------------- MAIN RENDER -------------------------
   return (
     <div className="flex flex-col h-screen bg-black text-white overflow-hidden font-cinzel">
       {/* Header */}
       <header className="h-12 bg-zinc-800 border-b border-gray-300 flex items-center px-4 justify-between py-4">
-        <div className="px-3 py-1 border border-purple-400 rounded text-sm">
+        <div className="px-3 py-1 border border-purple-400 rounded font-merriweather text-sm">
           {user?.email || "Not Signed In"}
         </div>
         <div>
@@ -800,13 +811,12 @@ const CustomObservePage: React.FC = () => {
             {/* Heading and Button Section */}
             <div className="flex items-center justify-between border-b border-gray-400 pb-2 mb-4">
               <h3 className="text-lg font-cinzel">Log Graphs</h3>
-              <button className="px-4 py-1 bg-fuchsia-300 text-gray-900 rounded hover:bg-purple-700 hover:text-white transition">
+              <button className="px-4 py-1 bg-purple-700 text-white rounded hover:bg-fuchsia-300 hover:text-gray-900 transition">
                 Revert State
               </button>
             </div>
-
             {/* Graph Area */}
-            {graphContent}
+            {currentGraphContent}
           </div>
         </div>
 
@@ -817,7 +827,7 @@ const CustomObservePage: React.FC = () => {
           style={{ height: "4px" }}
         ></div>
 
-        {/* BOTTOM ROW – Diff Pane & Code Pane */}
+        {/* BOTTOM ROW – Diff Report Pane & Model Outputs Pane */}
         <div className="flex relative" style={{ height: `${bottomSectionHeight}vh` }}>
           {/* Left Panel: Diff Report Pane with File Tabs */}
           <div className="bg-black overflow-y-auto" style={{ width: "60%" }}>
@@ -828,26 +838,21 @@ const CustomObservePage: React.FC = () => {
                   <button
                     key={fname}
                     onClick={() => setSelectedFile(fname)}
-                    className={`px-2 py-1 border rounded text-xs transition-colors duration-200 border-gray-400 ${selectedFile === fname ? "bg-gray-700" : "bg-black hover:bg-gray-600"
+                    className={`px-2 py-1 border rounded text-xs transition-colors duration-200 border-gray-200 ${selectedFile === fname ? "bg-stone-700 hover:bg-stone-800" : "bg-black hover:bg-stone-700"
                       }`}
                   >
                     {fname}
                   </button>
                 ))}
+                <button
+                  onClick={() => setIsCodeEditorModalOpen(true)}
+                  className="px-3 py-2 animated-border text-xs bg-black"
+                >
+                  Open in Code Editor
+                </button>
               </div>
             </div>
-            <div className="px-3 py-4 pb-32">
-              {selectedSheet && selectedSheet.diffReport && selectedSheet.diffReport[selectedFile] ? (
-                <div
-                  className="bg-zinc-800 border border-gray-300 rounded p-2 text-sm font-mono whitespace-pre-wrap"
-                  dangerouslySetInnerHTML={{
-                    __html: selectedSheet.diffReport[selectedFile],
-                  }}
-                ></div>
-              ) : (
-                <p>No diff report available.</p>
-              )}
-            </div>
+            {currentDiffContent}
           </div>
 
           {/* BOTTOM VERTICAL RESIZER */}
@@ -857,44 +862,35 @@ const CustomObservePage: React.FC = () => {
             style={{ width: "4px" }}
           ></div>
 
-          {/* Right Panel: Code Pane with Monaco Editor */}
-          <div className="bg-black overflow-y-auto" style={{ width: "46%" }}>
+          {/* Right Panel: Model Outputs */}
+          <div className="bg-black overflow-y-auto pb-[100px]" style={{ width: "46%" }}>
             <div className="sticky top-0 z-10 bg-black px-4 py-2 border-b border-gray-300 flex justify-between items-center">
-              <h3 className="text-lg font-bold">Code</h3>
-              <div className="flex space-x-2">
-                {getFileKeys().map((fname) => (
-                  <button
-                    key={fname}
-                    onClick={() => setSelectedFile(fname)}
-                    className={`px-2 py-1 border rounded text-xs transition-colors duration-200 border-gray-400 ${selectedFile === fname ? "bg-gray-800" : "bg-black hover:bg-gray-800"
-                      }`}
-                  >
-                    {fname}
-                  </button>
-                ))}
-              </div>
+              <h3 className="text-lg font-cinzel">Model Outputs</h3>
             </div>
-            <div className="h-full p-4">
-              <Editor
-                height="100%"
-                defaultLanguage="python"
-                theme="vs-dark"
-                value={codeContent}
-                onChange={(value) => {
-                  if (value) setCodeContent(value);
-                }}
-                options={{
-                  minimap: { enabled: false },
-                  automaticLayout: true,
-                }}
-              />
-            </div>
+            {currentModelOutputsContent}
           </div>
         </div>
       </div>
-      <div className="absolute bottom-0 left-0 right-0 bg-black border-t border-gray-400 p-2 flex items-center justify-between z-[999]">
+
+      <div className="absolute bottom-0 left-0 right-0 bg-black border-t border-gray-400 p-2 flex items-center justify-between z-[50]">
         <p className="text-gray-400 text-sm">© 2025 AgentOps</p>
       </div>
+
+      {isCodeEditorModalOpen && selectedSheet && (
+        <CodeditorModal
+          isOpen={isCodeEditorModalOpen}
+          onClose={() => setIsCodeEditorModalOpen(false)}
+          fileContents={selectedSheet.mergedFiles || {}}
+          onMerge={(updatedFiles) => {
+            setSelectedSheet({ ...selectedSheet, mergedFiles: updatedFiles });
+            const firstKey = Object.keys(updatedFiles)[0];
+            if (firstKey) {
+              setCodeContent(updatedFiles[firstKey]);
+            }
+            setIsCodeEditorModalOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 };

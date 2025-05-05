@@ -30,7 +30,7 @@ export const Header: React.FC<HeaderProps> = ({ user, scrollToSection }) => {
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <div className="flex items-center space-x-2">
           <BrainCircuit className="text-violet-300 w-6 h-6" />
-          <Link href="/" className="text-2xl font-bold text-white-800">AgentFlux</Link>
+          <Link href="/" className="text-2xl font-times text-white-800">AgentFlux</Link>
         </div>
 
         {/* Mobile Menu Toggle */}
