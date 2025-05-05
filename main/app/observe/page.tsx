@@ -141,7 +141,7 @@ const EnhancedSidebar: React.FC<EnhancedSidebarProps> = ({
                       <li key={sheet._id} className="mb-1">
                         <div
                           onClick={() => handleSheetToggle(sheet)}
-                          className="cursor-pointer flex items-center justify-between text-sm bg-zinc-700 p-1 rounded border border-gray-300 hover:bg-zinc-600 transition-colors"
+                          className="cursor-pointer font-quintessential flex items-center justify-between text-sm bg-zinc-700 p-1 rounded border border-gray-300 hover:bg-zinc-600 transition-colors"
                         >
                           <span className="text-white">{sheet.title}</span>
                           {expandedSheets[sheet._id] ? (
@@ -199,16 +199,16 @@ const TimingBarChart: React.FC<TimingBarChartProps> = ({ beforeTimings, afterTim
     new Set([...Object.keys(beforeTimings), ...Object.keys(afterTimings)])
   );
   const colorList = [
-    "rgba(138, 43, 226,0.75)",
-    "rgba(255, 20, 147,0.75)",
-    "rgba(60, 179, 113,0.75)",
-    "rgba(199, 21, 133,0.75)",
-    "rgba(0, 255, 127,0.75)",
-    "rgba(217, 64, 255,0.75)",
-    "rgba(0, 191, 255,0.75)",
-    "rgba(255, 99, 71,0.75)",
-    "rgba(123, 104, 238,0.75)",
-    "rgba(152, 251, 152,0.75)",
+    "rgba(138, 43, 226,0.85)",
+    "rgba(255, 20, 147,0.85)",
+    "rgba(60, 179, 113,0.85)",
+    "rgba(199, 21, 133,0.85)",
+    "rgba(0, 255, 127,0.85)",
+    "rgba(217, 64, 255,0.85)",
+    "rgba(0, 191, 255,0.85)",
+    "rgba(255, 99, 71,0.85)",
+    "rgba(123, 104, 238,0.85)",
+    "rgba(152, 251, 152,0.85)",
   ];
   const getRandomColors = (agents: string[]): { [agent: string]: string } => {
     const mapping: { [agent: string]: string } = {};
@@ -287,14 +287,14 @@ const ModelPieChart: React.FC<ModelPieChartProps> = ({ title, timings }) => {
   const labels = Object.keys(aggregated);
   const dataValues = labels.map((label) => aggregated[label]);
   const colorList = [
-    "rgba(255, 0, 123, 0.91)",
+    "rgba(255, 0, 123, 0.85)",
     "rgba(0, 255, 0, 0.65)",
     "rgba(107, 255, 211, 0.85)",
     "rgba(0, 0, 255, 0.65)",
     "rgba(255, 0, 0, 0.65)",
-    "rgba(113, 255, 255, 0.88)",
-    "rgba(255, 105, 105, 0.91)",
-    "rgba(255, 154, 78, 0.95)",
+    "rgba(113, 255, 255, 0.85)",
+    "rgba(255, 105, 105, 0.85)",
+    "rgba(255, 154, 78, 0.85)",
     "rgba(138, 43, 226, 0.65)",
     "rgb(158, 129, 255)",
   ];
@@ -349,7 +349,7 @@ const CustomObservePage: React.FC = () => {
   const router = useRouter();
 
   // ------------------------- LAYOUT STATES -------------------------
-  const [topSectionHeight, setTopSectionHeight] = useState<number>(46);
+  const [topSectionHeight, setTopSectionHeight] = useState<number>(50);
   const bottomSectionHeight = 100 - topSectionHeight;
   const [sideBarWidth, setSideBarWidth] = useState<number>(16);
   const [bottomRightWidth, setBottomRightWidth] = useState<number>(50);
@@ -771,7 +771,7 @@ const CustomObservePage: React.FC = () => {
     <div className="flex flex-col h-screen bg-black text-white overflow-hidden font-cinzel">
       {/* Header */}
       <header className="h-12 bg-zinc-800 border-b border-gray-300 flex items-center px-4 justify-between py-4">
-        <div className="px-3 py-1 border border-purple-400 rounded text-sm">
+        <div className="px-3 py-1 border border-purple-400 rounded font-merriweather text-sm">
           {user?.email || "Not Signed In"}
         </div>
         <div>
@@ -838,7 +838,7 @@ const CustomObservePage: React.FC = () => {
                   <button
                     key={fname}
                     onClick={() => setSelectedFile(fname)}
-                    className={`px-2 py-1 border rounded text-xs transition-colors duration-200 border-gray-200 ${selectedFile === fname ? "bg-stone-700" : "bg-black hover:bg-gray-900"
+                    className={`px-2 py-1 border rounded text-xs transition-colors duration-200 border-gray-200 ${selectedFile === fname ? "bg-stone-700 hover:bg-stone-800" : "bg-black hover:bg-stone-700"
                       }`}
                   >
                     {fname}
@@ -872,7 +872,7 @@ const CustomObservePage: React.FC = () => {
         </div>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 bg-black border-t border-gray-400 p-2 flex items-center justify-between z-[999]">
+      <div className="absolute bottom-0 left-0 right-0 bg-black border-t border-gray-400 p-2 flex items-center justify-between z-[50]">
         <p className="text-gray-400 text-sm">© 2025 AgentOps</p>
       </div>
 
