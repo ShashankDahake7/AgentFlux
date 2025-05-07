@@ -851,7 +851,7 @@ const TerminalPanel = forwardRef(
             playgroundId: currentPlaygroundIdRef.current,
           });
         } else {
-          const backendUrl = process.env.NEXT_PUBLIC_WS_URL || "http://localhost:3001";
+          const backendUrl = process.env.NEXT_PUBLIC_WS_URL;
           import("socket.io-client").then(({ io }) => {
             const socket = io(backendUrl);
             socketRef.current = socket;
@@ -1028,7 +1028,7 @@ export default function PlaygroundsPage() {
     setAgentProcessing(true);
     try {
       console.log();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_AGENT_API_URL}/api/agent/process`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/agent/process`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
