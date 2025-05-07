@@ -182,14 +182,14 @@ const server = http.createServer(app);
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: ["https://agent-flux.vercel.app", "http://localhost:3000"],
     credentials: true,
   })
 );
 
 const io = new SocketIOServer(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: ["https://agent-flux.vercel.app", "http://localhost:3000"],
     methods: ["GET", "POST"],
     credentials: true,
   },
