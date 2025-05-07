@@ -691,7 +691,7 @@ const CustomObservePage: React.FC = () => {
       }
     }
     if (beforeRun) {
-      const beforeTimings = beforeRun.timings;
+      const beforeTimings = beforeRun?.timings ?? {}
       const afterTimings = afterRun
         ? afterRun.timings
         : Object.fromEntries(
@@ -873,7 +873,7 @@ const CustomObservePage: React.FC = () => {
       </div>
 
       <div className="absolute bottom-0 left-0 right-0 bg-black border-t border-gray-400 p-2 flex items-center justify-between z-[50]">
-        <p className="text-gray-400 text-sm">© 2025 AgentOps</p>
+        <p className="text-gray-400 text-sm">© 2025 AgentFlux</p>
       </div>
 
       {isCodeEditorModalOpen && selectedSheet && (

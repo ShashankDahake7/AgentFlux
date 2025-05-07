@@ -1,10 +1,10 @@
-## AgentOps
+## AgentFlux
 
 <div align="center">
   <table border="0" cellspacing="0" cellpadding="0">
     <tr>
       <td style="padding-right: 30px;">
-        <img src="main\public\agentops-logo.gif" alt="AgentOps Logo" width="280"/>
+        <img src="main\public\AgentFlux-logo.gif" alt="AgentFlux Logo" width="280"/>
       </td>
       <td style="vertical-align: middle; font-size: 24px; font-weight: bold;">
         Agent Engineering for reliable & dynamic AI agents
@@ -27,41 +27,41 @@
 
 
 1. Overview:<br/>
-- AgentOps is an advanced agent engineering platform that enables developers to build, test, visualize, and refine AI agent systems with unprecedented control and visibility. With an intuitive UI and powerful backend capabilities, AgentOps streamlines the process of creating reliable, dynamic agent graphs while providing comprehensive monitoring and optimization tools.
+- AgentFlux is an advanced agent engineering platform that enables developers to build, test, visualize, and refine AI agent systems with unprecedented control and visibility. With an intuitive UI and powerful backend capabilities, AgentFlux streamlines the process of creating reliable, dynamic agent graphs while providing comprehensive monitoring and optimization tools.
 
 2. Key Features:
    - Interactive Playground Environment<br/>
-    Create and manage multiple playgrounds for different agent projects<br/>
-    Collaborative code editing with syntax highlighting and IntelliSense<br/>
-    Built-in terminal for real-time code execution and feedback<br/>
+    Create and manage multiple playgrounds for different agent projects.
+    Collaborative code editing with syntax highlighting and IntelliSense.
+    Built-in terminal for real-time code execution and feedback.<br/>
 
     - Agent Graph visualization<br/>
-    Automatically extract and visualize agent relationships from code<br/>
-    Interactive node-based graph representation of agent structures<br/>
+    Automatically extract and visualize agent relationships from code.
+    Interactive node-based graph representation of agent structures.
     Visual indicators for model types and communication flows<br/>
     
     - Intelligent Agent Refinement<br/>
-    Automated agent graph improvement suggestions<br/>
-    Advanced diff comparison between original and refined code<br/>
+    Automated agent graph improvement suggestions.
+    Advanced diff comparison between original and refined code.
     Selective merging of recommended changes<br/>
     
     - Model Management<br/>
-    Associate specific models with agent sheets<br/>
-    Control which LLMs are available for different agent components<br/>
+    Associate specific models with agent sheets.
+    Control which LLMs are available for different agent components.
     Track model performance and resource utilization<br/>
     
     - Comprehensive Observation Tools<br/>
-    Historical tracking of agent refinements and changes<br/>
-    Detailed diff reports with visual highlighting<br/>
+    Historical tracking of agent refinements and changes.
+    Detailed diff reports with visual highlighting.
     Performance metrics and comparison across agent versions<br/>
 
 <br/>
 <div align="center">
-    <img src="main\public\vid1.gif" alt="AgentOps video1" width="800"/>
+    <img src="main\public\vid1.gif" alt="AgentFlux video1" width="800"/>
 </div>
 <br/>
 
-**AgentOps Studios**
+**AgentFlux Studios**
 
 - Make studios with integrated EC2 configured containers to run your code.<br/>
 - Visualize your agent graphs wihtout changing a single of code.
@@ -102,11 +102,11 @@
 
 <br/>
 <div align="center">
-    <img src="main\public\vid2.gif" alt="AgentOps video1" width="800"/>
+    <img src="main\public\vid2.gif" alt="AgentFlux video1" width="800"/>
 </div>
 <br/>
 
-**AgentOps Observe**
+**AgentFlux Observe**
 
 - Loggers record your runs, save your refine merges.<br/>
 - Visualize changes made by our models in specific refines in proper diff reports.

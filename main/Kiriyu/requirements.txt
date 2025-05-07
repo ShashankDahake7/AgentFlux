@@ -1,2 +1,8 @@
-fastapi 
-uvicorn
+crewai==0.118.0
+crewai_tools==0.43.0
+fastapi==0.115.12
+langchain_google_genai==2.1.4
+langchain_huggingface
+pydantic==2.11.4
+python-dotenv==1.1.0
+uvicorn==0.34.2

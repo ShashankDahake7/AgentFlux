@@ -268,12 +268,12 @@ const AdvancedSettingsModal: React.FC<{
       </h2>
       <button
         onClick={onDeletePlayground}
-        className="w-full py-2 bg-gray-500 hover:bg-red-400 rounded text-gray-200 transition-colors duration-300 mb-4"
+        className="w-full py-2 bg-zinc-700 hover:bg-red-400 hover:text-gray-900 rounded text-gray-200 transition-colors duration-300 mb-4"
       >
         Delete Playground
       </button>
-      <div className="bg-gray-800 p-4 rounded mb-4">
-        <h3 className="text-lg font-semibold text-gray-200 mb-4">Select Sheets to Delete</h3>
+      <div className="bg-stone-800 p-4 rounded mb-4 border border-gray-400">
+        <h3 className="text-lg font-merriweather text-gray-200 mb-4">Select Sheets to Delete</h3>
         {sheets && sheets.length > 0 ? (
           <div className="grid grid-cols-1 gap-3 max-h-60 overflow-y-auto">
             {sheets.map((sheet) => {
@@ -283,7 +283,7 @@ const AdvancedSettingsModal: React.FC<{
                   key={sheet._id}
                   className={`flex items-center justify-between p-3 rounded cursor-pointer transition-all duration-200 border ${isSelected
                     ? "bg-red-500 bg-opacity-20 border-red-400"
-                    : "bg-gray-700 border-gray-600 hover:bg-gray-600"
+                    : "bg-stone-700 border-gray-400 hover:bg-gray-600"
                     }`}
                 >
                   <div className="flex items-center gap-3">
@@ -305,13 +305,13 @@ const AdvancedSettingsModal: React.FC<{
       </div>
       <button
         onClick={handleDeleteSelectedSheets}
-        className="w-full py-2 bg-gray-500 hover:bg-red-300 rounded text-gray-200 transition-colors duration-300 mb-2"
+        className="w-full py-2 bg-zinc-700 hover:bg-red-400 hover:text-gray-900 rounded text-gray-200 transition-colors duration-300 mb-2"
       >
         Delete Selected Sheets
       </button>
       <button
         onClick={handleDeleteAllSheets}
-        className="w-full py-2 bg-gray-500 hover:bg-red-300 rounded text-gray-200 transition-colors duration-300"
+        className="w-full py-2 bg-zinc-700 hover:bg-red-400 hover:text-gray-900 rounded text-gray-200 transition-colors duration-300"
       >
         Delete All Sheets
       </button>
@@ -720,7 +720,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         }}
       >
         <video
-          src="/agentops.mp4"
+          src="/AgentFlux.mp4"
           className="h-full rounded-lg"
           muted
           autoPlay
@@ -1622,7 +1622,7 @@ export default function PlaygroundsPage() {
                   />
                   <button
                     onClick={handleRunCode}
-                    className="animated-border absolute bottom-[50px] right-4 z-10 px-5 py-3 text-white bg-black rounded-md shadow-md hover:bg-gray-400"
+                    className="animated-border absolute bottom-[50px] right-4 z-10 px-5 py-3 text-white bg-black rounded-md shadow-md"
                   >
                     Run Code
                   </button>
@@ -1703,7 +1703,7 @@ export default function PlaygroundsPage() {
                           setSelectedSheet(sheet);
                         }
                       }}
-                      className={`px-3 py-1 rounded text-xs border border-gray-600 hover:bg-gray-700 transition-colors duration-300 ${selectedSheet && selectedSheet._id === sheet._id ? "bg-gray-500" : ""
+                      className={`px-3 py-1 rounded text-xs border border-gray-400 hover:bg-gray-700 transition-colors duration-300 ${selectedSheet && selectedSheet._id === sheet._id ? "bg-gray-500" : ""
                         }`}
                     >
                       {sheet.title}

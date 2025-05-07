@@ -351,7 +351,7 @@ io.on("connection", (socket: Socket) => {
                   // NEW: If the process exits with code 0, record the run details.
                   if (code == 0) {
                     // Remove the injected graph data from the output.
-                    const cleanedOutput = outputBuffer.replace(/---GRAPH_STRUCTURE_BEGIN---[\s\S]*?---GRAPH_STRUCTURE_END---/g, "").trim();
+                    const cleanedOutput = outputBuffer.replace(/---GRAPH_STRUCTURE_BEGIN---[\s\S]*?---GRAPH_STRUCTURE_END---/g, "").replace(/---TIMINGS_JSON_BEGIN---\s*([\s\S]+?)\s*---TIMINGS_JSON_END---/g, "").trim();
                     // Extract timings using the new markers.
                     const timings = extractTimingsFromOutput(outputBuffer) || {};
 
