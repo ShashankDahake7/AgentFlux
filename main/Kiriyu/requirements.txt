@@ -9,5 +9,4 @@ fastapi
 uvicorn[standard]
 python-dotenv
 pydantic
-difflib
 jinja2
