@@ -182,14 +182,14 @@ const server = http.createServer(app);
 
 app.use(
   cors({
-    origin: ["https://agent-flux.vercel.app", "http://localhost:3000"],
+    origin: "http://localhost:3000",
     credentials: true,
   })
 );
 
 const io = new SocketIOServer(server, {
   cors: {
-    origin: ["https://agent-flux.vercel.app", "http://localhost:3000"],
+    origin: "http://localhost:3000",
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -393,11 +393,14 @@ io.on("connection", (socket: Socket) => {
         socket.disconnect();
       });
 
+      const rawKey = process.env.SSH_PRIVATE_KEY!;
+      const cleankey = rawKey.replace(/\\n/g, "\n");
+
       conn.connect({
         host: process.env.SSH_HOST!,
         port: process.env.SSH_PORT ? parseInt(process.env.SSH_PORT) : 22,
         username: process.env.SSH_USER!,
-        privateKey: process.env.SSH_PRIVATE_KEY ? fs.readFileSync(process.env.SSH_PRIVATE_KEY) : undefined,
+        privateKey: cleankey,
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
