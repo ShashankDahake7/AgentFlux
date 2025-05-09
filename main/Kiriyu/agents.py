@@ -18,7 +18,7 @@ hf_token = os.getenv('HUGGINGFACE_TOKEN')
 # )
 
 model = GoogleGenerativeAI(
-    model="gemini-1.5-pro",
+    model="gemini-2.5-flash-preview-04-17-thinking",
     google_api_key=gemini_api_key,
     temperature=0, 
     http_options={'api_version': 'v1alpha'}
@@ -26,7 +26,7 @@ model = GoogleGenerativeAI(
 
 gemini_api_key_2 = os.getenv('GEM_API_KEY')
 model_2 = GoogleGenerativeAI(
-    model="gemini-1.5-pro",
+    model="gemini-2.5-flash-preview-04-17-thinking",
     google_api_key=gemini_api_key_2,
     temperature=0, 
     http_options={'api_version': 'v1alpha'}
