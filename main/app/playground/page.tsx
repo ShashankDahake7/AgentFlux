@@ -21,7 +21,8 @@ import dynamic from "next/dynamic";
 import Draggable from "react-draggable";
 import Image from "next/image";
 import "xterm/css/xterm.css";
-import Link from 'next/link'
+import Link from 'next/link';
+import MakeCompatibleModal from "@/components/MakeCompatibleModal";
 
 // Dynamically import MonacoEditor (SSR disabled)
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
@@ -654,6 +655,7 @@ interface SidebarProps {
   onAdd: () => void;
   onOpenAdvanced: (pg: Playground) => void;
   onOpenAssociateModels: () => void;
+  onOpenMakeCompatible: () => void; // New callback property
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -663,6 +665,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   onAdd,
   onOpenAdvanced,
   onOpenAssociateModels,
+  onOpenMakeCompatible, // Received as prop
 }) => {
   const logos = ["/logo1.png", "/logo2.png", "/logo3.png"];
   const getLogoForPlayground = (id: string) => {
@@ -705,7 +708,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                 title="Advanced settings"
                 className="text-gray-400 hover:text-gray-200 focus:outline-none"
               >
-                <span className="text-2xl leading-none text-white hover:text-gray-800">{'\u22EE'}</span>
+                <span className="text-2xl leading-none text-white hover:text-gray-800">
+                  {"\u22EE"}
+                </span>
               </button>
             </div>
           </li>
@@ -731,6 +736,10 @@ const Sidebar: React.FC<SidebarProps> = ({
           href="#"
           className="text-sm font-times transition-colors duration-200"
           style={{ color: "#c4b5fd" }}
+          onClick={(e) => {
+            e.preventDefault();
+            onOpenMakeCompatible();  // Call the new callback on click
+          }}
           onMouseEnter={(e) => (e.currentTarget.style.color = "#f5deb3")}
           onMouseLeave={(e) => (e.currentTarget.style.color = "#c4b5fd")}
         >
@@ -738,14 +747,11 @@ const Sidebar: React.FC<SidebarProps> = ({
         </a>
       </div>
       <div className="flex items-center mt-2">
-        {/* Image (1/4th width, same height as button) */}
         <img
           src="models.png"
           alt="Icon"
           className="h-10 w-1/6 object-cover rounded"
         />
-
-        {/* Button (3/4th width) */}
         <button
           onClick={onOpenAssociateModels}
           className="flex-1 py-1 font-times bg-gray-500 hover:bg-gray-600 rounded text-gray-200 transition-colors duration-300 ml-2"
@@ -981,7 +987,7 @@ export default function PlaygroundsPage() {
   const [advancedModalOpen, setAdvancedModalOpen] = useState(false);
   const [advancedPlayground, setAdvancedPlayground] = useState<Playground | null>(null);
   const [showAssociateModelsModal, setShowAssociateModelsModal] = useState(false);
-
+  const [showMakeCompatibleModal, setShowMakeCompatibleModal] = useState<boolean>(false);
   const monacoEditorRef = useRef<any>(null);
   const terminalPanelRef = useRef<{ triggerRunCode: () => void }>(null);
   const router = useRouter();
@@ -1583,8 +1589,9 @@ export default function PlaygroundsPage() {
                 setGraphData(null);
               }}
               onAdd={() => setShowAddPlaygroundModal(true)}
-              onOpenAssociateModels={() => setShowAssociateModelsModal(true)}
               onOpenAdvanced={openAdvancedSettings}
+              onOpenAssociateModels={() => setShowAssociateModelsModal(true)}
+              onOpenMakeCompatible={() => setShowMakeCompatibleModal(true)} // New callback
             />
           </div>
           <div onMouseDown={handleSidebarMouseDown} className="absolute top-0 right-0 h-full w-2 cursor-ew-resize bg-gray-700" />
@@ -1769,6 +1776,17 @@ export default function PlaygroundsPage() {
         agentResult={agentResult}
         onMerge={handleMergeFromModal}
       />
+      {showMakeCompatibleModal && selectedPlayground && (
+        <MakeCompatibleModal
+          isOpen={showMakeCompatibleModal}
+          onClose={() => setShowMakeCompatibleModal(false)}
+          sheets={sheets}
+          token={token}
+          selectedPlaygroundId={selectedPlayground._id}
+          playgroundName={selectedPlayground.name}
+          onMergeCompatible={handleMergeFromModal}
+        />
+      )}
     </div>
   );
 }
