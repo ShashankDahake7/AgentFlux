@@ -79,8 +79,7 @@ class Main_Tasks:
     
     def re_architect_graph(self, agent):
         description = (
-            "This task instructs the agent to fully rearchitect the entire agent graph. Analyze every section of the submission, "
-            "The main task is to analyze nodes within an agent graph and look for tasks that have too many steps or are too complex, appropriately break them up into smaller tasks given to different nodes."
+            "The main task is to analyze nodes within an agent graph and look for tasks that have too many steps or are too complex, appropriately break them up into smaller tasks given to different nodes. Keep a check on the number of nodes and find a balance, maximum 4 nodes may be allowed."
             "Ensure these nodes are conncted in a logical manner that will help the user achieve his goal from the agent graph in a much more effective manner."
             "For the nodes created, assign the appropriate LLM from the allowedModels list, you must also ensure that you properly declare the llms to be used within the code. These are some examples of connecting with llms:\n"
             "For connecting with llms from huggingface:\n ```from langchain_huggingface import HuggingFaceEndpoint\n llm = HuggingFaceEndpoint(repo_id=[model_name from list],max_new_tokens=2056,verbose=True,task='text-generation',temperature=0.01,repetition_penalty=1.03,huggingfacehub_api_token='[huggingface_api_key]')\nresponse = llm.invoke([HumanMessage(content='enhanced prompt')])```\n"
