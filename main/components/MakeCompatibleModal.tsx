@@ -228,5 +228,5 @@ const MakeCompatibleModal: React.FC<MakeCompatibleModalProps> = ({
         </div>
     );
 };
-
 export default MakeCompatibleModal;
+

@@ -31,28 +31,28 @@
 
 2. Key Features:
    - Interactive Playground Environment<br/>
-    Create and manage multiple playgrounds for different agent projects<br/>
-    Collaborative code editing with syntax highlighting and IntelliSense<br/>
-    Built-in terminal for real-time code execution and feedback<br/>
+    Create and manage multiple playgrounds for different agent projects.
+    Collaborative code editing with syntax highlighting and IntelliSense.
+    Built-in terminal for real-time code execution and feedback.<br/>
 
     - Agent Graph visualization<br/>
-    Automatically extract and visualize agent relationships from code<br/>
-    Interactive node-based graph representation of agent structures<br/>
+    Automatically extract and visualize agent relationships from code.
+    Interactive node-based graph representation of agent structures.
     Visual indicators for model types and communication flows<br/>
     
     - Intelligent Agent Refinement<br/>
-    Automated agent graph improvement suggestions<br/>
-    Advanced diff comparison between original and refined code<br/>
+    Automated agent graph improvement suggestions.
+    Advanced diff comparison between original and refined code.
     Selective merging of recommended changes<br/>
     
     - Model Management<br/>
-    Associate specific models with agent sheets<br/>
-    Control which LLMs are available for different agent components<br/>
+    Associate specific models with agent sheets.
+    Control which LLMs are available for different agent components.
     Track model performance and resource utilization<br/>
     
     - Comprehensive Observation Tools<br/>
-    Historical tracking of agent refinements and changes<br/>
-    Detailed diff reports with visual highlighting<br/>
+    Historical tracking of agent refinements and changes.
+    Detailed diff reports with visual highlighting.
     Performance metrics and comparison across agent versions<br/>
 
 <br/>
