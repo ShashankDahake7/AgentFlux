@@ -39,8 +39,6 @@ const GraphVisualization = dynamic(
   }
 );
 
-import MakeCompatibleModal from "@/components/MakeCompatibleModal";
-
 /* ========= TYPES ========= */
 interface Playground {
   _id: string;
