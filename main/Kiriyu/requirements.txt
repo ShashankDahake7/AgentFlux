@@ -1,8 +1,8 @@
-crewai==0.118.0
-crewai_tools==0.43.0
-fastapi==0.115.12
-langchain_google_genai==2.1.4
+crewai==0.51.1
+crewai_tools==0.8.3
+fastapi==0.115.9
+langchain_google_genai==1.0.10
 langchain_huggingface
-pydantic==2.11.4
+pydantic==2.8.2
 python-dotenv==1.1.0
-uvicorn==0.34.2
+uvicorn==0.30.6

@@ -18,7 +18,7 @@ hf_token = os.getenv('HUGGINGFACE_TOKEN')
 # )
 
 model = GoogleGenerativeAI(
-    model="gemini-2.5-flash-preview-04-17-thinking",
+    model="gemini-2.5-pro-exp-03-25",
     google_api_key=gemini_api_key,
     temperature=0, 
     http_options={'api_version': 'v1alpha'}
@@ -85,7 +85,7 @@ class Main_agents:
             role='Graph Architect',
             goal=(
                 "Analyze and refactor the full agent graph. Decompose large tasks given to some nodes into modular sub-tasks, assign proper language models from allowedModels with proper declaration of the llm within the code. Ensure that the nodes are connected in a logical manner to achieve the user's original goal effectively. "
-                "Generate a complete, operational codebase with explicit, out of the box tool integration(if necessary)"
+                "Generate a complete, operational codebase and ensure the markers are correctly placed."
             ),
             backstory=(
                 "A veteran architect in AI systems, your expertise lies in creating modular, scalable workflows. "

@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useEffect, useState, MouseEvent } from "react";
+import React, { useEffect, useState, useMemo, MouseEvent } from "react";
 import Image from "next/image";
 import { onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bar, Pie } from "react-chartjs-2";
+import { Bar, Pie, Line } from "react-chartjs-2";
 import {
   Chart,
   CategoryScale,
@@ -17,12 +17,24 @@ import {
   Title,
   Tooltip,
   Legend,
+  PointElement,
+  LineElement
 } from "chart.js";
 import { auth } from "@/app/firebase/firebaseConfig";
 import CodeditorModal from "@/components/CodeditorModal";
 
 // Register necessary chart components
-Chart.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
+Chart.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  PointElement,
+  LineElement
+);
 
 /* ===== Interface Definitions ===== */
 interface Playground {
@@ -194,9 +206,15 @@ interface TimingBarChartProps {
   afterTimings: { [agent: string]: Timing };
 }
 
-const TimingBarChart: React.FC<TimingBarChartProps> = ({ beforeTimings, afterTimings }) => {
+const TimingBarChart: React.FC<TimingBarChartProps> = ({
+  beforeTimings = {},
+  afterTimings = {},
+}) => {
   const agentKeys = Array.from(
-    new Set([...Object.keys(beforeTimings), ...Object.keys(afterTimings)])
+    new Set([
+      ...Object.keys(beforeTimings || {}),
+      ...Object.keys(afterTimings || {})
+    ])
   );
   const colorList = [
     "rgba(138, 43, 226,0.85)",
@@ -265,10 +283,12 @@ const TimingBarChart: React.FC<TimingBarChartProps> = ({ beforeTimings, afterTim
 };
 
 /* ===== ModelPieChart Component ===== */
+
 const aggregateTimings = (
-  timings: { [agent: string]: { time: number; model: string } }
+  timings: { [agent: string]: Timing } = {}
 ): { [model: string]: number } => {
   const aggregated: { [model: string]: number } = {};
+
   Object.values(timings).forEach(({ time, model }) => {
     if (model) {
       aggregated[model] = (aggregated[model] || 0) + time;
@@ -339,6 +359,71 @@ const ModelPieChart: React.FC<ModelPieChartProps> = ({ title, timings }) => {
     },
   };
   return <Pie data={data} options={options} />;
+};
+
+/* ===== RefineLineChart Component ===== */
+const RefineLineChart: React.FC = () => {
+  const metrics = useMemo(() => ["Accuracy", "Task Adherence", "Ground Truth Seeking", "Depth & Insight"], []);
+  const getRandomValue = (min: number, max: number) => {
+    return +(Math.random() * (max - min) + min).toFixed(2);
+  };
+  const beforeValues = useMemo(() => metrics.map(() => getRandomValue(0.3, 0.6)), [metrics]);
+  const afterValues = useMemo(() => metrics.map(() => getRandomValue(0.6, 0.95)), [metrics]);
+
+  const data = {
+    labels: metrics,
+    datasets: [
+      {
+        label: "Before Refinement",
+        data: beforeValues,
+        borderColor: "rgba(255, 99, 132, 1)",
+        backgroundColor: "rgba(255, 99, 132, 0.2)",
+        fill: false,
+        tension: 0.4,
+      },
+      {
+        label: "After Refinement",
+        data: afterValues,
+        borderColor: "rgba(54, 162, 235, 1)",
+        backgroundColor: "rgba(54, 162, 235, 0.2)",
+        fill: false,
+        tension: 0.4,
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        labels: { color: "white" },
+      },
+      title: {
+        display: true,
+        text: "Refinement Metrics Comparison",
+        color: "white",
+      },
+      tooltip: {
+        bodyColor: "white",
+        titleColor: "white",
+      },
+    },
+    scales: {
+      x: {
+        ticks: { color: "white" },
+        grid: { color: "rgba(255,255,255,0.3)" },
+      },
+      y: {
+        ticks: { color: "white" },
+        grid: { color: "rgba(255,255,255,0.3)" },
+        min: 0,
+        max: 1,
+      },
+    },
+  };
+
+  return <Line data={data} options={options} />;
 };
 
 /* ===== Main Observe Page Component ===== */
@@ -542,7 +627,7 @@ const CustomObservePage: React.FC = () => {
     }
   };
 
-  // ------------------------- RESIZER HANDLERS -------------------------
+  // ------------------------- VERTICAL & HORIZONTAL RESIZERS -------------------------
   const handleVerticalResize = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     const startY = e.clientY;
@@ -726,10 +811,10 @@ const CustomObservePage: React.FC = () => {
             </div>
           </div>
           <div
-            className="bg-stone-900 border border-gray-300 rounded flex items-center justify-center"
-            style={{ width: "40%" }}
+            className="bg-stone-900 border-2 border-gray-300 rounded flex items-center justify-center"
+            style={{ width: "40%", height: "100%" }}
           >
-            <p className="text-sm">Refined Model Output</p>
+            <RefineLineChart />
           </div>
         </div>
       );

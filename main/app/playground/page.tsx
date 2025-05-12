@@ -465,182 +465,243 @@ export const AssociateModelsModal: React.FC<{
   sheets: Sheet[];
   onSubmit: (selectedSheetIds: string[], selectedModels: string[]) => void;
 }> = ({ isOpen, onClose, sheets, onSubmit }) => {
-  const availableModels = [
-    "deepseek-r1",
-    "gemini-1.5-pro",
-    "gemini-1.5-flash",
-    "gemini-2.0-flash",
-    "openai-gpt-3.5-turbo",
-    "openai-gpt-4",
-    "mistralai/Mistral-7B-Instruct-v0.3",
-    "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
+  // All possible models
+  const models = [
+    {
+      id: "deepseek-r1",
+      name: "DeepSeek-R1",
+      company: "DeepSeek AI",
+      tags: ["search", "distillation", "ai"],
+      gradients: {
+        selected: "bg-gradient-to-r from-red-400 to-yellow-500",
+        default: "bg-gradient-to-r from-red-600 to-yellow-700",
+      },
+      logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYpzFp7T95S6gDEFYMor4BT_eRZpVYx43HjacHa6Uc6Jmsond15fa32s0XzKEpBqSwUcU&usqp=CAU",
+    },
+    {
+      id: "gemini-2.5-pro-exp-03-25",
+      name: "Gemini 2.5 Pro Exp-03-25",
+      company: "Google",
+      tags: ["gemini", "pro", "latest", "free"],
+      gradients: {
+        selected: "bg-gradient-to-r from-green-400 to-blue-500",
+        default: "bg-gradient-to-r from-green-600 to-blue-700",
+      },
+      logo: "https://cloudonair.withgoogle.com/api/assets?path=/gs/gweb-gc-gather-production.appspot.com/files/AFiumC5HS17acVQUTkwzerfEucSVvRMinXGOqC97Dtg5fREwhUful4BC97FFW2yEBLn9NPSd-7o.k0guz5CS4xZQu6H2",
+    },
+    {
+      id: "gemini-1.5-flash",
+      name: "Gemini 1.5 Flash",
+      company: "Google",
+      tags: ["gemini", "flash", "ai", "free"],
+      gradients: {
+        selected: "bg-gradient-to-r from-green-400 to-blue-500",
+        default: "bg-gradient-to-r from-green-600 to-blue-700",
+      },
+      logo: "https://cloudonair.withgoogle.com/api/assets?path=/gs/gweb-gc-gather-production.appspot.com/files/AFiumC5HS17acVQUTkwzerfEucSVvRMinXGOqC97Dtg5fREwhUful4BC97FFW2yEBLn9NPSd-7o.k0guz5CS4xZQu6H2",
+    },
+    {
+      id: "gemini-2.0-flash",
+      name: "Gemini 2.0 Flash",
+      company: "Google",
+      tags: ["gemini", "flash", "ai", "free"],
+      gradients: {
+        selected: "bg-gradient-to-r from-green-400 to-blue-500",
+        default: "bg-gradient-to-r from-green-600 to-blue-700",
+      },
+      logo: "https://cloudonair.withgoogle.com/api/assets?path=/gs/gweb-gc-gather-production.appspot.com/files/AFiumC5HS17acVQUTkwzerfEucSVvRMinXGOqC97Dtg5fREwhUful4BC97FFW2yEBLn9NPSd-7o.k0guz5CS4xZQu6H2",
+    },
+    {
+      id: "openai-gpt-3.5-turbo",
+      name: "GPT-3.5 Turbo",
+      company: "OpenAI",
+      tags: ["chatbot", "turbo", "openai"],
+      gradients: {
+        selected: "bg-gradient-to-r from-purple-400 to-pink-500",
+        default: "bg-gradient-to-r from-purple-600 to-pink-700",
+      },
+      logo: "https://mir-s3-cdn-cf.behance.net/project_modules/fs/e50214173218977.648c4882a75d6.gif",
+    },
+    {
+      id: "openai-gpt-4",
+      name: "GPT-4",
+      company: "OpenAI",
+      tags: ["chatbot", "gpt4", "openai", "allrounder"],
+      gradients: {
+        selected: "bg-gradient-to-r from-purple-400 to-pink-500",
+        default: "bg-gradient-to-r from-purple-600 to-pink-700",
+      },
+      logo: "https://mir-s3-cdn-cf.behance.net/project_modules/fs/e50214173218977.648c4882a75d6.gif",
+    },
+    {
+      id: "qwen/Qwen3-235B-A22B",
+      name: "Qwen3-235B-A22B",
+      company: "Qwen",
+      tags: ["qwen", "small", "reasoning"],
+      gradients: {
+        selected: "bg-gradient-to-r from-sky-600 to-indigo-700",
+        default: "bg-gradient-to-r from-sky-500 to-indigo-500",
+      },
+      logo: "https://i.namu.wiki/i/eNiAyEuBeEyN7lOJGFdl0yhPhzwYlirqWYU1_tSVOkPrNKv65zvqvQxh-hYzCNREUMnLlZytk8JEcHvYEEdVLcIFgCgo9QSd7h40vyy9ruW3XZE0ocz1O-FX6cuI7iJuJkXf58CaumvTVZn8E11ZKg.webp",
+    },
+    {
+      id: "mistralai/Mistral-7B-Instruct-v0.3",
+      name: "Mistral-7B-Instruct-v0.3",
+      company: "Mistral AI",
+      tags: ["mistral", "instruction", "ai"],
+      gradients: {
+        selected: "bg-gradient-to-r from-indigo-400 to-purple-500",
+        default: "bg-gradient-to-r from-indigo-600 to-purple-700",
+      },
+      logo: "https://logosandtypes.com/wp-content/uploads/2025/02/mistral-ai.svg",
+    },
+    {
+      id: "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+      name: "DeepSeek Distill",
+      company: "DeepSeek AI",
+      tags: ["distill", "qwen", "ai"],
+      gradients: {
+        selected: "bg-gradient-to-r from-red-400 to-yellow-500",
+        default: "bg-gradient-to-r from-red-600 to-yellow-700",
+      },
+      logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYpzFp7T95S6gDEFYMor4BT_eRZpVYx43HjacHa6Uc6Jmsond15fa32s0XzKEpBqSwUcU&usqp=CAU",
+    },
+    // You can add more models here, they'll be included in search but only initial 9 are shown by default
   ];
+
+  const initialDisplayCount = 9;
 
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
   const [selectedSheetIds, setSelectedSheetIds] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchType, setSearchType] = useState<"name" | "company" | "tags">("name");
 
-  const modelGradients: { [key: string]: { default: string; selected: string } } = {
-    "deepseek-r1": {
-      selected: "bg-gradient-to-r from-red-400 to-yellow-500",
-      default: "bg-gradient-to-r from-red-600 to-yellow-700"
-    },
-    "gemini-1.5-pro": {
-      selected: "bg-gradient-to-r from-green-400 to-blue-500",
-      default: "bg-gradient-to-r from-green-600 to-blue-700"
-    },
-    "gemini-1.5-flash": {
-      selected: "bg-gradient-to-r from-green-400 to-blue-500",
-      default: "bg-gradient-to-r from-green-600 to-blue-700"
-    },
-    "gemini-2.0-flash": {
-      selected: "bg-gradient-to-r from-green-400 to-blue-500",
-      default: "bg-gradient-to-r from-green-600 to-blue-700"
-    },
-    "openai-gpt-3.5-turbo": {
-      selected: "bg-gradient-to-r from-purple-400 to-pink-500",
-      default: "bg-gradient-to-r from-purple-600 to-pink-700"
-    },
-    "openai-gpt-4": {
-      selected: "bg-gradient-to-r from-purple-400 to-pink-500",
-      default: "bg-gradient-to-r from-purple-600 to-pink-700"
-    },
-    "mistralai/Mistral-7B-Instruct-v0.3": {
-      selected: "bg-gradient-to-r from-indigo-400 to-purple-500",
-      default: "bg-gradient-to-r from-indigo-600 to-purple-700"
-    },
-    "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B": {
-      selected: "bg-gradient-to-r from-red-400 to-yellow-500",
-      default: "bg-gradient-to-r from-red-600 to-yellow-700"
-    }
+  const handleModelToggle = (modelId: string) => {
+    setSelectedModels((prev) =>
+      prev.includes(modelId) ? prev.filter((m) => m !== modelId) : [...prev, modelId]
+    );
   };
 
-  const modelLogos: { [key: string]: string } = {
-    "deepseek-r1": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYpzFp7T95S6gDEFYMor4BT_eRZpVYx43HjacHa6Uc6Jmsond15fa32s0XzKEpBqSwUcU&usqp=CAU",
-    "gemini-1.5-pro": "https://cloudonair.withgoogle.com/api/assets?path=/gs/gweb-gc-gather-production.appspot.com/files/AFiumC5HS17acVQUTkwzerfEucSVvRMinXGOqC97Dtg5fREwhUful4BC97FFW2yEBLn9NPSd-7o.k0guz5CS4xZQu6H2",
-    "gemini-1.5-flash": "https://cloudonair.withgoogle.com/api/assets?path=/gs/gweb-gc-gather-production.appspot.com/files/AFiumC5HS17acVQUTkwzerfEucSVvRMinXGOqC97Dtg5fREwhUful4BC97FFW2yEBLn9NPSd-7o.k0guz5CS4xZQu6H2",
-    "gemini-2.0-flash": "https://cloudonair.withgoogle.com/api/assets?path=/gs/gweb-gc-gather-production.appspot.com/files/AFiumC5HS17acVQUTkwzerfEucSVvRMinXGOqC97Dtg5fREwhUful4BC97FFW2yEBLn9NPSd-7o.k0guz5CS4xZQu6H2",
-    "openai-gpt-3.5-turbo": "https://mir-s3-cdn-cf.behance.net/project_modules/fs/e50214173218977.648c4882a75d6.gif",
-    "openai-gpt-4": "https://mir-s3-cdn-cf.behance.net/project_modules/fs/e50214173218977.648c4882a75d6.gif",
-    "mistralai/Mistral-7B-Instruct-v0.3": "https://logosandtypes.com/wp-content/uploads/2025/02/mistral-ai.svg",
-    "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYpzFp7T95S6gDEFYMor4BT_eRZpVYx43HjacHa6Uc6Jmsond15fa32s0XzKEpBqSwUcU&usqp=CAU"
-  };
-
-  // Toggle the selection of a model.
-  const handleModelToggle = (model: string) => {
-    if (selectedModels.includes(model)) {
-      setSelectedModels(selectedModels.filter((m) => m !== model));
-    } else {
-      setSelectedModels([...selectedModels, model]);
-    }
-  };
-
-  // Sheet selection handlers.
-  const handleSheetSelect = (sheetId: string) => {
-    setSelectedSheetIds([...selectedSheetIds, sheetId]);
-  };
-
-  const handleSheetDeselect = (sheetId: string) => {
-    setSelectedSheetIds(selectedSheetIds.filter((id) => id !== sheetId));
-  };
-
-  // On submit validation.
   const handleSubmit = () => {
-    if (selectedModels.length === 0)
-      return alert("Please select at least one model.");
-    if (selectedSheetIds.length === 0)
-      return alert("Please select at least one sheet.");
+    if (!selectedModels.length) return alert("Please select at least one model.");
+    if (!selectedSheetIds.length) return alert("Please select at least one sheet.");
     onSubmit(selectedSheetIds, selectedModels);
     setSelectedModels([]);
     setSelectedSheetIds([]);
+    setSearchQuery("");
+    setSearchType("name");
     onClose();
   };
 
+  const filteredModels = models.filter((model) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    if (searchType === "name") return model.name.toLowerCase().includes(q);
+    if (searchType === "company") return model.company.toLowerCase().includes(q);
+    return model.tags.some((tag) => tag.toLowerCase().includes(q));
+  });
+
+  const displayModels = !searchQuery
+    ? filteredModels.slice(0, initialDisplayCount)
+    : filteredModels;
+
+  const searchOptions = [
+    { value: "name", label: "Name" },
+    { value: "company", label: "Company" },
+    { value: "tags", label: "Tags" },
+  ];
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} style="max-w-[75vw]">
-      <div className="p-2 space-y-6">
+      <div className="p-4 space-y-6">
         <h2 className="text-xl font-cinzel text-gray-200">Associate Models</h2>
 
-        {/* Models Grid Section */}
-        <div>
-          <h3 className="text-lg font-times text-gray-200 mb-2">
-            Select Models
-          </h3>
-          <div className="grid grid-cols-3 gap-4">
-            {availableModels.map((model) => {
-              const isSelected = selectedModels.includes(model);
-              const gradientClass = isSelected
-                ? modelGradients[model].selected
-                : modelGradients[model].default;
+        {/* Search Bar with dark background and pill tags */}
+        <div className="space-y-2">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search models..."
+            className="w-full px-3 py-2 bg-black text-white placeholder-gray-500 border border-gray-300 rounded"
+          />
+          <div className="flex flex-wrap gap-2 pt-2">
+            {searchOptions.map((opt) => {
+              const active = searchType === opt.value;
               return (
                 <button
-                  key={model}
-                  onClick={() => handleModelToggle(model)}
-                  className={`flex items-center font-times space-x-2 rounded-md px-3 py-2 border transition-all duration-300 ${gradientClass} hover:brightness-125`}
+                  key={opt.value}
+                  onClick={() => setSearchType(opt.value as any)}
+                  className={`px-3 py-1 rounded-full text-sm transition duration-200 ${active
+                    ? "bg-white text-black"
+                    : "bg-black text-gray-200 hover:bg-gray-700 hover:text-white"
+                    } border ${active ? "border-transparent" : "border-gray-400"}`}
                 >
-                  <img
-                    src={modelLogos[model]}
-                    alt={`${model} logo`}
-                    className="w-[35px] h-[28px]"
-                  />
-                  <span className="text-white">{model}</span>
+                  {opt.label}
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* Selected Models List */}
+        {/* Models Grid */}
+        <div>
+          <h3 className="text-lg font-times text-gray-200 mb-2">Select Models</h3>
+          <div className="grid grid-cols-3 gap-4">
+            {displayModels.map((model) => {
+              const isSelected = selectedModels.includes(model.id);
+              const gradientClass = isSelected ? model.gradients.selected : model.gradients.default;
+              return (
+                <button
+                  key={model.id}
+                  onClick={() => handleModelToggle(model.id)}
+                  className={`flex items-center space-x-2 rounded-md px-3 py-2 border transition-all duration-300 ${gradientClass} hover:brightness-125`}
+                >
+                  <img src={model.logo} alt={`${model.name} logo`} className="w-[35px] h-[28px]" />
+                  <span className="text-white text-sm">{model.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Selected Models */}
         {selectedModels.length > 0 && (
           <div>
-            <h3 className="text-lg font-times text-gray-200 mb-2">
-              Selected Models
-            </h3>
+            <h3 className="text-lg font-times text-gray-200 mb-2">Selected Models</h3>
             <ul className="space-y-2">
-              {selectedModels.map((model) => (
-                <li
-                  key={model}
-                  className="flex items-center font-times justify-between bg-stone-800 border border-gray-200 rounded px-3 py-2"
-                >
-                  <div className="flex items-center space-x-2">
-                    <img
-                      src={modelLogos[model]}
-                      alt={`${model} logo`}
-                      className="w-[28px] h-[25px]"
-                    />
-                    <span className="text-white">{model}</span>
-                  </div>
-                  <button
-                    onClick={() => handleModelToggle(model)}
-                    className="text-red-400 hover:text-red-600"
-                  >
-                    Remove
-                  </button>
-                </li>
-              ))}
+              {models
+                .filter((m) => selectedModels.includes(m.id))
+                .map((model) => (
+                  <li key={model.id} className="flex items-center justify-between bg-stone-800 border border-gray-200 rounded px-3 py-2">
+                    <div className="flex items-center space-x-2">
+                      <img src={model.logo} alt={`${model.name} logo`} className="w-[28px] h-[25px]" />
+                      <span className="text-white text-sm">{model.name}</span>
+                    </div>
+                    <button onClick={() => handleModelToggle(model.id)} className="text-red-400 hover:text-red-600">Remove</button>
+                  </li>
+                ))}
             </ul>
           </div>
         )}
 
         {/* Sheets Selection Section */}
         <div>
-          <h3 className="text-lg font-times text-gray-200 mb-2">
-            Select Sheets
-          </h3>
+          <h3 className="text-lg font-times text-gray-200 mb-2">Select Sheets</h3>
           <MultiSelectDropdownForSheets
-            options={sheets.map((sheet) => ({
-              id: sheet._id,
-              label: sheet.title
-            }))}
+            options={sheets.map((sheet) => ({ id: sheet._id, label: sheet.title }))}
             selected={selectedSheetIds}
-            onSelect={handleSheetSelect}
-            onDeselect={handleSheetDeselect}
+            onSelect={(id) => setSelectedSheetIds((prev) => [...prev, id])}
+            onDeselect={(id) => setSelectedSheetIds((prev) => prev.filter((i) => i !== id))}
             placeholder="Select sheets..."
           />
         </div>
 
-        {/* Submit Button */}
-        <button onClick={handleSubmit}
-          className="relative w-full py-2 font-cinzel rounded border border-gray-200 text-gray-100 transition-all duration-500 overflow-hidden group bg-neutral-700">
+        {/* Submit */}
+        <button
+          onClick={handleSubmit}
+          className="relative w-full py-2 font-cinzel rounded border border-gray-200 text-gray-100 transition-all duration-500 overflow-hidden group bg-neutral-700"
+        >
           <span className="absolute inset-0 bg-gradient-to-r from-rose-500 to-purple-500 opacity-0 transition-opacity duration-500 group-hover:opacity-100"></span>
           <span className="relative">Associate</span>
         </button>
@@ -648,6 +709,7 @@ export const AssociateModelsModal: React.FC<{
     </Modal>
   );
 };
+
 /* ========= SIDEBAR ========= */
 interface SidebarProps {
   playgrounds: Playground[];

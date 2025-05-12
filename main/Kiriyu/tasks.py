@@ -87,21 +87,22 @@ class Main_Tasks:
             "for connecting with llms from openai:\n ```from langchain.chat_models import ChatOpenAI\n llm = ChatOpenAI(model=[gpt model from list])```\n"
             "for connecting with llms from google:\n ```from langchain_google_genai import ChatGoogleGenerativeAI\n model = ChatGoogleGenerativeAI(model='gemini_model_name from list', google_api_key='[google api key]', temperature=[0-1], http_options=['api_version': 'v1alpha'])```\n"
             "The output must be a complete, operational codebase with all the nodes and their connections clearly defined. "
-            "Ensure API keys from .env are referenced appropriately. The output must be a complete, operational codebase."
+            "Your output must not be overcomplicated and must not involve too much complex prompts, it must also not omit the timings json printing."
+            "Your output must not differ too much in structure from the original code like you must keep using the HumanMessage(content=('actual prompt must be stated here only, do not assign it to a seperate variable')). Remember that your code is being parsed so your structure of output must follow exactly the same structure as given in the original code (like the humanmessages, nodes and other things must be decalred in the same way as in the original code) do not try to overly change the structure of the code. Only do the task assigned and nothing more than that, do not print logs for every step or anything uncessary which wasn't there in the original code."
             "\n\nThe original code sent by the user is this: \n{code}\n"
             "the allowedModels list is this: {allowedModels}\n"
             """Your sequence of steps to follow is as follows: 1. Analyze the original code and identify the main tasks and sub-tasks. 2. Break down complex tasks into smaller,
             manageable sub-tasks with proper break down into nodes with proper roles and functions. 3. Assign appropriate LLMs from the allowedModels list to each task. 
-            4. Ensure that the nodes are connected logically to achieve the user's goal effectively. 5. Refine the prompts given by the human user and ensure your own prompts are descriptive and follow a ReAct format too. 
+            4. Ensure that the nodes are connected logically to achieve the user's goal effectively. 5. Refine the prompts given by the human user and ensure your own prompts are concise and apt. 
             6. Ensure that all agent roles are clearly defined with proper LLM assignments.
             7. if multiple files are given then follow the same format for outputtting code as in original code \n%%%%filename:\n$$$\ncode\n$$$\n%%%%filename...and so on.\n"
-            "The output should be a complete codebase with all the changes integrated into it. "
+            "The output should be a complete codebase with all the changes integrated into it."
             """
 
         )
         expected_output = (
             "A completely restructured agent graph code. All agent roles should be clearly defined with proper LLM assignments. "
-            "The code should be production ready and free of placeholders. Ensure that the code is copy pastable and can be directly executed."
+            "The code should be free of placeholders. Ensure that the code is copy pastable and can be directly executed."
             "if multiple files are given then follow the same format for outputtting code as in original code \n%%%%filename:\n$$$\ncode\n$$$\n%%%%filename...and so on.\n"
             "The output should be a complete codebase with all the changes integrated into it. "
         )
