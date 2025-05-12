@@ -66,7 +66,7 @@
 - Make studios with integrated EC2 configured containers to run your code.<br/>
 - Visualize your agent graphs wihtout changing a single of code.
 - Integrate with custom models from hugging face in a totally no-code environment.
-- integrated loggers and profilers that save each of your runs/refines to facilitate state reversion and finegrained observations. 
+- Integrated loggers and profilers that save each of your runs/refines to facilitate state reversion and finegrained observations. 
 
 <div>
 <h3>Options for Agent Graphs Refinement</h3>
@@ -84,7 +84,7 @@
       Re-architect Graphs
       </td>
       <td style="vertical-align: middle;">
-       Analyzes agent graphs to find God Tasks, breaks them into smaller modules, tries to optimize graphs using more modular structures. Dyanimcally shifts to better models for your tasks using hugging face's public endpoints for models.
+       Analyzes agent graphs to find God Tasks, breaks them into smaller modules, tries to optimize graphs using more modular structures. Dynaimcally shifts to better models for your tasks using hugging face's public endpoints for models.
       </td>
     </tr>
     <tr>

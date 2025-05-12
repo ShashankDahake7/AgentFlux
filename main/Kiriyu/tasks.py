@@ -79,7 +79,6 @@ class Main_Tasks:
     
     def re_architect_graph(self, agent):
         description = (
-            "This task instructs the agent to fully rearchitect the entire agent graph. Analyze every section of the submission, "
             "The main task is to analyze nodes within an agent graph and look for tasks that have too many steps or are too complex, appropriately break them up into smaller tasks given to different nodes. Keep a check on the number of nodes and find a balance, maximum 4 nodes may be allowed."
             "Ensure these nodes are conncted in a logical manner that will help the user achieve his goal from the agent graph in a much more effective manner."
             "For the nodes created, assign the appropriate LLM from the allowedModels list, you must also ensure that you properly declare the llms to be used within the code. These are some examples of connecting with llms:\n"
@@ -98,7 +97,6 @@ class Main_Tasks:
             7. if multiple files are given then follow the same format for outputtting code as in original code \n%%%%filename:\n$$$\ncode\n$$$\n%%%%filename...and so on.\n"
             "The output should be a complete codebase with all the changes integrated into it."
             """
-
         )
         expected_output = (
             "A completely restructured agent graph code. All agent roles should be clearly defined with proper LLM assignments. "

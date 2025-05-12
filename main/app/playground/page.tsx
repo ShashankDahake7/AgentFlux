@@ -21,7 +21,8 @@ import dynamic from "next/dynamic";
 import Draggable from "react-draggable";
 import Image from "next/image";
 import "xterm/css/xterm.css";
-import Link from 'next/link'
+import Link from 'next/link';
+import MakeCompatibleModal from "@/components/MakeCompatibleModal";
 
 // Dynamically import MonacoEditor (SSR disabled)
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
@@ -920,7 +921,7 @@ const TerminalPanel = forwardRef(
             playgroundId: currentPlaygroundIdRef.current,
           });
         } else {
-          const backendUrl = process.env.NEXT_PUBLIC_WS_URL || "http://localhost:3001";
+          const backendUrl = process.env.NEXT_PUBLIC_WS_URL;
           import("socket.io-client").then(({ io }) => {
             const socket = io(backendUrl);
             socketRef.current = socket;
@@ -1052,7 +1053,6 @@ export default function PlaygroundsPage() {
   const [showAssociateModelsModal, setShowAssociateModelsModal] = useState(false);
   const [showMakeCompatibleModal, setShowMakeCompatibleModal] = useState<boolean>(false);
 
-
   const monacoEditorRef = useRef<any>(null);
   const terminalPanelRef = useRef<{ triggerRunCode: () => void }>(null);
   const router = useRouter();
@@ -1099,7 +1099,7 @@ export default function PlaygroundsPage() {
     setAgentProcessing(true);
     try {
       console.log();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_AGENT_API_URL}/api/agent/process`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/agent/process`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1852,8 +1852,6 @@ export default function PlaygroundsPage() {
           onMergeCompatible={handleMergeFromModal}
         />
       )}
-
-
     </div>
   );
 }

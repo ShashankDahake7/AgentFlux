@@ -14,11 +14,12 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://agent-flux.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # Updated AgentRequest to include brokenDownOriginal.
 class AgentRequest(BaseModel):
