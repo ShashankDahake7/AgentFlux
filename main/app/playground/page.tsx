@@ -23,6 +23,7 @@ import Image from "next/image";
 import "xterm/css/xterm.css";
 import Link from 'next/link';
 import MakeCompatibleModal from "@/components/MakeCompatibleModal";
+import { modellist } from "./data/modelList";
 
 // Dynamically import MonacoEditor (SSR disabled)
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
@@ -464,110 +465,6 @@ export const AssociateModelsModal: React.FC<{
   sheets: Sheet[];
   onSubmit: (selectedSheetIds: string[], selectedModels: string[]) => void;
 }> = ({ isOpen, onClose, sheets, onSubmit }) => {
-  // All possible models
-  const models = [
-    {
-      id: "deepseek-r1",
-      name: "DeepSeek-R1",
-      company: "DeepSeek AI",
-      tags: ["search", "distillation", "ai"],
-      gradients: {
-        selected: "bg-gradient-to-r from-red-400 to-yellow-500",
-        default: "bg-gradient-to-r from-red-600 to-yellow-700",
-      },
-      logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYpzFp7T95S6gDEFYMor4BT_eRZpVYx43HjacHa6Uc6Jmsond15fa32s0XzKEpBqSwUcU&usqp=CAU",
-    },
-    {
-      id: "gemini-2.5-pro-exp-03-25",
-      name: "Gemini 2.5 Pro Exp-03-25",
-      company: "Google",
-      tags: ["gemini", "pro", "latest", "free"],
-      gradients: {
-        selected: "bg-gradient-to-r from-green-400 to-blue-500",
-        default: "bg-gradient-to-r from-green-600 to-blue-700",
-      },
-      logo: "https://cloudonair.withgoogle.com/api/assets?path=/gs/gweb-gc-gather-production.appspot.com/files/AFiumC5HS17acVQUTkwzerfEucSVvRMinXGOqC97Dtg5fREwhUful4BC97FFW2yEBLn9NPSd-7o.k0guz5CS4xZQu6H2",
-    },
-    {
-      id: "gemini-1.5-flash",
-      name: "Gemini 1.5 Flash",
-      company: "Google",
-      tags: ["gemini", "flash", "ai", "free"],
-      gradients: {
-        selected: "bg-gradient-to-r from-green-400 to-blue-500",
-        default: "bg-gradient-to-r from-green-600 to-blue-700",
-      },
-      logo: "https://cloudonair.withgoogle.com/api/assets?path=/gs/gweb-gc-gather-production.appspot.com/files/AFiumC5HS17acVQUTkwzerfEucSVvRMinXGOqC97Dtg5fREwhUful4BC97FFW2yEBLn9NPSd-7o.k0guz5CS4xZQu6H2",
-    },
-    {
-      id: "gemini-2.0-flash",
-      name: "Gemini 2.0 Flash",
-      company: "Google",
-      tags: ["gemini", "flash", "ai", "free"],
-      gradients: {
-        selected: "bg-gradient-to-r from-green-400 to-blue-500",
-        default: "bg-gradient-to-r from-green-600 to-blue-700",
-      },
-      logo: "https://cloudonair.withgoogle.com/api/assets?path=/gs/gweb-gc-gather-production.appspot.com/files/AFiumC5HS17acVQUTkwzerfEucSVvRMinXGOqC97Dtg5fREwhUful4BC97FFW2yEBLn9NPSd-7o.k0guz5CS4xZQu6H2",
-    },
-    {
-      id: "openai-gpt-3.5-turbo",
-      name: "GPT-3.5 Turbo",
-      company: "OpenAI",
-      tags: ["chatbot", "turbo", "openai"],
-      gradients: {
-        selected: "bg-gradient-to-r from-purple-400 to-pink-500",
-        default: "bg-gradient-to-r from-purple-600 to-pink-700",
-      },
-      logo: "https://mir-s3-cdn-cf.behance.net/project_modules/fs/e50214173218977.648c4882a75d6.gif",
-    },
-    {
-      id: "openai-gpt-4",
-      name: "GPT-4",
-      company: "OpenAI",
-      tags: ["chatbot", "gpt4", "openai", "allrounder"],
-      gradients: {
-        selected: "bg-gradient-to-r from-purple-400 to-pink-500",
-        default: "bg-gradient-to-r from-purple-600 to-pink-700",
-      },
-      logo: "https://mir-s3-cdn-cf.behance.net/project_modules/fs/e50214173218977.648c4882a75d6.gif",
-    },
-    {
-      id: "qwen/Qwen3-235B-A22B",
-      name: "Qwen3-235B-A22B",
-      company: "Qwen",
-      tags: ["qwen", "small", "reasoning"],
-      gradients: {
-        selected: "bg-gradient-to-r from-sky-600 to-indigo-700",
-        default: "bg-gradient-to-r from-sky-500 to-indigo-500",
-      },
-      logo: "https://i.namu.wiki/i/eNiAyEuBeEyN7lOJGFdl0yhPhzwYlirqWYU1_tSVOkPrNKv65zvqvQxh-hYzCNREUMnLlZytk8JEcHvYEEdVLcIFgCgo9QSd7h40vyy9ruW3XZE0ocz1O-FX6cuI7iJuJkXf58CaumvTVZn8E11ZKg.webp",
-    },
-    {
-      id: "mistralai/Mistral-7B-Instruct-v0.3",
-      name: "Mistral-7B-Instruct-v0.3",
-      company: "Mistral AI",
-      tags: ["mistral", "instruction", "ai"],
-      gradients: {
-        selected: "bg-gradient-to-r from-indigo-400 to-purple-500",
-        default: "bg-gradient-to-r from-indigo-600 to-purple-700",
-      },
-      logo: "https://logosandtypes.com/wp-content/uploads/2025/02/mistral-ai.svg",
-    },
-    {
-      id: "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
-      name: "DeepSeek Distill",
-      company: "DeepSeek AI",
-      tags: ["distill", "qwen", "ai"],
-      gradients: {
-        selected: "bg-gradient-to-r from-red-400 to-yellow-500",
-        default: "bg-gradient-to-r from-red-600 to-yellow-700",
-      },
-      logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYpzFp7T95S6gDEFYMor4BT_eRZpVYx43HjacHa6Uc6Jmsond15fa32s0XzKEpBqSwUcU&usqp=CAU",
-    },
-    // You can add more models here, they'll be included in search but only initial 9 are shown by default
-  ];
-
   const initialDisplayCount = 9;
 
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
@@ -592,7 +489,7 @@ export const AssociateModelsModal: React.FC<{
     onClose();
   };
 
-  const filteredModels = models.filter((model) => {
+  const filteredModels = modellist.filter((model) => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
     if (searchType === "name") return model.name.toLowerCase().includes(q);
@@ -632,8 +529,8 @@ export const AssociateModelsModal: React.FC<{
                   key={opt.value}
                   onClick={() => setSearchType(opt.value as any)}
                   className={`px-3 py-1 rounded-full text-sm transition duration-200 ${active
-                    ? "bg-white text-black"
-                    : "bg-black text-gray-200 hover:bg-gray-700 hover:text-white"
+                      ? "bg-white text-black"
+                      : "bg-black text-gray-200 hover:bg-gray-700 hover:text-white"
                     } border ${active ? "border-transparent" : "border-gray-400"}`}
                 >
                   {opt.label}
@@ -643,21 +540,27 @@ export const AssociateModelsModal: React.FC<{
           </div>
         </div>
 
-        {/* Models Grid */}
+        {/* Models Grid with scroll */}
         <div>
           <h3 className="text-lg font-times text-gray-200 mb-2">Select Models</h3>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-4 max-h-72 overflow-y-auto">
             {displayModels.map((model) => {
               const isSelected = selectedModels.includes(model.id);
-              const gradientClass = isSelected ? model.gradients.selected : model.gradients.default;
+              const gradientClass =
+                isSelected ? model.gradients.selected : model.gradients.default;
               return (
                 <button
                   key={model.id}
                   onClick={() => handleModelToggle(model.id)}
-                  className={`flex items-center space-x-2 rounded-md px-3 py-2 border transition-all duration-300 ${gradientClass} hover:brightness-125`}
+                  className={`flex items-center space-x-2 rounded-md px-3 py-2 border transition-all duration-300 ${gradientClass
+                    } hover:brightness-125`}
                 >
-                  <img src={model.logo} alt={`${model.name} logo`} className="w-[35px] h-[28px]" />
-                  <span className="text-white text-sm">{model.name}</span>
+                  <img
+                    src={model.logo}
+                    alt={`${model.name} logo`}
+                    className="w-[35px] h-[28px]"
+                  />
+                  <span className="text-white font-merriweather">{model.name}</span>
                 </button>
               );
             })}
@@ -669,15 +572,27 @@ export const AssociateModelsModal: React.FC<{
           <div>
             <h3 className="text-lg font-times text-gray-200 mb-2">Selected Models</h3>
             <ul className="space-y-2">
-              {models
+              {modellist
                 .filter((m) => selectedModels.includes(m.id))
                 .map((model) => (
-                  <li key={model.id} className="flex items-center justify-between bg-stone-800 border border-gray-200 rounded px-3 py-2">
+                  <li
+                    key={model.id}
+                    className="flex items-center justify-between bg-stone-800 border border-gray-200 rounded px-3 py-2"
+                  >
                     <div className="flex items-center space-x-2">
-                      <img src={model.logo} alt={`${model.name} logo`} className="w-[28px] h-[25px]" />
+                      <img
+                        src={model.logo}
+                        alt={`${model.name} logo`}
+                        className="w-[28px] h-[25px]"
+                      />
                       <span className="text-white text-sm">{model.name}</span>
                     </div>
-                    <button onClick={() => handleModelToggle(model.id)} className="text-red-400 hover:text-red-600">Remove</button>
+                    <button
+                      onClick={() => handleModelToggle(model.id)}
+                      className="text-red-400 hover:text-red-600"
+                    >
+                      Remove
+                    </button>
                   </li>
                 ))}
             </ul>
@@ -691,7 +606,9 @@ export const AssociateModelsModal: React.FC<{
             options={sheets.map((sheet) => ({ id: sheet._id, label: sheet.title }))}
             selected={selectedSheetIds}
             onSelect={(id) => setSelectedSheetIds((prev) => [...prev, id])}
-            onDeselect={(id) => setSelectedSheetIds((prev) => prev.filter((i) => i !== id))}
+            onDeselect={(id) =>
+              setSelectedSheetIds((prev) => prev.filter((i) => i !== id))
+            }
             placeholder="Select sheets..."
           />
         </div>
@@ -708,7 +625,6 @@ export const AssociateModelsModal: React.FC<{
     </Modal>
   );
 };
-
 /* ========= SIDEBAR ========= */
 interface SidebarProps {
   playgrounds: Playground[];
