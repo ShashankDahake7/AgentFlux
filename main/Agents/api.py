@@ -6,6 +6,7 @@ from typing import List, Dict
 
 from helper_funcs import generate_diff_report_per_file, parse_aggregated_code
 from adk_agents.prompt_refiner.executor import refine_prompts
+from adk_agents.graph_architect.executor import rearchitect_graph
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -52,8 +53,7 @@ async def process_agent_request(req: AgentRequest):
               
 
         elif req.refinementType == "rearchitect_graph":
-            # (unchanged)
-            pass
+            refined_code = rearchitect_graph(original_code, allowedModels=req.allowedModels)
 
         else:
             raise HTTPException(status_code=400, detail="Invalid refinementType provided.")
