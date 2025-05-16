@@ -529,8 +529,8 @@ export const AssociateModelsModal: React.FC<{
                   key={opt.value}
                   onClick={() => setSearchType(opt.value as any)}
                   className={`px-3 py-1 rounded-full text-sm transition duration-200 ${active
-                      ? "bg-white text-black"
-                      : "bg-black text-gray-200 hover:bg-gray-700 hover:text-white"
+                    ? "bg-white text-black"
+                    : "bg-black text-gray-200 hover:bg-gray-700 hover:text-white"
                     } border ${active ? "border-transparent" : "border-gray-400"}`}
                 >
                   {opt.label}
@@ -543,7 +543,7 @@ export const AssociateModelsModal: React.FC<{
         {/* Models Grid with scroll */}
         <div>
           <h3 className="text-lg font-times text-gray-200 mb-2">Select Models</h3>
-          <div className="grid grid-cols-3 gap-4 max-h-72 overflow-y-auto">
+          <div className="grid grid-cols-3 gap-4 max-h-72 overflow-y-auto scroll-smooth">
             {displayModels.map((model) => {
               const isSelected = selectedModels.includes(model.id);
               const gradientClass =
@@ -1013,7 +1013,7 @@ export default function PlaygroundsPage() {
     setAgentProcessing(true);
     try {
       console.log();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/agent/process`, {
+      const res = await fetch(`http://localhost:8000/api/agent/process`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
