@@ -3,10 +3,11 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict
-from helper_funcs import generate_diff_report_per_file, parse_aggregated_code
-from crews import promptrefinement, rearchitect
 
-# Set up production-grade logging.
+from helper_funcs import generate_diff_report_per_file, parse_aggregated_code
+from adk_agents.prompt_refiner.executor import refine_prompts
+from adk_agents.graph_architect.executor import rearchitect_graph
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -14,21 +15,20 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://agent-flux.vercel.app"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-# Updated AgentRequest to include brokenDownOriginal.
 class AgentRequest(BaseModel):
     refinementType: str          
     code: str   
     brokenDownOriginal: Dict[str, str]
     allowedModels: List[str]
 
-# Updated AgentResponse now contains a diffReport as a dictionary and brokenDownRefined mapping.
+
 class AgentResponse(BaseModel):
     diffReport: Dict[str, str]
     refinedGraphCode: str
@@ -49,20 +49,21 @@ async def process_agent_request(req: AgentRequest):
 
     try:
         if req.refinementType == "refine_prompts":
-            refined_code = promptrefinement(original_code)
+            refined_code=refine_prompts(original_code)
+              
+
         elif req.refinementType == "rearchitect_graph":
-            refined_code = rearchitect(original_code, req.allowedModels)
+            refined_code = rearchitect_graph(original_code, allowedModels=req.allowedModels)
+
         else:
             raise HTTPException(status_code=400, detail="Invalid refinementType provided.")
     except Exception as e:
-        logger.exception("Crew execution error:")
+        logger.exception("Agent execution error:")
         raise HTTPException(status_code=500, detail=f"Agent execution error: {str(e)}")
-    
     
     brokenDownRefined = parse_aggregated_code(refined_code)
     
-    
-    diffReport = {}
+    diffReport: Dict[str, str] = {}
     for filename, orig in req.brokenDownOriginal.items():
         refined = brokenDownRefined.get(filename, "")
         diffReport[filename] = generate_diff_report_per_file(orig, refined)
@@ -73,6 +74,7 @@ async def process_agent_request(req: AgentRequest):
         "refinedGraphDiagram": "",
         "brokenDownRefined": brokenDownRefined,
     }
+
 
 if __name__ == "__main__":
     import uvicorn
