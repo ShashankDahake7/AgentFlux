@@ -8,7 +8,7 @@ The architecture is designed for modular, scalable execution of agent graphs whe
 
 <br/>
 <div align="center">
-<img src="public/sysarch.png" width="600">
+<img src="public/sysarch.png" width="800">
 </div>
 
 ### Core Flow

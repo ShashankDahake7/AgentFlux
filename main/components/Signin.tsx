@@ -1,96 +1,132 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
-import { auth } from '@/app/firebase/firebaseConfig';
-import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
+import React, { useState } from 'react';
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { signIn, signInWithGoogle, signInWithGithub } from '@/app/firebase/authService';
+import OAuthButton from './OAuthButton';
 
 export const SignIn = () => {
     const [showPassword, setShowPassword] = useState(false);
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [user, setUser] = useState(null);
+    const [formData, setFormData] = useState({
+        email: '',
+        password: ''
+    });
     const router = useRouter();
 
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            setUser(user);
-        });
-        return () => unsubscribe();
-    }, []);
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await signInWithEmailAndPassword(auth, email, password);
-            alert('Signed in successfully!');
-            router.push('/');
-        } catch (error) {
-            alert((error as any).message);
+            await signIn(formData.email, formData.password);
+            router.push('/playground');
+        } catch (error: any) {
+            alert(error.message);
+        }
+    };
+
+    const handleGoogleSignIn = async () => {
+        try {
+            const user = await signInWithGoogle();
+            if (user) {
+                router.push('/playground');
+            }
+        } catch (error: any) {
+            alert(error.message);
+        }
+    };
+
+    const handleGithubSignIn = async () => {
+        try {
+            const user = await signInWithGithub();
+            if (user) {
+                router.push('/playground');
+            }
+        } catch (error: any) {
+            alert(error.message);
         }
     };
 
     return (
-        <div className="min-h-[600px] flex items-center justify-center bg-gradient-to-br from-gray-900 to-slate-900 p-10">
-            <div className="w-full max-w-md bg-white/10 backdrop-blur-md rounded-xl shadow-xl p-8 space-y-6 border border-violet-300">
-                {user ? (
-                    <div className="text-center space-y-4 text-gray-200">
-                        <p className="text-lg font-semibold">Welcome, {user.email}</p>
-                        <button
-                            onClick={() => auth.signOut()}
-                            className="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition duration-300">
-                            Sign Out
-                        </button>
+        <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md">
+            <h2 className="text-3xl font-cinzel text-center text-white mb-6 text-gray-800">Sign In</h2>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Mail className="text-black w-5 h-5" />
                     </div>
-                ) : (
-                    <>
-                        <div className="text-center">
-                            <h2 className="text-3xl font-bold text-gray-100 mb-2">Welcome Back</h2>
-                            <p className="text-gray-400">Sign in to continue with AgentFlux</p>
-                        </div>
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Mail className="text-gray-400 w-5 h-5" />
-                                </div>
-                                <input
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="Email Address"
-                                    required
-                                    className="block w-full px-12 py-3 bg-gray-800 text-gray-200 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                />
-                            </div>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Lock className="text-gray-400 w-5 h-5" />
-                                </div>
-                                <input
-                                    type={showPassword ? "text" : "password"}
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="Password"
-                                    required
-                                    className="block w-full px-12 py-3 bg-gray-800 text-gray-200 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-blue-400"
-                                >
-                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                                </button>
-                            </div>
-                            <button
-                                type="submit"
-                                className="w-full font-cinzel bg-violet-400 text-white py-3 px-4 rounded-lg hover:bg-purple-700 transition duration-300">
-                                Sign In
-                            </button>
-                        </form>
-                    </>
-                )}
+                    <input
+                        type="email"
+                        name="email"
+                        placeholder="Email Address"
+                        value={formData.email}
+                        onChange={handleChange}
+                        required
+                        className="block text-black w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent"
+                    />
+                </div>
+
+                <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Lock className="text-black w-5 h-5" />
+                    </div>
+                    <input
+                        type={showPassword ? "text" : "password"}
+                        name="password"
+                        placeholder="Password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        required
+                        className="block text-black w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent"
+                    />
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    >
+                        {showPassword ? <Eye className="text-gray-400 w-5 h-5" /> : <EyeOff className="text-gray-400 w-5 h-5" />}
+                    </button>
+                </div>
+
+                <button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-blue-600 to-purple-400 text-white 
+                    py-3 px-4 rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 
+                    focus:ring-purple-500 focus:ring-opacity-50 transition duration-300 font-cinzel"
+                >
+                    Sign In
+                </button>
+
+                <div className="relative flex items-center justify-center py-2 my-4">
+                    <div className="border-t border-gray-300 flex-grow"></div>
+                    <span className="mx-4 text-sm text-gray-500 bg-white px-2">or</span>
+                    <div className="border-t border-gray-300 flex-grow"></div>
+                </div>
+
+                <div className="space-y-3">
+                    <OAuthButton
+                        provider="google"
+                        onClick={handleGoogleSignIn}
+                    />
+                    <OAuthButton
+                        provider="github"
+                        onClick={handleGithubSignIn}
+                    />
+                </div>
+            </form>
+
+            <div className="text-center mt-4">
+                <p className="text-sm text-gray-200">
+                    Don't have an account?
+                    <a href="/signup" className="text-purple-400 hover:text-purple-500 ml-1">
+                        Sign Up
+                    </a>
+                </p>
             </div>
         </div>
     );
