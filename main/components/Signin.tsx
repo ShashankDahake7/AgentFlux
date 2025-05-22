@@ -55,7 +55,7 @@ export const SignIn = () => {
         <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md">
             <h2 className="text-3xl font-cinzel text-center text-white mb-6 text-gray-800">Sign In</h2>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <Mail className="text-black w-5 h-5" />
@@ -108,7 +108,7 @@ export const SignIn = () => {
                     <div className="border-t border-gray-300 flex-grow"></div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-6">
                     <OAuthButton
                         provider="google"
                         onClick={handleGoogleSignIn}
@@ -120,7 +120,7 @@ export const SignIn = () => {
                 </div>
             </form>
 
-            <div className="text-center mt-4">
+            <div className="text-center mt-4 pt-3">
                 <p className="text-sm text-gray-200">
                     Don't have an account?
                     <a href="/signup" className="text-purple-400 hover:text-purple-500 ml-1">

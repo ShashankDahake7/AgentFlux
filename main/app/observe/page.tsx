@@ -4,7 +4,7 @@ import React, { useEffect, useState, useMemo, MouseEvent } from "react";
 import Image from "next/image";
 import { onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
-import { ChevronUp, ChevronDown } from "lucide-react";
+import { ChevronUp, ChevronDown, User } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bar, Pie, Line } from "react-chartjs-2";
@@ -130,7 +130,7 @@ const EnhancedSidebar: React.FC<EnhancedSidebarProps> = ({
             >
               <div className="flex items-center">
                 <Image src="/obs2.png" alt="Logo" width={20} height={20} className="mr-2" priority />
-                <span className="text-white">{pg.name}</span>
+                <span className="text-white font-cinzel">{pg.name}</span>
               </div>
               {expandedPlaygrounds[pg._id] ? (
                 <ChevronUp size={16} className="ml-1 text-white" />
@@ -853,12 +853,17 @@ const CustomObservePage: React.FC = () => {
 
   // ------------------------- MAIN RENDER -------------------------
   return (
-    <div className="flex flex-col h-screen bg-black text-white overflow-hidden font-cinzel">
+    <div className="flex flex-col h-screen bg-black text-white overflow-hidden">
       {/* Header */}
       <header className="h-12 bg-zinc-800 border-b border-gray-300 flex items-center px-4 justify-between py-4">
-        <div className="px-3 py-1 border border-purple-400 rounded font-merriweather text-sm">
-          {user?.email || "Not Signed In"}
-        </div>
+        <button
+          onClick={() => router.push('/profile')}
+          className="flex items-center justify-between gap-2 px-3 py-2 border border-purple-400 rounded text-sm text-white background bg-black hover:text-purple-300 hover:text-white transition duration-200"
+        >
+          <User className="w-4 h-4" />
+          <span>{user?.email || "Not Signed In"}</span>
+
+        </button>
         <div>
           <button className="text-white px-3 py-1 border border-purple-400 rounded text-sm font-cinzel hover:bg-gray-500 transition mx-4">
             <Link href="/">Home</Link>

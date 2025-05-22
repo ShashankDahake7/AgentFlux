@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { BrainCircuit, Menu, X } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/app/firebase/firebaseConfig';
+import { useRouter } from "next/navigation";
 import Link from 'next/link';
 
 interface HeaderProps {
@@ -11,6 +12,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ user, scrollToSection }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const router = useRouter();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
@@ -40,7 +42,7 @@ export const Header: React.FC<HeaderProps> = ({ user, scrollToSection }) => {
 
         {/* Desktop Navigation */}
         <nav className="hidden lg:flex space-x-6">
-          <button onClick={() => scrollToSection("home")} className="text-white-600 font-cinzel hover:text-violet-300 transition">Home</button>
+          <button onClick={() => router.push('/profile')} className="text-white-600 font-cinzel hover:text-violet-300 transition">Profile</button>
           <button onClick={() => scrollToSection("features")} className="text-white-600 font-cinzel hover:text-violet-300 transition">Features</button>
           <button onClick={() => scrollToSection("about")} className="text-white-600 font-cinzel hover:text-violet-300 transition">About</button>
           <button className="text-white-600 font-cinzel hover:text-violet-300 transition"><Link href="/observe">Observe</Link></button>
@@ -73,8 +75,8 @@ export const Header: React.FC<HeaderProps> = ({ user, scrollToSection }) => {
         {isMenuOpen && (
           <div className="lg:hidden fixed inset-0 bg-black bg-opacity-80 top-16 py-8 h-max ">
             <nav className="flex flex-col items-center space-y-6">
-              <button onClick={() => { scrollToSection("home"); toggleMenu(); }} className="text-white-600 hover:text-blue-600 transition">
-                Home
+              <button onClick={() => router.push('/profile')} className="text-white-600 hover:text-blue-600 transition">
+                Profile
               </button>
               <button onClick={() => { scrollToSection("features"); toggleMenu(); }} className="text-white-600 hover:text-blue-600 transition">
                 Features
