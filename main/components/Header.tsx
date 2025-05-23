@@ -52,19 +52,19 @@ export const Header: React.FC<HeaderProps> = ({ user, scrollToSection }) => {
         <div className="hidden lg:flex space-x-4">
           {user ? (
             <>
-              <Link href="/playground" className="px-3 py-1.5 text-sm font-merriweather bg-black-600 text-white-600 border border-violet-400 rounded-lg hover:bg-gray-600 transition">
+              <Link href="/playground" className="px-3 py-1.5 text-sm font-merriweather bg-black-600 text-white-600 animated-border rounded-lg hover:bg-gray-600 transition">
                 Access Playgrounds
               </Link>
-              <button onClick={handleSignOut} className="px-3 py-1.5 text-sm font-merriweather bg-black-600 text-white border border-violet-400 rounded-lg hover:bg-gray-700 transition">
+              <button onClick={handleSignOut} className="px-3 py-1.5 text-sm font-merriweather bg-black-600 text-white border-2 border-violet-400 rounded-lg hover:bg-gray-700 transition">
                 Sign Out
               </button>
             </>
           ) : (
             <>
-              <Link href="/signin" className="px-3 py-1.5 text-sm font-merriweather text-black-600 border border-violet-400 rounded-lg hover:bg-gray-700 transition">
+              <Link href="/signin" className="px-3 py-1.5 text-sm font-merriweather text-black-600 border-2 border-violet-400 rounded-lg hover:bg-gray-700 transition">
                 Sign In
               </Link>
-              <Link href="/signup" className="px-3 py-1.5 text-sm font-merriweather bg-black-600 text-white border border-violet-400 rounded-lg hover:bg-gray-700 transition">
+              <Link href="/signup" className="px-3 py-1.5 text-sm font-merriweather bg-black-600 text-white border-2 border-violet-400 rounded-lg hover:bg-gray-700 transition">
                 Sign Up
               </Link>
             </>

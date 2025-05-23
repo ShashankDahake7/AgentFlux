@@ -1542,7 +1542,7 @@ export default function PlaygroundsPage() {
       <header className="h-12 bg-zinc-900 border-b border-gray-300 flex items-center px-4 flex justify-between">
         <button
           onClick={() => router.push('/profile')}
-          className="flex items-center justify-between gap-2 px-3 py-2 border border-purple-400 rounded text-sm text-white background bg-black hover:text-purple-300 hover:text-white transition duration-200"
+          className="flex items-center justify-between gap-2 px-3 py-2 border border-purple-400 rounded text-sm text-white background bg-black hover:text-violet-300 transition duration-200"
         >
           <User className="w-4 h-4" />
           <span>{user?.email || "Not Signed In"}</span>

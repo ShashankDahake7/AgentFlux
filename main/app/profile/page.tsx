@@ -82,6 +82,22 @@ interface Sheet {
     updatedAt: string;
 }
 
+interface Run {
+    _id: string;
+    sheetId: string;
+    output: string;
+    timings: { [agent: string]: { time: number; model: string } };
+    timestamp: string;
+}
+
+interface RefineHistory {
+    _id: string;
+    sheetId: string;
+    diffReport: { [filename: string]: string };
+    mergedFiles: { [filename: string]: string };
+    timestamp: string;
+}
+
 interface RunStats {
     totalRuns: number;
     models: {
@@ -224,7 +240,12 @@ const AgentGraphPreview = ({ graphData, onClick }: { graphData: any, onClick: ()
 };
 
 // Activity chart component
-const ActivityChart = ({ playgrounds }: { playgrounds: Playground[] }) => {
+const ActivityChart = ({ playgrounds, sheets, runs, refines }: {
+    playgrounds: Playground[],
+    sheets: Sheet[],
+    runs: Run[],
+    refines: RefineHistory[]
+}) => {
     // Get last 30 days
     const last30Days = Array.from({ length: 30 }, (_, i) => {
         const d = new Date();
@@ -236,12 +257,36 @@ const ActivityChart = ({ playgrounds }: { playgrounds: Playground[] }) => {
         date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     );
 
-    // Mock activity data based on playground creation dates
+    // Calculate actual activity data based on creation dates across entities
     const activityData = last30Days.map(date => {
-        return playgrounds.filter(pg => {
-            const pgDate = new Date(pg.createdAt);
-            return pgDate.toDateString() === date.toDateString();
-        }).length + Math.floor(Math.random() * 3); // Adding randomness for visual appeal
+        const dateString = date.toDateString();
+
+        // Count playgrounds created on this date
+        const playgroundsCount = playgrounds.filter(pg => {
+            const pgDate = new Date(pg.createdAt).toDateString();
+            return pgDate === dateString;
+        }).length;
+
+        // Count sheets created on this date
+        const sheetsCount = sheets.filter(sheet => {
+            const sheetDate = new Date(sheet.createdAt).toDateString();
+            return sheetDate === dateString;
+        }).length;
+
+        // Count runs performed on this date
+        const runsCount = runs.filter(run => {
+            const runDate = new Date(run.timestamp).toDateString();
+            return runDate === dateString;
+        }).length;
+
+        // Count refines performed on this date
+        const refinesCount = refines.filter(refine => {
+            const refineDate = new Date(refine.timestamp).toDateString();
+            return refineDate === dateString;
+        }).length;
+
+        // Total activity is the sum of all counts
+        return playgroundsCount + sheetsCount + runsCount + refinesCount;
     });
 
     const data = {
@@ -326,6 +371,32 @@ const ActivityChart = ({ playgrounds }: { playgrounds: Playground[] }) => {
 // Model usage chart component
 const ModelUsageChart = ({ modelUsage }: { modelUsage: RunStats['models'] }) => {
     const modelData = Object.entries(modelUsage || {}).slice(0, 5);
+
+    // If no model data, show placeholder with empty chart
+    if (modelData.length === 0) {
+        const emptyData = {
+            labels: ['No Data'],
+            datasets: [{
+                data: [1],
+                backgroundColor: ['rgba(125, 99, 235, 0.3)'],
+                borderColor: ['rgba(125, 99, 235, 0.6)'],
+                borderWidth: 1
+            }]
+        };
+
+        return <Doughnut data={emptyData} options={{
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    enabled: false
+                }
+            },
+            cutout: '65%'
+        }} />;
+    }
 
     const data = {
         labels: modelData.map(([_, model]) => model.name),
@@ -415,7 +486,7 @@ const StatCard = ({ icon, label, value, trend, color }: {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
         >
-            <div className="absolute top-0 right-0 w-24 h-24 rounded-full bg-gradient-to-br opacity-10"
+            <div className="absolute top-0 right-0 w-24 h-24 rounded-full bg-gradient-to-br opacity-20"
                 style={{
                     background: `radial-gradient(circle at top right, ${color}, transparent 70%)`,
                 }}
@@ -453,6 +524,8 @@ export default function ProfilePage() {
     const [loading, setLoading] = useState<boolean>(true);
     const [playgrounds, setPlaygrounds] = useState<Playground[]>([]);
     const [sheets, setSheets] = useState<Sheet[]>([]);
+    const [runs, setRuns] = useState<Run[]>([]);
+    const [refines, setRefines] = useState<RefineHistory[]>([]);
     const [activeTab, setActiveTab] = useState<'overview' | 'playgrounds' | 'models'>('overview');
     const [searchTerm, setSearchTerm] = useState<string>("");
     const [runStats, setRunStats] = useState<RunStats>({
@@ -512,6 +585,9 @@ export default function ProfilePage() {
 
                     // Fetch sheets for each playground
                     const allSheets: Sheet[] = [];
+                    const allRuns: Run[] = [];
+                    const allRefines: RefineHistory[] = [];
+
                     await Promise.all(
                         playgroundsData.playgrounds.map(async (pg: Playground) => {
                             const sheetsRes = await fetch(`/api/playgrounds/${pg._id}/sheets`, {
@@ -520,50 +596,48 @@ export default function ProfilePage() {
                             const sheetsData = await sheetsRes.json();
 
                             if (sheetsData.sheets) {
-                                // Add mock graph data for visualization
-                                const sheetsWithGraphs = sheetsData.sheets.map((sheet: Sheet) => {
-                                    if (!sheet.graphData) {
-                                        // Create mock graph data
-                                        const nodeCount = Math.floor(Math.random() * 5) + 3;
-                                        const nodes = Array.from({ length: nodeCount }, (_, i) => ({
-                                            id: `node-${i}`,
-                                            label: `Node ${i}`,
-                                            x: Math.random() * 300 - 150,
-                                            y: Math.random() * 200 - 100
-                                        }));
+                                allSheets.push(...sheetsData.sheets);
 
-                                        const edges = [];
-                                        for (let i = 0; i < nodeCount - 1; i++) {
-                                            edges.push({
-                                                from: `node-${i}`,
-                                                to: `node-${i + 1}`
+                                // For each sheet, fetch runs and refines
+                                await Promise.all(
+                                    sheetsData.sheets.map(async (sheet: Sheet) => {
+                                        // Fetch runs for this sheet
+                                        try {
+                                            const runsRes = await fetch(`/api/runs?sheetId=${sheet._id}`, {
+                                                headers: { Authorization: `Bearer ${token}` }
                                             });
-
-                                            // Add some random connections
-                                            if (Math.random() > 0.7 && i > 0) {
-                                                edges.push({
-                                                    from: `node-${i}`,
-                                                    to: `node-${Math.floor(Math.random() * i)}`
-                                                });
+                                            const runsData = await runsRes.json();
+                                            if (runsData.runs) {
+                                                allRuns.push(...runsData.runs);
                                             }
+                                        } catch (err) {
+                                            console.error("Error fetching runs for sheet", sheet._id, err);
                                         }
 
-                                        return {
-                                            ...sheet,
-                                            graphData: { nodes, edges }
-                                        };
-                                    }
-                                    return sheet;
-                                });
-
-                                allSheets.push(...sheetsWithGraphs);
+                                        // Fetch refine history for this sheet
+                                        try {
+                                            const refinesRes = await fetch(`/api/refines?sheetId=${sheet._id}`, {
+                                                headers: { Authorization: `Bearer ${token}` }
+                                            });
+                                            const refinesData = await refinesRes.json();
+                                            if (refinesData.runs) {
+                                                allRefines.push(...refinesData.runs);
+                                            }
+                                        } catch (err) {
+                                            console.error("Error fetching refines for sheet", sheet._id, err);
+                                        }
+                                    })
+                                );
                             }
                         })
                     );
 
+                    // Set the collected data
                     setSheets(allSheets);
+                    setRuns(allRuns);
+                    setRefines(allRefines);
 
-                    // Generate activity stats
+                    // Generate activity stats from real data
                     const thirtyDaysAgo = new Date();
                     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -588,42 +662,40 @@ export default function ProfilePage() {
                         mostActivePlayground: playgroundActivity[0] || { name: "-", id: "", activity: 0 }
                     });
 
-                    // Generate model stats
+                    // Generate model stats from real run data
                     const modelUsage: { [modelId: string]: { count: number; name: string; company: string } } = {};
-                    let totalRuns = 0;
+                    let totalRunTime = 0;
 
-                    const models = ["gpt-4", "claude-3-opus", "gemini-pro", "llama-3", "mistral-large"];
-                    const companies = ["OpenAI", "Anthropic", "Google", "Meta", "Mistral"];
+                    // Process run timings to calculate model usage and run time
+                    allRuns.forEach(run => {
+                        if (run.timings) {
+                            let runTotalTime = 0;
 
-                    allSheets.forEach(sheet => {
-                        // Create realistic model associations if none exist
-                        if (!sheet.associatedModels || sheet.associatedModels.length === 0) {
-                            const modelCount = Math.floor(Math.random() * 2) + 1;
-                            sheet.associatedModels = Array.from({ length: modelCount }, () => {
-                                const idx = Math.floor(Math.random() * models.length);
-                                return `${companies[idx]}/${models[idx]}`;
-                            });
-                        }
+                            Object.entries(run.timings).forEach(([agent, timing]) => {
+                                if (timing.time) {
+                                    runTotalTime += timing.time;
+                                }
 
-                        if (sheet.associatedModels && sheet.associatedModels.length) {
-                            sheet.associatedModels.forEach(modelId => {
-                                const runCount = Math.floor(Math.random() * 10) + 1;
-                                totalRuns += runCount;
+                                if (timing.model) {
+                                    const modelId = timing.model;
+                                    if (modelUsage[modelId]) {
+                                        modelUsage[modelId].count++;
+                                    } else {
+                                        // Parse model name and company from ID
+                                        const parts = modelId.split('/');
+                                        const modelName = parts.length > 1 ? parts[1] : modelId;
+                                        const company = parts.length > 1 ? parts[0] : 'Unknown';
 
-                                if (modelUsage[modelId]) {
-                                    modelUsage[modelId].count += runCount;
-                                } else {
-                                    const parts = modelId.split('/');
-                                    const modelName = parts[parts.length - 1] || modelId;
-                                    const company = parts[0] || 'Unknown';
-
-                                    modelUsage[modelId] = {
-                                        count: runCount,
-                                        name: modelName,
-                                        company: company
-                                    };
+                                        modelUsage[modelId] = {
+                                            count: 1,
+                                            name: modelName,
+                                            company: company
+                                        };
+                                    }
                                 }
                             });
+
+                            totalRunTime += runTotalTime;
                         }
                     });
 
@@ -639,11 +711,14 @@ export default function ProfilePage() {
                         }
                     });
 
+                    // Calculate average run time
+                    const averageRunTime = allRuns.length > 0 ? totalRunTime / allRuns.length : 0;
+
                     setRunStats({
-                        totalRuns,
+                        totalRuns: allRuns.length,
                         models: modelUsage,
                         mostUsedModel: mostUsed,
-                        averageRunTime: Math.random() * 2 + 0.5 // Mock average run time between 0.5-2.5s
+                        averageRunTime: averageRunTime
                     });
                 }
             } catch (error) {
@@ -796,7 +871,7 @@ export default function ProfilePage() {
 
                     <div>
                         <button className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg py-2 px-4 text-sm font-medium flex items-center">
-                            <Plus size={16} className="mr-2" /> New Playground
+                            <Plus size={16} className="mr-2" /> Preview Paid Models
                         </button>
                     </div><hr />
                 </header>
@@ -865,7 +940,12 @@ export default function ProfilePage() {
                                     <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-4">
                                         <h2 className="text-lg font-medium mb-6">Activity Overview</h2>
                                         <div className="h-72">
-                                            <ActivityChart playgrounds={playgrounds} />
+                                            <ActivityChart
+                                                playgrounds={playgrounds}
+                                                sheets={sheets}
+                                                runs={runs}
+                                                refines={refines}
+                                            />
                                         </div>
                                     </div>
 
@@ -1216,27 +1296,62 @@ export default function ProfilePage() {
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-zinc-700">
-                                            {Object.entries(runStats.models).map(([modelId, data]) => {
-                                                const modelLatency = (Math.random() * 3 + 0.5).toFixed(2);
-                                                const lastUsed = new Date();
-                                                lastUsed.setDate(lastUsed.getDate() - Math.floor(Math.random() * 30));
+                                            {Object.entries(runStats.models).length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={5} className="text-center py-8 text-gray-400">
+                                                        No model usage data available yet
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                Object.entries(runStats.models).map(([modelId, data]) => {
+                                                    // Find all runs using this model
+                                                    const modelRuns = runs.filter(run =>
+                                                        Object.values(run.timings || {}).some(timing =>
+                                                            timing.model === modelId
+                                                        )
+                                                    );
 
-                                                return (
-                                                    <tr key={modelId} className="hover:bg-zinc-700/20">
-                                                        <td className="py-3 text-sm font-medium">{data.name}</td>
-                                                        <td className="py-3 text-sm text-gray-300">{data.company}</td>
-                                                        <td className="py-3 text-center">
-                                                            <div className="inline-flex items-center px-2 py-1 rounded-full bg-purple-900/30 text-purple-300 text-xs">
-                                                                {data.count} runs
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-3 text-right text-sm">{modelLatency}s</td>
-                                                        <td className="py-3 text-right text-sm text-gray-400">
-                                                            {formatDate(lastUsed.toISOString())}
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
+                                                    // Calculate average latency
+                                                    let totalLatency = 0;
+                                                    let latencyCount = 0;
+
+                                                    modelRuns.forEach(run => {
+                                                        Object.values(run.timings || {}).forEach(timing => {
+                                                            if (timing.model === modelId && timing.time) {
+                                                                totalLatency += timing.time;
+                                                                latencyCount++;
+                                                            }
+                                                        });
+                                                    });
+
+                                                    const avgLatency = latencyCount > 0
+                                                        ? (totalLatency / latencyCount).toFixed(2)
+                                                        : "N/A";
+
+                                                    // Find last used date
+                                                    const lastUsedRun = modelRuns.length > 0
+                                                        ? modelRuns.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0]
+                                                        : null;
+
+                                                    const lastUsedDate = lastUsedRun
+                                                        ? formatDate(lastUsedRun.timestamp)
+                                                        : "Never";
+
+                                                    return (
+                                                        <tr key={modelId} className="hover:bg-zinc-700/20">
+                                                            <td className="py-3 text-sm font-medium">{data.name}</td>
+                                                            <td className="py-3 text-sm text-gray-300">{data.company}</td>
+                                                            <td className="py-3 text-center">
+                                                                <div className="inline-flex items-center px-2 py-1 rounded-full bg-purple-900/30 text-purple-300 text-xs">
+                                                                    {data.count} runs
+                                                                </div>
+                                                            </td>
+                                                            <td className="py-3 text-right text-sm">{avgLatency !== "N/A" ? `${avgLatency}s` : avgLatency}</td>
+                                                            <td className="py-3 text-right text-sm text-gray-400">{lastUsedDate}</td>
+                                                        </tr>
+                                                    );
+                                                })
+                                            )}
                                         </tbody>
                                     </table>
                                 </div>

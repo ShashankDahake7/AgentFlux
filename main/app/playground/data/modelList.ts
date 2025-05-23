@@ -3,7 +3,7 @@ const logos = {
     openai: "https://mir-s3-cdn-cf.behance.net/project_modules/fs/e50214173218977.648c4882a75d6.gif",
     deepseek: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYpzFp7T95S6gDEFYMor4BT_eRZpVYx43HjacHa6Uc6Jmsond15fa32s0XzKEpBqSwUcU&usqp=CAU",
     mistral: "https://logosandtypes.com/wp-content/uploads/2025/02/mistral-ai.svg",
-    qwen: "https://i.namu.wiki/i/eNiAyEuBeEyN7lOJGFdl0yhPhzwYlirqWYU1_tSVOkPrNKv65zvqvQxh-hYzCNREUMnLlZytk8JEcHvYEEdVLcIFgCgo9QSd7h40vyy9ruW3XZE0ocz1O-FX6cuI7iJuJkXf58CaumvTVZn8E11ZKg.webp"
+    qwen: "https://images.seeklogo.com/logo-png/61/1/qwen-2-5-logo-png_seeklogo-612182.png"
 };
 
 const companies = {
