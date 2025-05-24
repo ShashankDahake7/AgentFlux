@@ -2,7 +2,7 @@
 if (typeof window !== "undefined" && typeof self === "undefined") {
   (window as any).self = window;
 }
-import { ChevronUp, ChevronDown } from "lucide-react";
+import { ChevronUp, ChevronDown, User } from "lucide-react";
 import GraphAgentControls, { RefinementType } from "@/components/GraphAgentControls";
 import AgentGraphDiffModal from "@/components/AgentGraphDiffModal";
 import React, {
@@ -1540,9 +1540,14 @@ export default function PlaygroundsPage() {
     <div className="flex flex-col h-screen bg-black text-white relative overflow-hidden">
       {/* Header */}
       <header className="h-12 bg-zinc-900 border-b border-gray-300 flex items-center px-4 flex justify-between">
-        <div className="px-3 py-1 border border-purple-400 rounded text-sm">
-          {user?.email || "Not Signed In"}
-        </div>
+        <button
+          onClick={() => router.push('/profile')}
+          className="flex items-center justify-between gap-2 px-3 py-2 border border-purple-400 rounded text-sm text-white background bg-black hover:text-violet-300 transition duration-200"
+        >
+          <User className="w-4 h-4" />
+          <span>{user?.email || "Not Signed In"}</span>
+
+        </button>
         <div>
           <button className="text-white-600 px-3 py-1 border border-purple-400 rounded text-sm font-cinzel hover:text-violet-300 transition mx-4">
             <Link href="/">Home</Link>
