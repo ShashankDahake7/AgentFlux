@@ -38,6 +38,8 @@ import {
     ArrowUpRight,
     Plus
 } from "lucide-react";
+import { modellist } from "../playground/data/modelList";
+import dynamic from "next/dynamic";
 
 // Register chart components
 Chart.register(
@@ -126,9 +128,9 @@ interface ActivityStats {
     };
 }
 
-const NavItem = ({ icon, label, active, href }: { icon: React.ReactNode, label: string, active: boolean, href: string }) => {
+const NavItem = ({ icon, label, active, href, onClick }: { icon: React.ReactNode, label: string, active: boolean, href: string, onClick?: () => void }) => {
     return (
-        <Link href={href} className="block">
+        <Link href={href} className="block" onClick={onClick} tabIndex={-1}>
             <motion.div
                 className={`flex items-center p-3 my-1 rounded-lg transition-all ${active ? 'bg-gradient-to-r from-violet-900/50 to-violet-700/30 text-white' : 'text-gray-300 hover:bg-zinc-800'}`}
                 whileHover={{ x: 5 }}
@@ -165,6 +167,9 @@ const AgentGraphPreview = ({ graphData, onClick }: { graphData: any, onClick: ()
             y: 100 + (node.y || 0) / 5
         };
     });
+
+    // Derive node count as in GraphVisualization
+    const nodeCount = Array.isArray(graphData.nodes) ? graphData.nodes.length : Object.keys(graphData.nodes).length;
 
     return (
         <div
@@ -234,6 +239,10 @@ const AgentGraphPreview = ({ graphData, onClick }: { graphData: any, onClick: ()
                 <span className="text-xs text-white flex items-center">
                     <Eye size={12} className="mr-1" /> View graph
                 </span>
+            </div>
+
+            <div className="absolute top-2 right-2 bg-purple-900/80 text-purple-200 text-xs px-2 py-1 rounded shadow">
+                {nodeCount} node{nodeCount !== 1 ? 's' : ''}
             </div>
         </div>
     );
@@ -359,18 +368,27 @@ const ActivityChart = ({ playgrounds, sheets, runs, refines }: {
             }
         },
         interaction: {
-            mode: 'index',
+            mode: 'index' as const,
             intersect: false,
         },
         maintainAspectRatio: false
     };
 
-    return <Line data={data} options={options} />;
+    // Patch: fix chart.js types for options
+    const fixedLineOptions = {
+        ...options,
+        interaction: {
+            ...options.interaction,
+            mode: 'index' as const,
+        },
+    };
+
+    return <Line data={data} options={fixedLineOptions} />;
 };
 
-// Model usage chart component
+// Patch: add type to modelData in ModelUsageChart
 const ModelUsageChart = ({ modelUsage }: { modelUsage: RunStats['models'] }) => {
-    const modelData = Object.entries(modelUsage || {}).slice(0, 5);
+    const modelData: [string, { count: number; name: string; company: string }][] = Object.entries(modelUsage || {}).slice(0, 5);
 
     // If no model data, show placeholder with empty chart
     if (modelData.length === 0) {
@@ -467,7 +485,22 @@ const ModelUsageChart = ({ modelUsage }: { modelUsage: RunStats['models'] }) => 
         }
     };
 
-    return <Doughnut data={data} options={options} />;
+    // Patch: fix chart.js types for Doughnut options
+    const fixedDoughnutOptions = {
+        ...options,
+        plugins: {
+            ...options.plugins,
+            tooltip: {
+                ...options.plugins.tooltip,
+                titleFont: {
+                    ...options.plugins.tooltip.titleFont,
+                    weight: 'bold' as const,
+                },
+            },
+        },
+    };
+
+    return <Doughnut data={data} options={fixedDoughnutOptions} />;
 };
 
 // Stat card component
@@ -518,6 +551,13 @@ const StatCard = ({ icon, label, value, trend, color }: {
     );
 };
 
+// Utility to get model info from modellist
+function getModelInfo(modelId: string) {
+    return modellist.find((m) => m.id === modelId || m.name === modelId);
+}
+
+const GraphVisualization = dynamic(() => import("@/components/GraphVisualization"), { ssr: false });
+
 export default function ProfilePage() {
     const [user, setUser] = useState<any>(null);
     const [token, setToken] = useState<string>("");
@@ -549,6 +589,10 @@ export default function ProfilePage() {
         }
     });
     const [filterOption, setFilterOption] = useState<'all' | 'recent' | 'active'>('all');
+    // --- Add state for overlays and modal ---
+    const [showSearchOverlay, setShowSearchOverlay] = useState(false);
+    const [showSettingsOverlay, setShowSettingsOverlay] = useState(false);
+    const [graphModalSheet, setGraphModalSheet] = useState<Sheet | null>(null);
 
     const router = useRouter();
 
@@ -653,7 +697,7 @@ export default function ProfilePage() {
                     }));
 
                     // Sort by activity
-                    playgroundActivity.sort((a, b) => b.activity - a.activity);
+                    playgroundActivity.sort((a: { activity: number }, b: { activity: number }) => b.activity - a.activity);
 
                     setActivityStats({
                         totalPlaygrounds: playgroundsData.playgrounds.length,
@@ -830,7 +874,7 @@ export default function ProfilePage() {
                     <div>
                         <h2 className="text-xs text-gray-200 font-medium mb-2 px-3">ACCOUNT</h2><hr />
                         <nav>
-                            <NavItem icon={<Settings size={18} />} label="Settings" active={false} href="/settings" />
+                            <NavItem icon={<Settings size={18} />} label="Settings" active={false} href="#" onClick={() => setShowSettingsOverlay(true)} />
                             <NavItem icon={<LogOut size={18} />} label="Sign Out" active={false} href="/signup" />
                         </nav>
                     </div>
@@ -865,8 +909,30 @@ export default function ProfilePage() {
                             placeholder="Search playgrounds..."
                             className="bg-zinc-800/50 border border-zinc-700 rounded-lg py-2 pl-10 pr-4 text-sm w-64 focus:outline-none focus:ring-1 focus:ring-purple-500"
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                setShowSearchOverlay(e.target.value.length > 0);
+                            }}
+                            onFocus={() => setShowSearchOverlay(searchTerm.length > 0)}
+                            onBlur={() => setTimeout(() => setShowSearchOverlay(false), 200)}
                         />
+                        {showSearchOverlay && searchTerm && (
+                            <div className="absolute left-0 top-full z-30 w-full bg-zinc-900/95 border border-zinc-700 rounded-xl shadow-xl mt-1">
+                                <ul className="divide-y divide-zinc-800">
+                                    {playgrounds.filter(pg => pg.name.toLowerCase().includes(searchTerm.toLowerCase())).map(pg => (
+                                        <li key={pg._id} className="flex items-center justify-between px-4 py-3 hover:bg-purple-900/20 transition cursor-pointer">
+                                            <span className="truncate text-white text-base">{pg.name}</span>
+                                            <Link href={`/playground?pg=${pg._id}`} className="ml-4 text-purple-300 hover:text-purple-400 transition">
+                                                <ChevronRight size={18} />
+                                            </Link>
+                                        </li>
+                                    ))}
+                                    {playgrounds.filter(pg => pg.name.toLowerCase().includes(searchTerm.toLowerCase())).length === 0 && (
+                                        <li className="text-gray-400 px-4 py-3">No playgrounds found.</li>
+                                    )}
+                                </ul>
+                            </div>
+                        )}
                     </div>
 
                     <div>
@@ -1019,7 +1085,7 @@ export default function ProfilePage() {
                                                     <div className="h-36">
                                                         <AgentGraphPreview
                                                             graphData={sheet.graphData}
-                                                            onClick={() => handleSheetClick(sheet)}
+                                                            onClick={() => setGraphModalSheet(sheet)}
                                                         />
                                                     </div>
                                                     <div className="p-4">
@@ -1340,7 +1406,9 @@ export default function ProfilePage() {
                                                     return (
                                                         <tr key={modelId} className="hover:bg-zinc-700/20">
                                                             <td className="py-3 text-sm font-medium">{data.name}</td>
-                                                            <td className="py-3 text-sm text-gray-300">{data.company}</td>
+                                                            <td className="py-3 text-sm text-gray-300">
+                                                                {getModelInfo(modelId)?.company || data.company}
+                                                            </td>
                                                             <td className="py-3 text-center">
                                                                 <div className="inline-flex items-center px-2 py-1 rounded-full bg-purple-900/30 text-purple-300 text-xs">
                                                                     {data.count} runs
@@ -1360,6 +1428,59 @@ export default function ProfilePage() {
                     </AnimatePresence>
                 </div>
             </div>
+
+            <AnimatePresence>
+                {showSettingsOverlay && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.97 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.97 }}
+                        transition={{ duration: 0.25 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur bg-black/40"
+                    >
+                        <motion.div
+                            initial={{ y: 40, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: 40, opacity: 0 }}
+                            transition={{ duration: 0.25 }}
+                            className="bg-zinc-900/80 rounded-xl p-8 shadow-xl w-full max-w-md mx-auto relative border-2 border-purple-300"
+                        >
+                            <button onClick={() => setShowSettingsOverlay(false)} className="absolute top-2 right-2 text-gray-400 hover:text-gray-200 text-2xl">&times;</button>
+                            <h3 className="text-lg font-bold mb-4">Account Settings</h3>
+                            <div className="mb-6">
+                                <p className="text-gray-300 mb-2">Permanently delete your AgentFlux account.</p>
+                                <button className="bg-gradient-to-r from-red-600 to-pink-600 text-white px-4 py-2 rounded-lg font-semibold w-full opacity-90 hover:opacity-100 transition">Delete Account</button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {graphModalSheet && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.97 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.97 }}
+                        transition={{ duration: 0.25 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur bg-black/60"
+                    >
+                        <motion.div
+                            initial={{ y: 40, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: 40, opacity: 0 }}
+                            transition={{ duration: 0.25 }}
+                            className="bg-zinc-900/90 rounded-xl shadow-2xl w-full max-w-5xl h-[80vh] p-6 relative flex flex-col border-2 border-purple-300"
+                        >
+                            <button onClick={() => setGraphModalSheet(null)} className="absolute top-3 right-4 text-gray-400 hover:text-gray-200 text-2xl">&times;</button>
+                            <h2 className="text-xl font-bold mb-4 text-white">Graph Visualization</h2>
+                            <div className="flex-1 min-h-0 min-w-0 overflow-hidden rounded-lg">
+                                <GraphVisualization graphData={graphModalSheet.graphData} />
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div >
     );
 }
