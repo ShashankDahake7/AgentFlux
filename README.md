@@ -112,3 +112,11 @@
 - Visualize changes made by our models in specific refines in proper diff reports.
 - Make changes from any state to revert back to it.
 - integrated loggers and profilers injected directly into your code help visualize time taken by different agents within your graph and helps you decode bottlenecks and see refined outputs. 
+<br/><br/>
+
+**Read More:**
+<p>
+  <a href="https://github.com/VidyutChakrabarti/AgentFlux/blob/main/data/README.md" style="background-color:#a770ef; color:white; padding:7px 20px; border:none; border-radius:8px; text-decoration:none; margin:5px; display:inline-block;">View Repo structure</a>
+  <a href="https://github.com/VidyutChakrabarti/AgentFlux/blob/main/main/Agents/README.md" style="background-color:#cf8bf3; color:white; padding:7px 20px; border:none; border-radius:8px; text-decoration:none; margin:5px; display:inline-block;">Agent Architecture</a>
+  <a href="https://github.com/VidyutChakrabarti/AgentFlux/blob/main/main/README.md" style="background-color:#e0c3fc; color:black; padding:7px 20px; border:none; border-radius:8px; text-decoration:none; margin:5px; display:inline-block;">System Architecture</a>
+</p>
