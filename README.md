@@ -115,8 +115,6 @@
 <br/><br/>
 
 **Read More:**
-<p>
-  <a href="https://github.com/VidyutChakrabarti/AgentFlux/blob/main/data/README.md" style="background-color:#a770ef; color:white; padding:7px 20px; border:none; border-radius:8px; text-decoration:none; margin:5px; display:inline-block;">View Repo structure</a>
-  <a href="https://github.com/VidyutChakrabarti/AgentFlux/blob/main/main/Agents/README.md" style="background-color:#cf8bf3; color:white; padding:7px 20px; border:none; border-radius:8px; text-decoration:none; margin:5px; display:inline-block;">Agent Architecture</a>
-  <a href="https://github.com/VidyutChakrabarti/AgentFlux/blob/main/main/README.md" style="background-color:#e0c3fc; color:black; padding:7px 20px; border:none; border-radius:8px; text-decoration:none; margin:5px; display:inline-block;">System Architecture</a>
-</p>
+<br/><br/>
+[![View Repo Structure](https://img.shields.io/badge/View_Repo_Structure-8a2be2?style=for-the-badge&logo=github&logoColor=white)](https://github.com/VidyutChakrabarti/AgentFlux/blob/main/data/README.md) &nbsp;&nbsp;&nbsp; [![Agent Architecture](https://img.shields.io/badge/Agent_Architecture-ba55d3?style=for-the-badge&logo=github&logoColor=white)](https://github.com/VidyutChakrabarti/AgentFlux/blob/main/main/Agents/README.md) &nbsp;&nbsp;&nbsp; [![System Architecture](https://img.shields.io/badge/System_Architecture-d8bfd8?style=for-the-badge&logo=github&logoColor=black)](https://github.com/VidyutChakrabarti/AgentFlux/blob/main/main/README.md)
+
