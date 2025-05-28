@@ -4,7 +4,6 @@ import http from "http";
 import cors from "cors";
 import { Server as SocketIOServer, Socket } from "socket.io";
 import { Client as SSHClient, SFTPWrapper, ClientChannel, ExecOptions } from "ssh2";
-import fs from "fs";
 import path from "path";
 import admin, { ServiceAccount } from "firebase-admin";
 import dbConnect from "./lib/mongodb";
