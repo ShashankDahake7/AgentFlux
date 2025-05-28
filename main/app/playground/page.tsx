@@ -3,8 +3,8 @@ if (typeof window !== "undefined" && typeof self === "undefined") {
   (window as any).self = window;
 }
 import { ChevronUp, ChevronDown, User } from "lucide-react";
-import GraphAgentControls, { RefinementType } from "@/components/GraphAgentControls";
-import AgentGraphDiffModal from "@/components/AgentGraphDiffModal";
+import GraphAgentControls, { RefinementType } from "@/app/playground/components/GraphAgentControls";
+import AgentGraphDiffModal from "@/app/playground/components/AgentGraphDiffModal";
 import React, {
   useState,
   useEffect,
@@ -22,7 +22,7 @@ import Draggable from "react-draggable";
 import Image from "next/image";
 import "xterm/css/xterm.css";
 import Link from 'next/link';
-import MakeCompatibleModal from "@/components/MakeCompatibleModal";
+import MakeCompatibleModal from "@/app/playground/components/MakeCompatibleModal";
 import { modellist } from "./data/modelList";
 
 // Dynamically import MonacoEditor (SSR disabled)
