@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { BrainCircuit, Menu, X } from 'lucide-react';
-import { signOut } from 'firebase/auth';
-import { auth } from '@/app/firebase/firebaseConfig';
 import { useRouter } from "next/navigation";
 import Link from 'next/link';
 
@@ -17,14 +15,7 @@ export const Header: React.FC<HeaderProps> = ({ user, scrollToSection }) => {
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   const handleSignOut = async () => {
-    const confirmed = window.confirm('Are you sure you want to sign out?');
-    if (confirmed) {
-      try {
-        await signOut(auth);
-      } catch (error) {
-        console.error('Error signing out:', error);
-      }
-    }
+    router.push("/signup");
   };
 
   return (

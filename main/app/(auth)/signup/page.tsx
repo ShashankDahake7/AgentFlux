@@ -1,13 +1,15 @@
 // app/(auth)/signup/page.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { User, Mail, Lock, Eye, EyeOff, LogOut, User as UserIcon } from 'lucide-react';
 import { auth } from '@/app/firebase/firebaseConfig';
 import { onAuthStateChanged, User as FirebaseUser, signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { signUp, signInWithGoogle, signInWithGithub } from '@/app/firebase/authService';
 import OAuthButton from '@/components/OAuthButton';
+import * as THREE from 'three';
+import FOG from 'vanta/dist/vanta.fog.min';
 
 export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
@@ -19,6 +21,8 @@ export default function SignUp() {
     password: ''
   });
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const vantaRef = useRef<HTMLDivElement>(null);
+  const vantaEffect = useRef<any>(null);
 
   // Gallery images from public/Gallery folder (same as Signin)
   const galleryImages = [
@@ -147,9 +151,34 @@ export default function SignUp() {
     }
   };
 
+  useEffect(() => {
+    if (!vantaEffect.current && vantaRef.current) {
+      vantaEffect.current = FOG({
+        el: vantaRef.current,
+        THREE: THREE,
+        mouseControls: true,
+        touchControls: true,
+        gyroControls: false,
+        minHeight: 200.00,
+        minWidth: 200.00,
+        highlightColor: 0xc3edff,
+        midtoneColor: 0xc867ff,
+        lowlightColor: 0xa9a0ff,
+        baseColor: 0xf4e0f7,
+        blurFactor: 0.44
+      });
+    }
+    return () => {
+      if (vantaEffect.current) {
+        vantaEffect.current.destroy();
+        vantaEffect.current = null;
+      }
+    };
+  }, []);
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-800 via-purple-300 to-pink-400 text-white">
-      <div className="bg-white border-2 border-gray-800 p-0 rounded-lg shadow-lg w-full max-w-6xl flex flex-col md:flex-row overflow-hidden justify-center items-stretch min-h-[30rem]">
+    <div ref={vantaRef} className="min-h-screen flex items-center justify-center w-full text-white">
+      <div className="bg-white border-2 border-gray-800 p-0 rounded-lg shadow-lg w-full max-w-6xl flex flex-col md:flex-row overflow-hidden justify-center items-stretch min-h-[38rem]">
         {/* Slideshow inside white box, left side on desktop */}
         <div className="hidden md:flex items-center justify-center bg-black w-[43rem] min-h-full relative">
           <div className="w-[35rem] h-100 rounded-lg overflow-hidden flex items-center justify-center border-4 border-gray-700 shadow-xl">
