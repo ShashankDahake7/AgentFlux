@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { signIn, signInWithGoogle, signInWithGithub } from '@/app/firebase/authService';
+import { getAuth, onAuthStateChanged, signOut as firebaseSignOut, User } from 'firebase/auth';
 import OAuthButton from './OAuthButton';
 
 export const SignIn = () => {
@@ -13,6 +14,7 @@ export const SignIn = () => {
         password: ''
     });
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [currentUser, setCurrentUser] = useState<User | null>(null);
     const router = useRouter();
 
     // Gallery images from public/Gallery folder
@@ -37,6 +39,15 @@ export const SignIn = () => {
         }, 3000);
         return () => clearInterval(interval);
     }, [galleryImages.length]);
+
+    // Listen for auth state changes
+    useEffect(() => {
+        const auth = getAuth();
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            setCurrentUser(user);
+        });
+        return () => unsubscribe();
+    }, []);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -74,6 +85,26 @@ export const SignIn = () => {
             alert(error.message);
         }
     };
+
+    const handleSignOut = async () => {
+        const auth = getAuth();
+        await firebaseSignOut(auth);
+        setCurrentUser(null);
+    };
+
+    if (currentUser) {
+        return (
+            <div className="bg-gray-800 p-8 border border-purple-300 rounded-lg shadow-lg w-full max-w-md mx-auto flex flex-col items-center justify-center mt-12">
+                <h2 className="text-2xl font-cinzel text-center mb-6 text-white">You are already signed in</h2>
+                <button
+                    onClick={handleSignOut}
+                    className="bg-gradient-to-r from-red-500 to-purple-400 text-white py-3 px-6 rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition duration-300 font-cinzel mb-2"
+                >
+                    Sign Out
+                </button>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-gray-800 p-0 border border-purple-300 rounded-lg shadow-lg w-full max-w-6xl flex flex-row overflow-hidden">
