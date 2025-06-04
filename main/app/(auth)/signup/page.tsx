@@ -166,6 +166,7 @@ export default function SignUp() {
         lowlightColor: 0xa9a0ff,
         baseColor: 0xf4e0f7,
         blurFactor: 0.44,
+        speed: 1.5
       });
     }
     return () => {
