@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { User, Mail, Lock, Eye, EyeOff, LogOut, User as UserIcon } from 'lucide-react';
+import { CircleUser, User, Mail, Lock, Eye, EyeOff, LogOut, User as UserIcon } from 'lucide-react';
 import { auth } from '@/app/firebase/firebaseConfig';
 import { onAuthStateChanged, User as FirebaseUser, signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
@@ -165,7 +165,7 @@ export default function SignUp() {
         midtoneColor: 0xc867ff,
         lowlightColor: 0xa9a0ff,
         baseColor: 0xf4e0f7,
-        blurFactor: 0.44
+        blurFactor: 0.44,
       });
     }
     return () => {
@@ -181,13 +181,32 @@ export default function SignUp() {
       <div className="bg-white border-2 border-gray-800 p-0 rounded-lg shadow-lg w-full max-w-6xl flex flex-col md:flex-row overflow-hidden justify-center items-stretch min-h-[38rem]">
         {/* Slideshow inside white box, left side on desktop */}
         <div className="hidden md:flex items-center justify-center bg-black w-[43rem] min-h-full relative">
-          <div className="w-[35rem] h-100 rounded-lg overflow-hidden flex items-center justify-center border-4 border-gray-700 shadow-xl">
+          <div className="w-[35rem] h-100 rounded-lg overflow-hidden flex items-center justify-center border-4 border-gray-700 shadow-xl relative">
             <img
               src={galleryImages[currentImageIndex]}
               alt="Gallery Slideshow"
               className="object-cover w-full h-full transition-opacity duration-1000"
               style={{ background: '#111' }}
             />
+          </div>
+          {/* Caption for each slide */}
+          <div className="absolute bottom-14 left-1/2 -translate-x-1/2 w-[90%] flex justify-center">
+            <div className="bg-black/70 px-4 py-2 rounded-lg shadow font-merriweather text-white tracking-wide text-center">
+              {{
+                0: 'Make your agents production ready!!',
+                1: 'Visualize your agents into graphs',
+                2: 'Monitor LLM calls and github styled state maintainance',
+                3: 'Use our browser based AI-code editor',
+                4: 'Enchat yourself with breathtaking UI',
+                5: 'Experience a new form of UX',
+                6: 'Integrate custom LLMs from Hugging-Face',
+                7: 'Enter the world of AgentFlux',
+                8: 'Observe and monitor your agents in real-time',
+                9: 'Maintain your agents with ease by colloborating with your team',
+                10: 'Use studios to manage your agents',
+                11: 'Experience seamless code executions',
+              }[currentImageIndex]}
+            </div>
           </div>
           {/* Dots indicator */}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1">
@@ -206,7 +225,16 @@ export default function SignUp() {
               {user ? 'Welcome Back!' : 'Create Account'}
             </h2>
             <p className="text-gray-500 font-merriweather pb-4">
-              {user ? `Signed in as ${user.email}` : 'Join AgentFlux today'}
+              {user ? (
+                <>
+                  Signed in as {user.email}
+                  <a href="/profile" className="inline-flex items-center ml-2 align-middle">
+                    <CircleUser className="w-5 h-5 text-black hover:text-purple-400" />
+                  </a>
+                </>
+              ) : (
+                'Join AgentFlux today'
+              )}
             </p>
           </div>
 
