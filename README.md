@@ -112,3 +112,9 @@
 - Visualize changes made by our models in specific refines in proper diff reports.
 - Make changes from any state to revert back to it.
 - integrated loggers and profilers injected directly into your code help visualize time taken by different agents within your graph and helps you decode bottlenecks and see refined outputs. 
+<br/><br/>
+
+**Read More:**
+<br/><br/>
+[![View Repo Structure](https://img.shields.io/badge/View_Repo_Structure-8a2be2?style=for-the-badge&logo=github&logoColor=white)](https://github.com/VidyutChakrabarti/AgentFlux/blob/main/data/README.md) &nbsp;&nbsp;&nbsp; [![Agent Architecture](https://img.shields.io/badge/Agent_Architecture-ba55d3?style=for-the-badge&logo=github&logoColor=white)](https://github.com/VidyutChakrabarti/AgentFlux/blob/main/main/Agents/README.md) &nbsp;&nbsp;&nbsp; [![System Architecture](https://img.shields.io/badge/System_Architecture-d8bfd8?style=for-the-badge&logo=github&logoColor=black)](https://github.com/VidyutChakrabarti/AgentFlux/blob/main/main/README.md)
+
