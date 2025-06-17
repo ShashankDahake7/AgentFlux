@@ -22,6 +22,14 @@ import {
 } from "chart.js";
 import { auth } from "@/app/firebase/firebaseConfig";
 import CodeditorModal from "@/components/CodeditorModal";
+import EnhancedSidebar from "./components/EnhancedSidebar";
+import ObserveHeader from "./components/ObserveHeader";
+import ObserveFooter from "./components/ObserveFooter";
+import GraphVisualizationPanel from "./components/GraphVisualizationPanel";
+import DiffReportPanel from "./components/DiffReportPanel";
+import ModelOutputsPanel from "./components/ModelOutputsPanel";
+import Resizer from "./components/Resizer";
+import { Playground, Sheet, RefineHistory, Run, FileType, Timing } from "./components/types";
 
 // Register necessary chart components
 Chart.register(
@@ -36,171 +44,7 @@ Chart.register(
   LineElement
 );
 
-/* ===== Interface Definitions ===== */
-interface Playground {
-  _id: string;
-  userId: string;
-  name: string;
-  description: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface FileType {
-  filename: string;
-  code: string;
-  language: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface Sheet {
-  _id: string;
-  sheetId: string;
-  title: string;
-  diffReport?: { [filename: string]: string };
-  mergedFiles?: { [filename: string]: string };
-  files?: FileType[];
-  canvasData: any;
-  graphData?: any;
-  associatedModels?: string[];
-  createdAt: string;
-  updatedAt: string;
-  playgroundId?: string;
-}
-
-export interface RefineHistory {
-  _id: string;
-  sheetId: string;
-  diffReport: { [filename: string]: string };
-  mergedFiles: { [filename: string]: string };
-  timestamp: string;
-}
-
-interface Run {
-  _id: string;
-  sheetId: string;
-  timestamp: string;
-  output: string;
-  timings: { [agent: string]: { time: number; model: string } };
-}
-
-interface EnhancedSidebarProps {
-  playgrounds: Playground[];
-  sheets: Sheet[];
-  refineHistories: { [sheetId: string]: RefineHistory[] };
-  onPlaygroundSelect: (pg: Playground) => void;
-  onRefineHistorySelect: (sheet: Sheet, history: RefineHistory) => void;
-  fetchRefineHistories: (sheetId: string) => void;
-}
-
-/* ===== Enhanced Sidebar Component ===== */
-const EnhancedSidebar: React.FC<EnhancedSidebarProps> = ({
-  playgrounds,
-  sheets,
-  refineHistories,
-  onPlaygroundSelect,
-  onRefineHistorySelect,
-  fetchRefineHistories,
-}) => {
-  const [expandedPlaygrounds, setExpandedPlaygrounds] = useState<{ [pgId: string]: boolean }>({});
-  const [expandedSheets, setExpandedSheets] = useState<{ [sheetId: string]: boolean }>({});
-
-  const handlePlaygroundToggle = (pg: Playground) => {
-    setExpandedPlaygrounds((prev) => ({ ...prev, [pg._id]: !prev[pg._id] }));
-    onPlaygroundSelect(pg);
-  };
-
-  const handleSheetToggle = (sheet: Sheet) => {
-    if (!expandedSheets[sheet._id]) {
-      fetchRefineHistories(sheet._id);
-    }
-    setExpandedSheets((prev) => ({ ...prev, [sheet._id]: !prev[sheet._id] }));
-  };
-
-  return (
-    <div className="bg-black border-r border-gray-300 py-4 px-2 overflow-y-auto">
-      <h2 className="text-2xl font-cinzel mb-4 text-white border-b border-gray-400">Playgrounds</h2>
-      <ul>
-        {playgrounds.map((pg) => (
-          <li key={pg._id} className="mb-2">
-            <div
-              onClick={() => handlePlaygroundToggle(pg)}
-              className="cursor-pointer flex items-center justify-between bg-neutral-600 p-2 rounded border border-gray-300 hover:bg-zinc-800 transition-colors"
-            >
-              <div className="flex items-center">
-                <Image src="/obs2.png" alt="Logo" width={20} height={20} className="mr-2" priority />
-                <span className="text-white font-cinzel">{pg.name}</span>
-              </div>
-              {expandedPlaygrounds[pg._id] ? (
-                <ChevronUp size={16} className="ml-1 text-white" />
-              ) : (
-                <ChevronDown size={16} className="ml-1 text-white" />
-              )}
-            </div>
-            <AnimatePresence>
-              {expandedPlaygrounds[pg._id] && (
-                <motion.ul
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="ml-4 mt-2 border-l border-gray-400 pl-2 overflow-hidden"
-                >
-                  {sheets
-                    .filter((sheet) => sheet.playgroundId === pg._id)
-                    .map((sheet) => (
-                      <li key={sheet._id} className="mb-1">
-                        <div
-                          onClick={() => handleSheetToggle(sheet)}
-                          className="cursor-pointer font-quintessential flex items-center justify-between text-sm bg-zinc-700 p-1 rounded border border-gray-300 hover:bg-zinc-600 transition-colors"
-                        >
-                          <span className="text-white">{sheet.title}</span>
-                          {expandedSheets[sheet._id] ? (
-                            <ChevronUp size={14} className="ml-1 text-white" />
-                          ) : (
-                            <ChevronDown size={14} className="ml-1 text-white" />
-                          )}
-                        </div>
-                        <AnimatePresence>
-                          {expandedSheets[sheet._id] && (
-                            <motion.ul
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: "auto" }}
-                              exit={{ opacity: 0, height: 0 }}
-                              transition={{ duration: 0.3 }}
-                              className="ml-4 mt-1 border-l border-gray-400 pl-2 overflow-hidden"
-                            >
-                              {(refineHistories[sheet._id] || []).map((history) => (
-                                <li
-                                  key={history._id}
-                                  onClick={() => onRefineHistorySelect(sheet, history)}
-                                  className="cursor-pointer text-xs border border-gray-400 rounded px-2 py-1 my-1 hover:bg-gray-700 transition-colors text-white"
-                                >
-                                  {new Date(history.timestamp).toLocaleString()}
-                                </li>
-                              ))}
-                            </motion.ul>
-                          )}
-                        </AnimatePresence>
-                      </li>
-                    ))}
-                </motion.ul>
-              )}
-            </AnimatePresence>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-};
-
 /* ===== TimingBarChart Component ===== */
-interface Timing {
-  time: number;
-  model: string;
-}
-
 interface TimingBarChartProps {
   beforeTimings: { [agent: string]: Timing };
   afterTimings: { [agent: string]: Timing };
@@ -628,20 +472,21 @@ const CustomObservePage: React.FC = () => {
   };
 
   // ------------------------- VERTICAL & HORIZONTAL RESIZERS -------------------------
+  // Fix event type for addEventListener/removeEventListener for resizer logic
   const handleVerticalResize = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     const startY = e.clientY;
     const startTop = topSectionHeight;
-    const onMouseMove = (event: MouseEvent) => {
+    const onMouseMove = (event: globalThis.MouseEvent) => {
       const delta = ((event.clientY - startY) / window.innerHeight) * 100;
       const newTop = startTop + delta;
       if (newTop >= 20 && newTop <= 80) setTopSectionHeight(newTop);
     };
     const onMouseUp = () => {
-      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mousemove", onMouseMove as EventListener);
       window.removeEventListener("mouseup", onMouseUp);
     };
-    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mousemove", onMouseMove as EventListener);
     window.addEventListener("mouseup", onMouseUp);
   };
 
@@ -649,16 +494,16 @@ const CustomObservePage: React.FC = () => {
     e.preventDefault();
     const startX = e.clientX;
     const startWidth = sideBarWidth;
-    const onMouseMove = (event: MouseEvent) => {
+    const onMouseMove = (event: globalThis.MouseEvent) => {
       const delta = ((event.clientX - startX) / window.innerWidth) * 100;
       const newWidth = startWidth + delta;
       if (newWidth >= 20 && newWidth <= 50) setSideBarWidth(newWidth);
     };
     const onMouseUp = () => {
-      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mousemove", onMouseMove as EventListener);
       window.removeEventListener("mouseup", onMouseUp);
     };
-    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mousemove", onMouseMove as EventListener);
     window.addEventListener("mouseup", onMouseUp);
   };
 
@@ -666,16 +511,16 @@ const CustomObservePage: React.FC = () => {
     e.preventDefault();
     const startX = e.clientX;
     const startRight = bottomRightWidth;
-    const onMouseMove = (event: MouseEvent) => {
+    const onMouseMove = (event: globalThis.MouseEvent) => {
       const delta = ((startX - event.clientX) / window.innerWidth) * 100;
       const newRight = startRight + delta;
       if (newRight >= 20 && newRight <= 50) setBottomRightWidth(newRight);
     };
     const onMouseUp = () => {
-      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mousemove", onMouseMove as EventListener);
       window.removeEventListener("mouseup", onMouseUp);
     };
-    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mousemove", onMouseMove as EventListener);
     window.addEventListener("mouseup", onMouseUp);
   };
 
@@ -855,24 +700,7 @@ const CustomObservePage: React.FC = () => {
   return (
     <div className="flex flex-col h-screen bg-black text-white overflow-hidden">
       {/* Header */}
-      <header className="h-12 bg-zinc-800 border-b border-gray-300 flex items-center px-4 justify-between py-4">
-        <button
-          onClick={() => router.push('/profile')}
-          className="flex items-center justify-between gap-2 px-3 py-2 border border-purple-400 rounded text-sm text-white background bg-black hover:text-violet-300 transition duration-200"
-        >
-          <User className="w-4 h-4" />
-          <span>{user?.email || "Not Signed In"}</span>
-
-        </button>
-        <div>
-          <button className="text-white px-3 py-1 border border-purple-400 rounded text-sm font-cinzel hover:bg-gray-500 transition mx-4">
-            <Link href="/">Home</Link>
-          </button>
-          <button className="text-white px-3 py-1 border border-purple-400 rounded text-sm font-cinzel hover:bg-gray-500 transition">
-            <Link href="/playground">Playground</Link>
-          </button>
-        </div>
-      </header>
+      <ObserveHeader user={user} onProfileClick={() => router.push('/profile')} />
 
       <div className="flex flex-col flex-1 relative">
         {/* TOP ROW – Enhanced Sidebar & Graph Visualization */}
@@ -890,11 +718,7 @@ const CustomObservePage: React.FC = () => {
           </div>
 
           {/* TOP HORIZONTAL RESIZER */}
-          <div
-            onMouseDown={handleTopHorizontalResize}
-            className="cursor-ew-resize bg-gray-400"
-            style={{ width: "4px" }}
-          ></div>
+          <Resizer orientation="horizontal" onMouseDown={handleTopHorizontalResize} />
 
           {/* Right Panel: Graph Visualization */}
           <div className="flex-1 bg-black p-4 overflow-hidden">
@@ -906,65 +730,111 @@ const CustomObservePage: React.FC = () => {
               </button>
             </div>
             {/* Graph Area */}
-            {currentGraphContent}
+            {selectedRefineHistory && selectedSheet && sheetRuns[selectedSheet._id] ? (
+              (() => {
+                const runsForSheet = [...sheetRuns[selectedSheet._id]].sort(
+                  (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+                );
+                const refineTime = new Date(selectedRefineHistory.timestamp).getTime();
+                let beforeRun = null;
+                let afterRun = null;
+                for (const run of runsForSheet) {
+                  const runTime = new Date(run.timestamp).getTime();
+                  if (runTime <= refineTime) {
+                    beforeRun = run;
+                  } else if (runTime > refineTime && !afterRun) {
+                    afterRun = run;
+                    break;
+                  }
+                }
+                if (beforeRun) {
+                  return (
+                    <GraphVisualizationPanel
+                      beforeTimings={beforeRun.timings || {}}
+                      afterTimings={afterRun ? afterRun.timings : {}}
+                    />
+                  );
+                }
+                return null;
+              })()
+            ) : (
+              <div className="flex gap-4 h-full pb-12">
+                <div className="flex-1 bg-stone-900 border border-gray-300 rounded flex items-center justify-center">
+                  <p className="text-sm">Line Chart: Agent Runtime (Before/After)</p>
+                </div>
+                <div className="flex-1 bg-stone-900 border border-gray-300 rounded flex items-center justify-center">
+                  <p className="text-sm">Pie Chart: Agent Run Distribution</p>
+                </div>
+                <div className="flex-1 bg-stone-900 border border-gray-300 rounded flex items-center justify-center">
+                  <p className="text-sm">Placeholder: Refined Model Output</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
         {/* VERTICAL RESIZER */}
-        <div
-          onMouseDown={handleVerticalResize}
-          className="cursor-ns-resize bg-gray-400"
-          style={{ height: "4px" }}
-        ></div>
+        <Resizer orientation="vertical" onMouseDown={handleVerticalResize} />
 
         {/* BOTTOM ROW – Diff Report Pane & Model Outputs Pane */}
         <div className="flex relative" style={{ height: `${bottomSectionHeight}vh` }}>
           {/* Left Panel: Diff Report Pane with File Tabs */}
-          <div className="bg-black overflow-y-auto" style={{ width: "60%" }}>
-            <div className="sticky top-0 z-10 bg-black px-4 py-2 border-b border-gray-300 flex justify-between items-center">
-              <h3 className="text-lg font-cinzel">Diff Report</h3>
-              <div className="flex space-x-2">
-                {getFileKeys().map((fname) => (
-                  <button
-                    key={fname}
-                    onClick={() => setSelectedFile(fname)}
-                    className={`px-2 py-1 border rounded text-xs transition-colors duration-200 border-gray-200 ${selectedFile === fname ? "bg-stone-700 hover:bg-stone-800" : "bg-black hover:bg-stone-700"
-                      }`}
-                  >
-                    {fname}
-                  </button>
-                ))}
-                <button
-                  onClick={() => setIsCodeEditorModalOpen(true)}
-                  className="px-3 py-2 animated-border text-xs bg-black"
-                >
-                  Open in Code Editor
-                </button>
-              </div>
-            </div>
-            {currentDiffContent}
-          </div>
+          <DiffReportPanel
+            fileKeys={getFileKeys()}
+            selectedFile={selectedFile}
+            setSelectedFile={setSelectedFile}
+            onOpenCodeEditor={() => setIsCodeEditorModalOpen(true)}
+            diffContent={currentDiffContent}
+          />
 
           {/* BOTTOM VERTICAL RESIZER */}
-          <div
-            onMouseDown={handleBottomHorizontalResize}
-            className="cursor-ew-resize bg-gray-400"
-            style={{ width: "4px" }}
-          ></div>
+          <Resizer orientation="horizontal" onMouseDown={handleBottomHorizontalResize} />
 
           {/* Right Panel: Model Outputs */}
           <div className="bg-black overflow-y-auto pb-[100px]" style={{ width: "46%" }}>
             <div className="sticky top-0 z-10 bg-black px-4 py-2 border-b border-gray-300 flex justify-between items-center">
               <h3 className="text-lg font-cinzel">Model Outputs</h3>
             </div>
-            {currentModelOutputsContent}
+            {selectedRefineHistory && selectedSheet && sheetRuns[selectedSheet._id] ? (() => {
+              const runsForSheet = [...sheetRuns[selectedSheet._id]].sort(
+                (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+              );
+              const refineTime = new Date(selectedRefineHistory.timestamp).getTime();
+              let beforeRun = null;
+              let afterRun = null;
+              for (const run of runsForSheet) {
+                const runTime = new Date(run.timestamp).getTime();
+                if (runTime <= refineTime) {
+                  beforeRun = run;
+                } else if (runTime > refineTime && !afterRun) {
+                  afterRun = run;
+                  break;
+                }
+              }
+              if (beforeRun) {
+                return (
+                  <ModelOutputsPanel
+                    beforeOutput={beforeRun.output}
+                    afterOutput={afterRun ? afterRun.output : ""}
+                  />
+                );
+              }
+              return null;
+            })() : (
+              <div className="flex flex-col gap-4 h-full pt-4 px-3 pb-12">
+                <div className="flex-1 bg-stone-900 border border-gray-300 rounded flex items-center justify-center">
+                  <p className="text-sm">Before Refine Output</p>
+                </div>
+                <div className="flex-1 bg-stone-900 border border-gray-300 rounded flex items-center justify-center">
+                  <p className="text-sm">After Refine Output</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 bg-black border-t border-gray-400 p-2 flex items-center justify-between z-[50]">
-        <p className="text-gray-400 text-sm">© 2025 AgentFlux</p>
-      </div>
+      <ObserveFooter />
 
       {isCodeEditorModalOpen && selectedSheet && (
         <CodeditorModal
