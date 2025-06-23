@@ -120,14 +120,12 @@ export const SignIn = () => {
                 </div>
             </form>
 
-            <div className="text-center mt-4 pt-3">
-                <p className="text-sm text-gray-200">
-                    Don't have an account?
-                    <a href="/signup" className="text-purple-400 hover:text-purple-500 ml-1">
-                        Sign Up
-                    </a>
-                </p>
-            </div>
+            <p className="text-sm text-gray-200">
+                Don&apos;t have an account?
+                <a href="/signup" className="text-purple-400 hover:text-purple-500 ml-1">
+                    Sign Up
+                </a>
+            </p>
         </div>
     );
 };
