@@ -53,7 +53,7 @@ export const SignIn = () => {
 
     return (
         <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md">
-            <h2 className="text-3xl font-cinzel text-center text-white mb-6 text-gray-800">Sign In</h2>
+            <h2 className="text-3xl font-cinzel text-center mb-6 text-gray-800">Sign In</h2>
 
             <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="relative">

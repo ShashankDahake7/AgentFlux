@@ -18,7 +18,6 @@ import Draggable from "react-draggable";
 import Image from "next/image";
 import "xterm/css/xterm.css";
 import Link from 'next/link';
-import MakeCompatibleModal from "@/app/playground/components/MakeCompatibleModal";
 import { modellist } from "./data/modelList";
 import Sidebar from "./components/Sidebar";
 import TerminalPanel from "./components/TerminalPanel";
@@ -30,6 +29,7 @@ import AssociateModelsModal from "./components/AssociateModelsModal";
 import MultiSelectDropdown from "./components/MultiSelectDropdown";
 import MultiSelectDropdownForSheets from "./components/MultiSelectDropdownForSheets";
 import type { Playground, FileType, Sheet } from "./components/types";
+import MakeCompatibleModal from "./components/MakeCompatibleModal";
 
 // Dynamically import MonacoEditor (SSR disabled)
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
