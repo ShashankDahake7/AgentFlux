@@ -4,10 +4,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { signIn, signInWithGoogle, signInWithGithub } from '@/app/firebase/authService';
-import { getAuth, onAuthStateChanged, signOut as firebaseSignOut, User } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, signOut as firebaseSignOut, User, sendPasswordResetEmail } from 'firebase/auth';
 import OAuthButton from './OAuthButton';
 import * as THREE from 'three';
 import FOG from 'vanta/dist/vanta.fog.min';
+import e from 'express';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export const SignIn = () => {
     const [showPassword, setShowPassword] = useState(false);
@@ -17,6 +19,10 @@ export const SignIn = () => {
     });
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [currentUser, setCurrentUser] = useState<User | null>(null);
+    const [showForgotModal, setShowForgotModal] = useState(false);
+    const [forgotEmail, setForgotEmail] = useState('');
+    const [forgotMessage, setForgotMessage] = useState('');
+    const [forgotError, setForgotError] = useState(false);
     const router = useRouter();
     const vantaRef = useRef<HTMLDivElement>(null);
     const vantaEffect = useRef<any>(null);
@@ -67,7 +73,8 @@ export const SignIn = () => {
                 midtoneColor: 0xc387ff,
                 lowlightColor: 0xb6a0ff,
                 baseColor: 0xf4e0f7,
-                blurFactor: 0.44
+                blurFactor: 0.44,
+                speed: 1.5
             });
         }
         return () => {
@@ -117,16 +124,37 @@ export const SignIn = () => {
 
     const handleSignOut = async () => {
         const auth = getAuth();
-        await firebaseSignOut(auth);
-        setCurrentUser(null);
+        const confirmed = window.confirm("Are you sure you want to sign out?");
+        if (confirmed) {
+            await firebaseSignOut(auth);
+            setCurrentUser(null);
+            router.push('/');
+        } else {
+            alert("Sign out cancelled.");
+        }
+    };
+
+    const handleForgotPassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setForgotMessage("");
+        setForgotError(false);
+        try {
+            const auth = getAuth();
+            await sendPasswordResetEmail(auth, forgotEmail);
+            setForgotMessage("Password reset email sent! Please check your inbox.");
+            setForgotError(false);
+        } catch (error: any) {
+            setForgotMessage(error.message || "Failed to send reset email.");
+            setForgotError(true);
+        }
     };
 
     return (
         <div ref={vantaRef} className="min-h-screen flex items-center justify-center w-full text-white">
             {currentUser ? (
                 <div className="flex items-center justify-center w-full h-full min-h-screen">
-                    <div className="bg-gray-800 p-8 border border-purple-300 rounded-lg shadow-lg w-full max-w-md mx-auto flex flex-col items-center justify-center">
-                        <h2 className="text-2xl font-cinzel text-center mb-6 text-white">You are already signed in</h2>
+                    <div className="bg-stone-800 p-8 border border-purple-300 rounded-lg shadow-lg w-full max-w-md mx-auto flex flex-col items-center justify-center">
+                        <h2 className="text-2xl font-cinzel text-center mb-6 text-white">You are already signed in as <a href='/profile' className='hover:text-purple-400'>{currentUser.email}</a></h2>
                         <button
                             onClick={handleSignOut}
                             className="bg-gradient-to-r from-red-500 to-purple-400 text-white py-3 px-6 rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition duration-300 font-cinzel mb-2"
@@ -139,13 +167,34 @@ export const SignIn = () => {
                 <div className="bg-stone-800 p-0 border-2 border-purple-300 rounded-lg shadow-lg w-full max-w-6xl flex flex-row overflow-hidden">
                     {/* Slideshow - Desktop only */}
                     <div className="hidden md:flex items-center justify-center bg-black w-[40rem] min-h-full relative">
-                        <div className="w-[32rem] h-100 rounded-lg overflow-hidden flex items-center justify-center border-4 border-gray-700 shadow-xl">
+                        <div className="w-[32rem] h-100 rounded-lg overflow-hidden flex items-center justify-center border-4 border-gray-700 shadow-xl relative">
                             <img
                                 src={galleryImages[currentImageIndex]}
                                 alt="Gallery Slideshow"
                                 className="object-cover w-full h-full transition-opacity duration-1000"
                                 style={{ background: '#111' }}
                             />
+                        </div>
+
+                        {/* Caption for each slide */}
+                        <div className="absolute bottom-14 left-1/2 -translate-x-1/2 w-[90%] flex justify-center">
+                            <div className="bg-black/70 px-4 py-2 rounded-lg shadow font-merriweather text-white tracking-wide text-center">
+
+                                {{
+                                    0: 'Make your agents production ready!!',
+                                    1: 'Visualize your agents into graphs',
+                                    2: 'Monitor LLM calls and github styled state maintainance',
+                                    3: 'Use our browser based AI-code editor',
+                                    4: 'Enchat yourself with breathtaking UI',
+                                    5: 'Experience a new form of UX',
+                                    6: 'Integrate custom LLMs from Hugging-Face',
+                                    7: 'Enter the world of AgentFlux',
+                                    8: 'Observe and monitor your agents in real-time',
+                                    9: 'Maintain your agents with ease by colloborating with your team',
+                                    10: 'Use studios to manage your agents',
+                                    11: 'Experience seamless code executions',
+                                }[currentImageIndex]}
+                            </div>
                         </div>
 
                         {/* Dots indicator */}
@@ -233,6 +282,62 @@ export const SignIn = () => {
                                 Sign Up
                             </a>
                         </p>
+                        <p className="text-sm text-gray-200 mt-2">
+                            Forgot your password?
+                            <button
+                                type="button"
+                                className="text-purple-400 hover:text-purple-600 focus:outline-none ml-1"
+                                onClick={() => setShowForgotModal(true)}
+                            >
+                                Help
+                            </button>
+                        </p>
+                        {/* Forgot Password Modal with Framer Motion */}
+                        <AnimatePresence>
+                            {showForgotModal && (
+                                <motion.div
+                                    className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                >
+                                    <motion.div
+                                        className="bg-stone-800 border-2 border-purple-300 rounded-lg p-6 w-full max-w-md shadow-lg relative"
+                                        initial={{ scale: 0.85, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        exit={{ scale: 0.85, opacity: 0 }}
+                                        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                                    >
+                                        <button
+                                            className="absolute top-2 right-2 text-gray-400 hover:text-gray-200 text-2xl"
+                                            onClick={() => setShowForgotModal(false)}
+                                        >
+                                            &times;
+                                        </button>
+                                        <h3 className="text-xl font-semibold mb-4 text-gray-100">Reset Password</h3>
+                                        <form onSubmit={handleForgotPassword} className="space-y-4">
+                                            <input
+                                                type="email"
+                                                placeholder="Enter your email"
+                                                value={forgotEmail}
+                                                onChange={e => setForgotEmail(e.target.value)}
+                                                required
+                                                className="block w-full px-4 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400 text-black"
+                                            />
+                                            <button
+                                                type="submit"
+                                                className="w-full bg-gradient-to-r from-blue-600 to-purple-400 text-white py-2 rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition duration-300"
+                                            >
+                                                Send Reset Email
+                                            </button>
+                                        </form>
+                                        {forgotMessage && (
+                                            <p className={`mt-3 text-center ${forgotError ? 'text-red-400' : 'text-green-400'}`}>{forgotMessage}</p>
+                                        )}
+                                    </motion.div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 </div>
             )}
